@@ -1,5 +1,5 @@
 """
-Syllable density scoring.
+Syllable density and syllable weight scoring.
 
 English  → pyphen (Hunspell hyphenation dictionary for en_US)
 Hindi    → Devanagari matra / consonant nucleus counting
@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import pyphen
 
-from services.language_utils import is_hindi_word, clean_word, content_lines
+from services.language_utils import is_hindi_word, clean_word, content_lines, get_multilingual_stopwords
+from config import scoring_config
 
 # ── English hyphenation dictionary ───────────────────────────────────────────
 _dic_en = pyphen.Pyphen(lang="en_US")
@@ -43,7 +44,6 @@ def _count_hindi(word: str) -> int:
         if ch in _DEVA_VOWELS or ch in _DEVA_MATRAS:
             count += 1
         elif "\u0900" <= ch <= "\u0939" or "\u0958" <= ch <= "\u095F":
-            # It's a consonant — count if NOT followed by halant or matra
             nxt = chars[i + 1] if i + 1 < len(chars) else ""
             if nxt != _HALANT and nxt not in _DEVA_MATRAS:
                 count += 1
@@ -60,44 +60,62 @@ def count_syllables(word: str) -> int:
     return _count_hindi(word) if is_hindi_word(word) else _count_english(word)
 
 
-def calculate(lyrics: str) -> tuple[float, float]:
+def calculate(lyrics: str) -> tuple[float, float, float, float]:
     """
-    Returns (syllable_score 0-100, avg_syllables_per_word).
+    Returns:
+       syllable_score        (0-100)
+       avg_syllables_per_line
+       syllable_weight_score (0-100)
+       syllable_weight_ratio
     """
     total_syllables = 0
     total_lines = 0
+    
+    total_words = 0
+    complex_words = 0
+
+    min_words = scoring_config.SYLLABLE["MIN_WORDS_FOR_DENSITY"]
+    complex_threshold = scoring_config.SYLLABLE["COMPLEX_WORD_SYLLABLES"]
+    stop_words = get_multilingual_stopwords()
 
     for line in content_lines(lyrics):
-        line_syllables = 0
-        words_in_line = 0
-        for raw_word in line.split():
-            word = clean_word(raw_word)
-            if not word:
-                continue
-            line_syllables += count_syllables(word)
-            words_in_line += 1
-            
-        if words_in_line > 0:
+        line_words = [clean_word(w) for w in line.split()]
+        line_words = [w for w in line_words if w]
+        
+        # EXCLUDE ad-lib / short lines from syllable density calculations
+        if len(line_words) >= min_words:
+            line_syllables = 0
+            for w in line_words:
+                syl_count = count_syllables(w)
+                line_syllables += syl_count
+                
+                # Syllable Weight: ratio of complex words to simple words, excluding stop words
+                if w.lower() not in stop_words:
+                    total_words += 1
+                    if syl_count >= complex_threshold:
+                        complex_words += 1
+                        
             total_syllables += line_syllables
             total_lines += 1
 
     if total_lines == 0:
-        return 0.0, 0.0
+        return 0.0, 0.0, 0.0, 0.0
 
     avg_syllables_per_line = total_syllables / total_lines
 
-    # Piecewise linear scoring curve based on syllables per line
-    if avg_syllables_per_line < 6.0:
-        score = 30.0
-    elif avg_syllables_per_line < 8.0:
-        score = 30.0 + ((avg_syllables_per_line - 6.0) / 2.0) * 20.0
-    elif avg_syllables_per_line < 10.0:
-        score = 50.0 + ((avg_syllables_per_line - 8.0) / 2.0) * 20.0
-    elif avg_syllables_per_line < 12.0:
-        score = 70.0 + ((avg_syllables_per_line - 10.0) / 2.0) * 15.0
-    elif avg_syllables_per_line < 14.0:
-        score = 85.0 + ((avg_syllables_per_line - 12.0) / 2.0) * 10.0
-    else:
-        score = min(95.0 + (avg_syllables_per_line - 14.0) * 2.5, 100.0)
+    # Dynamic Syllable Density Score (0-100)
+    score = scoring_config.evaluate_piecewise_curve(
+        avg_syllables_per_line,
+        scoring_config.SYLLABLE["DENSITY_THRESHOLDS"],
+        scoring_config.SYLLABLE["DENSITY_SCORES"]
+    )
 
-    return round(score, 2), round(avg_syllables_per_line, 2)
+    # Dynamic Syllable Weight Score (0-100)
+    weight_ratio = complex_words / max(total_words, 1)
+    syllable_weight_score = scoring_config.evaluate_piecewise_curve(
+        weight_ratio,
+        scoring_config.SYLLABLE["WEIGHT_THRESHOLDS"],
+        scoring_config.SYLLABLE["WEIGHT_SCORES"]
+    )
+
+    return round(score, 2), round(avg_syllables_per_line, 2), round(syllable_weight_score, 2), round(weight_ratio, 4)

@@ -1,5 +1,6 @@
 package com.raprank.backend.service;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.raprank.backend.entity.Score;
 import com.raprank.backend.entity.Track;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import org.springframework.transaction.support.TransactionTemplate;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,6 +29,7 @@ public class ScoringOrchestrationService {
     private final TrackRepository trackRepository;
     private final ScoreRepository scoreRepository;
     private final ObjectMapper objectMapper;
+    private final TransactionTemplate transactionTemplate;
 
     @Value("${app.python.service.url}")
     private String pythonServiceUrl;
@@ -34,7 +38,6 @@ public class ScoringOrchestrationService {
     private String goServiceUrl;
 
     @Async
-    @Transactional
     public void triggerAnalysis(Track track) {
         try {
             String url = pythonServiceUrl + "/analyze";
@@ -50,33 +53,51 @@ public class ScoringOrchestrationService {
             PyAnalysisResponse response = restTemplate.postForObject(url, request, PyAnalysisResponse.class);
 
             if (response != null) {
-                String jsonBreakdown = objectMapper.writeValueAsString(response);
+                final PyAnalysisResponse finalResponse = response;
+                transactionTemplate.executeWithoutResult(status -> {
+                    Track currentTrack = trackRepository.findById(track.getId())
+                            .orElseThrow(() -> new RuntimeException("Track not found: " + track.getId()));
+                    try {
+                        String jsonBreakdown = objectMapper.writeValueAsString(finalResponse);
 
-                Score score = Score.builder()
-                        .track(track)
-                        .syllableScore(response.getSyllable_score())
-                        .alliterationScore(response.getAlliteration_score())
-                        .flowScore(response.getFlow_score())
-                        .totalScore(response.getTotal_score())
-                        .breakdownJson(jsonBreakdown)
-                        .build();
+                        Score score = Score.builder()
+                                .track(currentTrack)
+                                .syllableScore(finalResponse.getSyllable_score())
+                                .alliterationScore(finalResponse.getAlliteration_score())
+                                .flowScore(finalResponse.getFlow_score())
+                                .totalScore(finalResponse.getTotal_score())
+                                .breakdownJson(jsonBreakdown)
+                                .build();
 
-                scoreRepository.save(score);
+                        scoreRepository.save(score);
 
-                track.setStatus(Track.TrackStatus.ANALYZED);
-                trackRepository.save(track);
-                log.info("Track {} successfully scored and analyzed.", track.getId());
+                        currentTrack.setStatus(Track.TrackStatus.ANALYZED);
+                        trackRepository.save(currentTrack);
+                        log.info("Track {} successfully scored and analyzed.", currentTrack.getId());
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to save analysis score for track " + currentTrack.getId(), e);
+                    }
+                });
             } else {
                 throw new RuntimeException("Received empty response from NLP service");
             }
         } catch (Exception e) {
             log.error("Failed to analyze track " + track.getId(), e);
-            track.setStatus(Track.TrackStatus.FAILED);
-            trackRepository.save(track);
+            try {
+                transactionTemplate.executeWithoutResult(status -> {
+                    trackRepository.findById(track.getId()).ifPresent(currentTrack -> {
+                        currentTrack.setStatus(Track.TrackStatus.FAILED);
+                        trackRepository.save(currentTrack);
+                    });
+                });
+            } catch (Exception ex) {
+                log.error("Failed to set track status to FAILED", ex);
+            }
         }
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PyAnalysisResponse {
         private Double syllable_score;
         private Double alliteration_score;
@@ -86,5 +107,14 @@ public class ScoringOrchestrationService {
         private Integer line_count;
         private Double avg_syllables_per_word;
         private Object alliteration_pairs;
+
+        private Double rhyme_score;
+        private Double wordplay_score;
+        private Double syllable_weight;
+        private Double vocabulary_uniqueness;
+        private Integer double_entendres_count;
+        private Integer puns_count;
+        private Integer similes_count;
+        private Integer metaphors_count;
     }
 }

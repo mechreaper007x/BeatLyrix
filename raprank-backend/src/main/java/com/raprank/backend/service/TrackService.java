@@ -1,5 +1,6 @@
 package com.raprank.backend.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.raprank.backend.dto.request.TrackUploadRequest;
 import com.raprank.backend.dto.response.ScoreBreakdownResponse;
 import com.raprank.backend.dto.response.TrackResponse;
@@ -27,6 +28,7 @@ public class TrackService {
     private final ScoreRepository scoreRepository;
     private final InteractionRepository interactionRepository;
     private final ScoringOrchestrationService scoringOrchestrationService;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public TrackResponse uploadTrack(TrackUploadRequest request, Long artistId) {
@@ -94,13 +96,29 @@ public class TrackService {
             Score score = scoreOpt.get();
             totalScore = score.getTotalScore();
             grade = getGrade(totalScore);
-            breakdown = ScoreBreakdownResponse.builder()
-                    .syllableScore(score.getSyllableScore())
-                    .alliterationScore(score.getAlliterationScore())
-                    .flowScore(score.getFlowScore())
-                    .totalScore(totalScore)
-                    .grade(grade)
-                    .build();
+            if (score.getBreakdownJson() != null && !score.getBreakdownJson().isEmpty()) {
+                try {
+                    breakdown = objectMapper.readValue(score.getBreakdownJson(), ScoreBreakdownResponse.class);
+                    breakdown.setTotalScore(totalScore);
+                    breakdown.setGrade(grade);
+                } catch (Exception e) {
+                    breakdown = ScoreBreakdownResponse.builder()
+                            .syllableScore(score.getSyllableScore())
+                            .alliterationScore(score.getAlliterationScore())
+                            .flowScore(score.getFlowScore())
+                            .totalScore(totalScore)
+                            .grade(grade)
+                            .build();
+                }
+            } else {
+                breakdown = ScoreBreakdownResponse.builder()
+                        .syllableScore(score.getSyllableScore())
+                        .alliterationScore(score.getAlliterationScore())
+                        .flowScore(score.getFlowScore())
+                        .totalScore(totalScore)
+                        .grade(grade)
+                        .build();
+            }
         }
 
         return TrackResponse.builder()

@@ -9,3 +9,4 @@ pydantic==2.7.0
 librosa==0.10.2
 soundfile==0.12.1
 numpy==1.26.4
+nltk==3.8.1

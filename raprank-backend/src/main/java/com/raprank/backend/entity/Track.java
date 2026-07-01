@@ -36,6 +36,12 @@ public class Track {
     @Column(nullable = false)
     private TrackStatus status; // PENDING, ANALYZED, FAILED
 
+    @OneToOne(mappedBy = "track", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Score score;
+
+    @OneToMany(mappedBy = "track", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<Interaction> interactions;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -48,6 +54,7 @@ public class Track {
     public enum TrackStatus {
         PENDING,
         DOWNLOADING_AUDIO,
+        SEPARATING_AUDIO,
         TRANSCRIBING,
         ANALYZING_FLOW,
         ANALYZING_TEXT,

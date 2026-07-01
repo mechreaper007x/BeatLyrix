@@ -71,6 +71,32 @@ export default function ProfilePage() {
     fetchProfile();
   }, [token]);
 
+  const handleDeleteTrack = async (trackId: string) => {
+    if (!window.confirm("Are you sure you want to delete this track? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/tracks/${trackId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setTracks((prev) => prev.filter((t) => t.id !== trackId));
+        alert("Track deleted successfully.");
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to delete track");
+      }
+    } catch (err: any) {
+      console.error("Delete track error:", err);
+      alert(err.message || "Failed to delete track.");
+    }
+  };
+
   // Route guard: Redirect if not logged in
   if (!token) {
     return <Navigate to="/login" replace />;
@@ -268,12 +294,21 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
-                      <Link
-                        to={`/tracks/${track.id}`}
-                        className="text-xs font-bold tracking-widest uppercase text-white bg-transparent border border-raprank-cream/30 hover:border-raprank-neon hover:text-raprank-neon px-4 py-2.5 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-raprank-neon text-center"
-                      >
-                        VIEW BREAKDOWN
-                      </Link>
+                      <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                        <Link
+                          to={`/tracks/${track.id}`}
+                          className="text-xs font-bold tracking-widest uppercase text-white bg-transparent border border-raprank-cream/30 hover:border-raprank-neon hover:text-raprank-neon px-4 py-2.5 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-raprank-neon text-center"
+                        >
+                          VIEW BREAKDOWN
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTrack(track.id)}
+                          className="text-xs font-bold tracking-widest uppercase text-rose-400 bg-red-950/20 border border-red-900/40 hover:bg-red-900/30 hover:border-rose-500 hover:text-rose-300 px-4 py-2.5 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 cursor-pointer"
+                        >
+                          DELETE
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))

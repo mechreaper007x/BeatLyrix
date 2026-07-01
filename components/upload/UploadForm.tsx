@@ -14,6 +14,8 @@ export default function UploadForm() {
   const [stage, setStage] = useState<Stage>("idle");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [analysisText, setAnalysisText] = useState("Checking syllables...");
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [estimatedTime, setEstimatedTime] = useState<string>("Calculating...");
   const [newTrackId, setNewTrackId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
@@ -166,13 +168,23 @@ export default function UploadForm() {
 
   const pollAnalysisStatus = (trackId: number) => {
     let attempts = 0;
-    const maxAttempts = 600; // 15 minutes timeout (at 1.5s intervals)
+    const maxAttempts = 2400; // 1 hour timeout (at 1.5s intervals)
+    setAnalysisProgress(5);
+    setEstimatedTime("Calculating...");
     
+    // Variables to track simulated progress increments per status
+    let separatingProgress = 15;
+    let transcribingProgress = 35;
+    let analyzingFlowProgress = 75;
+    let analyzingTextProgress = 88;
+    let secondsInTranscribing = 0;
+    let secondsInSeparating = 0;
+
     const interval = setInterval(async () => {
       attempts++;
       if (attempts > maxAttempts) {
         clearInterval(interval);
-        setErrorMessage("Analysis polling timed out (15m). The external AI service took too long.");
+        setErrorMessage("Analysis polling timed out (1h). The external AI service took too long.");
         setStage("error");
         return;
       }
@@ -190,20 +202,72 @@ export default function UploadForm() {
             setErrorMessage("Lyric analysis failed in background. Check backend logs.");
             setStage("error");
           } else if (data.totalScore !== null && data.scoreBreakdown !== null) {
+            setAnalysisProgress(100);
+            setEstimatedTime("Complete!");
             clearInterval(interval);
-            setStage("success");
+            setTimeout(() => {
+              setStage("success");
+            }, 500);
           } else {
-            // Dynamically set analysis text based on real status from backend
+            // Dynamically set progress and time estimation based on backend status
             if (data.status === "PENDING") {
               setAnalysisText("Registering track metadata...");
+              setAnalysisProgress(5);
+              setEstimatedTime("~3 minutes remaining");
             } else if (data.status === "DOWNLOADING_AUDIO") {
               setAnalysisText("Downloading audio file for scoring...");
+              setAnalysisProgress(12);
+              setEstimatedTime("~2m 50s remaining");
+            } else if (data.status === "SEPARATING_AUDIO") {
+              setAnalysisText("Isolating vocals from backing beat...");
+              secondsInSeparating += 1.5;
+              
+              // Smoothly increment separating progress from 15% to 35%
+              // Assume 60 seconds baseline. 60s / 1.5s = 40 steps.
+              // (35 - 15) / 40 = 0.5% per step.
+              if (separatingProgress < 35) {
+                separatingProgress += 0.5;
+              }
+              setAnalysisProgress(Math.min(Math.round(separatingProgress), 35));
+              
+              const remaining = Math.max(160 - Math.round(secondsInSeparating), 90);
+              const mins = Math.floor(remaining / 60);
+              const secs = remaining % 60;
+              setEstimatedTime(`~${mins > 0 ? `${mins}m ` : ""}${secs}s remaining`);
             } else if (data.status === "TRANSCRIBING") {
               setAnalysisText("Transcribing audio via Whisper AI (this may take a few minutes)...");
+              secondsInTranscribing += 1.5;
+              
+              // Smoothly increment transcribing progress from 35% to 75%
+              // Assume 120 seconds baseline. 120s / 1.5s = 80 steps.
+              // (75 - 35) / 80 = 0.5% per step.
+              if (transcribingProgress < 75) {
+                transcribingProgress += 0.5;
+              }
+              setAnalysisProgress(Math.min(Math.round(transcribingProgress), 75));
+              
+              const remaining = Math.max(100 - Math.round(secondsInTranscribing), 5);
+              if (remaining > 5) {
+                const mins = Math.floor(remaining / 60);
+                const secs = remaining % 60;
+                setEstimatedTime(`~${mins > 0 ? `${mins}m ` : ""}${secs}s remaining`);
+              } else {
+                setEstimatedTime("Finishing transcription...");
+              }
             } else if (data.status === "ANALYZING_FLOW") {
               setAnalysisText("Aligning vocals with beat-sync grid...");
+              if (analyzingFlowProgress < 88) {
+                analyzingFlowProgress += 1.5;
+              }
+              setAnalysisProgress(Math.min(Math.round(analyzingFlowProgress), 88));
+              setEstimatedTime("~15s remaining");
             } else if (data.status === "ANALYZING_TEXT") {
               setAnalysisText("Calculating rhymes, alliteration, and cadence...");
+              if (analyzingTextProgress < 98) {
+                analyzingTextProgress += 1.0;
+              }
+              setAnalysisProgress(Math.min(Math.round(analyzingTextProgress), 98));
+              setEstimatedTime("~5s remaining");
             }
           }
         } else {
@@ -211,8 +275,6 @@ export default function UploadForm() {
         }
       } catch (err: any) {
         console.error("Error polling status:", err);
-        // Do not immediately fail for temporary polling errors, just log it.
-        // If it persists, it will time out.
       }
     }, 1500);
   };
@@ -479,14 +541,35 @@ export default function UploadForm() {
             <div className="w-3 bg-raprank-neon rounded-full animate-bounce h-10 shadow-[0_0_8px_#a8ff3e]" style={{ animationDuration: '0.8s', animationDelay: '0.2s' }} />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 w-full max-w-md">
             <h3 className="font-graffiti text-3xl text-white tracking-widest uppercase">
               ANALYZING YOUR BARS
             </h3>
             <p className="text-sm font-semibold text-raprank-neon uppercase tracking-widest animate-pulse h-6">
               {analysisText}
             </p>
-            <p className="text-xs font-semibold text-raprank-skin/50 max-w-sm mx-auto">
+            
+            {/* Dynamic Progress Bar */}
+            <div className="pt-2">
+              <div
+                className="w-full bg-raprank-maroon/40 rounded-full h-4 overflow-hidden border border-raprank-maroon/20 relative"
+                role="progressbar"
+                aria-valuenow={analysisProgress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <div
+                  className="bg-raprank-neon h-full transition-all duration-300 shadow-[0_0_10px_#a8ff3e]"
+                  style={{ width: `${analysisProgress}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-xs font-bold text-raprank-neon tracking-widest mt-2">
+                <span>{estimatedTime}</span>
+                <span>{analysisProgress}%</span>
+              </div>
+            </div>
+
+            <p className="text-xs font-semibold text-raprank-skin/50 max-w-sm mx-auto pt-4">
               Our AI engine is measuring rhyme scheme density, syllable placement, syllable flow, and cadence structure.
             </p>
           </div>

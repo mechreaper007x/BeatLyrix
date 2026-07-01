@@ -3,3 +3,6 @@ uvicorn==0.30.0
 faster-whisper==1.0.3
 python-multipart==0.0.9
 requests==2.32.3
+transformers
+torch --extra-index-url https://download.pytorch.org/whl/cpu
+

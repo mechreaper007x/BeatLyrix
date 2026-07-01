@@ -60,6 +60,8 @@ class FlowMetadata(BaseModel):
     words_analyzed: int
     syllable_rate: Optional[float] = Field(default=None, description="Syllables per second.")
     complexity_bonus: Optional[float] = Field(default=None, description="Flow complexity bonus.")
+    cadence_variance: Optional[float] = Field(default=None, description="Standard deviation of syllable rate across intervals.")
+    flow_switch_bonus: Optional[float] = Field(default=None, description="Flow switch / cadence versatility bonus.")
 
 
 # ── Response ──────────────────────────────────────────────────────────────────
@@ -76,12 +78,22 @@ class ScoreBreakdown(BaseModel):
     )
     total_score: float = Field(..., ge=0, le=100)
 
+    # ── New scores ───────────────────────────────────────────
+    wordplay_score: float = Field(..., ge=0, le=100)
+    syllable_weight: float = Field(..., ge=0, le=100)
+
     # ── Stats ─────────────────────────────────────────────────
     word_count: int
     line_count: int
     avg_syllables_per_word: float
     vocabulary_uniqueness: float = Field(..., description="Type-token ratio (0-1).")
     detected_language: str = Field(..., description="'en', 'hi', or 'mixed'.")
+
+    # ── Wordplay stats ───────────────────────────────────────
+    double_entendres_count: int
+    puns_count: int
+    similes_count: int
+    metaphors_count: int
 
     # ── Detail lists ─────────────────────────────────────────
     alliteration_pairs: List[str]

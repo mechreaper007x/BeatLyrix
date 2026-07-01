@@ -9,9 +9,10 @@ import os
 import tempfile
 import logging
 
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query, Form
 from fastapi.responses import JSONResponse
 from faster_whisper import WhisperModel
+from transformers import pipeline
 
 # ─────────────────────────────────────────────────────────────
 # Logging
@@ -24,13 +25,21 @@ logger = logging.getLogger(__name__)
 
 # ─────────────────────────────────────────────────────────────
 # Model — loaded ONCE at module level, not per-request.
-# "small"  → best accuracy/speed trade-off on free CPU tier
+# "large-v3-turbo" → best accuracy/speed balance for multilingual rap
 # "int8"   → quantised inference; halves memory, keeps speed
 # device="cpu" → HF free tier has no GPU
 # ─────────────────────────────────────────────────────────────
-logger.info("Loading WhisperModel (small / int8 / cpu) …")
-model = WhisperModel("small", device="cpu", compute_type="int8")
+logger.info("Loading WhisperModel (large-v3-turbo-ct2 / int8 / cpu) …")
+model = WhisperModel("deepdml/faster-whisper-large-v3-turbo-ct2", device="cpu", compute_type="int8")
 logger.info("WhisperModel ready.")
+
+logger.info("Loading Hinglish LID transformer model...")
+try:
+    lid_pipeline = pipeline("token-classification", model="l3cube-pune/hing-bert-lid", device=-1)
+    logger.info("LID model ready.")
+except Exception as exc:
+    logger.error("Failed to load LID model: %s", exc)
+    lid_pipeline = None
 
 # ─────────────────────────────────────────────────────────────
 # FastAPI application
@@ -58,7 +67,11 @@ async def health() -> dict:
 # word-level timestamps as JSON.
 # ─────────────────────────────────────────────────────────────
 @app.post("/transcribe")
-async def transcribe(file: UploadFile = File(...)) -> JSONResponse:
+async def transcribe(
+    file: UploadFile = File(...),
+    language: str | None = Query(default=None, description="Optional ISO-639-1 language code hint."),
+    lyrics: str | None = Form(default=None, description="Optional track lyrics for LID classification.")
+) -> JSONResponse:
     # ── Validate upload ──────────────────────────────────────
     if not file or not file.filename:
         raise HTTPException(
@@ -89,18 +102,54 @@ async def transcribe(file: UploadFile = File(...)) -> JSONResponse:
             tmp.write(audio_bytes)
             tmp_path = tmp.name
 
-        logger.info("Transcribing '%s' (%d bytes) → %s", file.filename, len(audio_bytes), tmp_path)
+        whisper_lang = None
+        if language:
+            lang_cleaned = language.strip().lower()
+            if lang_cleaned in ("hi", "hindi"):
+                whisper_lang = "hi"
+            elif lang_cleaned in ("en", "english"):
+                whisper_lang = "en"
+        elif lyrics and lid_pipeline:
+            try:
+                # Classify lyrics text (up to 300 words to avoid token limit issues)
+                words_list = lyrics.split()[:300]
+                truncated_lyrics = " ".join(words_list)
+                results = lid_pipeline(truncated_lyrics)
+                
+                hi_count = 0
+                en_count = 0
+                for r in results:
+                    entity = r.get("entity", "").lower()
+                    if "hi" in entity or "label_1" in entity:
+                        hi_count += 1
+                    elif "en" in entity or "label_0" in entity:
+                        en_count += 1
+                
+                logger.info("LID results: hi=%d, en=%d", hi_count, en_count)
+                if hi_count > 5:
+                    whisper_lang = "hi"
+                    logger.info("Transformer classified lyrics as Hindi/Hinglish. Forcing Whisper to 'hi'.")
+                else:
+                    whisper_lang = "en"
+                    logger.info("Transformer classified lyrics as English. Forcing Whisper to 'en'.")
+            except Exception as exc:
+                logger.warning("LID classification failed: %s", exc)
+
+        logger.info(
+            "Transcribing '%s' (%d bytes) → %s (language hint: %s)", 
+            file.filename, len(audio_bytes), tmp_path, whisper_lang
+        )
 
         # ── Transcription ────────────────────────────────────
-        # language=None  → auto-detect (handles Hindi, English, Hinglish)
         # task="transcribe" → do not translate, return original language
         # word_timestamps=True → required for future beat-sync features
         try:
             segments, info = model.transcribe(
                 tmp_path,
-                language=None,
+                language=whisper_lang,
                 task="transcribe",
                 word_timestamps=True,
+                beam_size=1,
             )
         except Exception as exc:
             logger.exception("Transcription failed for '%s': %s", file.filename, exc)
@@ -122,6 +171,7 @@ async def transcribe(file: UploadFile = File(...)) -> JSONResponse:
                             "word": word.word,
                             "start": round(word.start, 3),
                             "end": round(word.end, 3),
+                            "probability": round(word.probability, 4)
                         }
                     )
 

@@ -41,10 +41,14 @@ from services import (
     rhyme_service,
     syllable_service,
     vocabulary_service,
+    wordplay_service,
 )
 from services.flow_service import calculate_beat_sync
+from services.alignment_service import align_structured_lyrics_to_whisper
 from services.language_utils import detect_language
 from services.transcription_service import transcribe_audio
+from services.separation_service import separate_vocals
+from config import scoring_config
 
 logging.basicConfig(
     level=logging.INFO,
@@ -95,10 +99,11 @@ async def analyze(request: AnalyzeRequest) -> ScoreBreakdown:
 
     # ── Run all text-based scoring services ───────────────────────────────
     await update_status(request.track_id, "ANALYZING_TEXT")
-    syllable_score, avg_syl = syllable_service.calculate(lyrics)
-    rhyme_score, rhyme_pairs, multisyl_count = rhyme_service.calculate(lyrics)
+    syllable_score, avg_syl, syllable_weight_score, weight_ratio = syllable_service.calculate(lyrics)
+    rhyme_score, rhyme_pairs, multisyl_count, internal_score, chain_score = rhyme_service.calculate(lyrics)
     allit_score, allit_pairs = alliteration_service.calculate(lyrics)
     vocab_score, ttr = vocabulary_service.calculate(lyrics)
+    wordplay_score, wordplay_meta = wordplay_service.calculate(lyrics)
 
     # ── Flow scoring (only when word timestamps or audio_url is provided) ─────────
     flow_score: float | None = None
@@ -122,15 +127,32 @@ async def analyze(request: AnalyzeRequest) -> ScoreBreakdown:
                 audio_res.raise_for_status()
                 audio_bytes = audio_res.content
 
+            # ── Separation ──────────────────────────────────────────
+            await update_status(request.track_id, "SEPARATING_AUDIO")
+            logger.info("Running audio source separation...")
+            separated = separate_vocals(audio_bytes, filename)
+            if separated:
+                vocals_bytes, accompaniment_bytes = separated
+                transcribe_bytes = vocals_bytes
+                flow_bytes = accompaniment_bytes
+                logger.info("Source separation successful. Vocals and accompaniment isolated.")
+            else:
+                transcribe_bytes = audio_bytes
+                flow_bytes = audio_bytes
+                logger.info("Source separation skipped/failed. Using mixed audio.")
+
             await update_status(request.track_id, "TRANSCRIBING")
-            logger.info("Transcribing downloaded audio for flow alignment...")
-            transcription = await transcribe_audio(audio_bytes, filename)
+            logger.info("Transcribing audio for flow alignment (hint lang: %s)...", lang)
+            transcription = await transcribe_audio(transcribe_bytes, filename, lang, lyrics)
             words_raw = transcription.get("words", [])
 
             if words_raw:
                 await update_status(request.track_id, "ANALYZING_FLOW")
+                # Map raw Whisper ASR word timestamps to the user's structured lyrics
+                words_aligned = align_structured_lyrics_to_whisper(lyrics, words_raw)
+                
                 raw_score, meta_dict = calculate_beat_sync(
-                    audio_bytes, filename, words_raw
+                    transcribe_bytes, flow_bytes, filename, words_aligned
                 )
                 if "error" not in meta_dict:
                     flow_score = raw_score
@@ -140,21 +162,27 @@ async def analyze(request: AnalyzeRequest) -> ScoreBreakdown:
         except Exception as exc:
             logger.exception("Flow analysis from audio_url failed: %s", exc)
 
-    # ── Weighted total ────────────────────────────────────────────────────
+    # ── Weighted total from Config ─────────────────────────────────────────
     if flow_score is not None:
+        w = scoring_config.MAIN_WEIGHTS["WITH_FLOW"]
         total = (
-            rhyme_score * 0.30
-            + syllable_score * 0.20
-            + allit_score * 0.15
-            + vocab_score * 0.15
-            + flow_score * 0.20
+            rhyme_score * w["rhyme"]
+            + syllable_score * w["syllable"]
+            + allit_score * w["alliteration"]
+            + vocab_score * w["vocabulary"]
+            + wordplay_score * w["wordplay"]
+            + syllable_weight_score * w["syllable_weight"]
+            + flow_score * w["flow"]
         )
     else:
+        w = scoring_config.MAIN_WEIGHTS["TEXT_ONLY"]
         total = (
-            rhyme_score * 0.35
-            + syllable_score * 0.25
-            + allit_score * 0.20
-            + vocab_score * 0.20
+            rhyme_score * w["rhyme"]
+            + syllable_score * w["syllable"]
+            + allit_score * w["alliteration"]
+            + vocab_score * w["vocabulary"]
+            + wordplay_score * w["wordplay"]
+            + syllable_weight_score * w["syllable_weight"]
         )
 
     line_count = sum(
@@ -170,11 +198,17 @@ async def analyze(request: AnalyzeRequest) -> ScoreBreakdown:
         vocabulary_score=round(vocab_score, 2),
         flow_score=flow_score,
         total_score=round(total, 2),
+        wordplay_score=round(wordplay_score, 2),
+        syllable_weight=round(syllable_weight_score, 2),
         word_count=len(lyrics.split()),
         line_count=line_count,
         avg_syllables_per_word=round(avg_syl, 2),
         vocabulary_uniqueness=ttr,
         detected_language=lang,
+        double_entendres_count=wordplay_meta["double_entendres_count"],
+        puns_count=wordplay_meta["puns_count"],
+        similes_count=wordplay_meta["simile_count"],
+        metaphors_count=wordplay_meta["metaphor_count"],
         alliteration_pairs=allit_pairs,
         rhyme_pairs=rhyme_pairs,
         multisyllabic_rhyme_count=multisyl_count,
@@ -240,10 +274,11 @@ async def transcribe_and_analyze(file: UploadFile = File(...)) -> JSONResponse:
     words_raw: list[dict] = transcription.get("words", [])
 
     # ── Step 2: Text-based scoring ────────────────────────────────────────
-    syllable_score, avg_syl = syllable_service.calculate(lyrics)
-    rhyme_score, rhyme_pairs, multisyl_count = rhyme_service.calculate(lyrics)
+    syllable_score, avg_syl, syllable_weight_score, weight_ratio = syllable_service.calculate(lyrics)
+    rhyme_score, rhyme_pairs, multisyl_count, internal_score, chain_score = rhyme_service.calculate(lyrics)
     allit_score, allit_pairs = alliteration_service.calculate(lyrics)
     vocab_score, ttr = vocabulary_service.calculate(lyrics)
+    wordplay_score, wordplay_meta = wordplay_service.calculate(lyrics)
 
     # ── Step 3: Beat-sync flow scoring ───────────────────────────────────
     flow_score: float | None = None
@@ -266,18 +301,22 @@ async def transcribe_and_analyze(file: UploadFile = File(...)) -> JSONResponse:
     # ── Step 4: Weighted total ────────────────────────────────────────────
     if flow_score is not None:
         total = (
-            rhyme_score * 0.30
-            + syllable_score * 0.20
-            + allit_score * 0.15
-            + vocab_score * 0.15
+            rhyme_score * 0.20
+            + syllable_score * 0.15
+            + allit_score * 0.10
+            + vocab_score * 0.10
+            + wordplay_score * 0.15
+            + syllable_weight_score * 0.10
             + flow_score * 0.20
         )
     else:
         total = (
-            rhyme_score * 0.35
-            + syllable_score * 0.25
-            + allit_score * 0.20
-            + vocab_score * 0.20
+            rhyme_score * 0.25
+            + syllable_score * 0.20
+            + allit_score * 0.15
+            + vocab_score * 0.15
+            + wordplay_score * 0.15
+            + syllable_weight_score * 0.10
         )
 
     line_count = sum(
@@ -293,11 +332,17 @@ async def transcribe_and_analyze(file: UploadFile = File(...)) -> JSONResponse:
         vocabulary_score=round(vocab_score, 2),
         flow_score=flow_score,
         total_score=round(total, 2),
+        wordplay_score=round(wordplay_score, 2),
+        syllable_weight=round(syllable_weight_score, 2),
         word_count=len(lyrics.split()),
         line_count=line_count,
         avg_syllables_per_word=round(avg_syl, 2),
         vocabulary_uniqueness=ttr,
         detected_language=lang,
+        double_entendres_count=wordplay_meta["double_entendres_count"],
+        puns_count=wordplay_meta["puns_count"],
+        similes_count=wordplay_meta["simile_count"],
+        metaphors_count=wordplay_meta["metaphor_count"],
         alliteration_pairs=allit_pairs,
         rhyme_pairs=rhyme_pairs,
         multisyllabic_rhyme_count=multisyl_count,

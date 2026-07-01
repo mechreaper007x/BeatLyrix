@@ -172,11 +172,22 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
   const lyricsLines = track.lyricsText.split("\n");
   const wordCount = track.lyricsText.trim().split(/\s+/).filter((w: string) => w.trim() !== "").length;
 
-  const syllableScore = track.scoreBreakdown ? track.scoreBreakdown.syllableScore : 0;
-  const alliterationScore = track.scoreBreakdown ? track.scoreBreakdown.alliterationScore : 0;
-  const flowScore = track.scoreBreakdown ? track.scoreBreakdown.flowScore : 0;
+  const syllableScore = track.scoreBreakdown?.syllableScore ?? 0;
+  const alliterationScore = track.scoreBreakdown?.alliterationScore ?? 0;
+  const flowScore = track.scoreBreakdown?.flowScore ?? 0;
   const totalScore = track.totalScore || 0;
   const grade = track.grade || "PENDING";
+
+  // New metrics
+  const rhymeScore = track.scoreBreakdown?.rhymeScore ?? track.scoreBreakdown?.rhyme_score ?? 0;
+  const wordplayScore = track.scoreBreakdown?.wordplayScore ?? track.scoreBreakdown?.wordplay_score ?? 0;
+  const syllableWeight = track.scoreBreakdown?.syllableWeight ?? track.scoreBreakdown?.syllable_weight ?? 0;
+  const vocabularyUniqueness = track.scoreBreakdown?.vocabularyUniqueness ?? track.scoreBreakdown?.vocabulary_uniqueness ?? 0;
+
+  const doubleEntendresCount = track.scoreBreakdown?.doubleEntendresCount ?? track.scoreBreakdown?.double_entendres_count ?? 0;
+  const punsCount = track.scoreBreakdown?.punsCount ?? track.scoreBreakdown?.puns_count ?? 0;
+  const similesCount = track.scoreBreakdown?.similesCount ?? track.scoreBreakdown?.similes_count ?? 0;
+  const metaphorsCount = track.scoreBreakdown?.metaphorsCount ?? track.scoreBreakdown?.metaphors_count ?? 0;
 
   return (
     <div className="w-full flex flex-col bg-[#1c1410] text-[#ffffff] min-h-screen">
@@ -361,8 +372,95 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
                 </div>
               </div>
 
+              {/* Rhyme Complexity */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-xs font-bold text-white uppercase tracking-wider">
+                  <span>Rhyme Complexity</span>
+                  <span className="text-[#a8ff3e] font-sans">{rhymeScore}%</span>
+                </div>
+                <div 
+                  role="progressbar"
+                  aria-valuenow={rhymeScore}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  className="w-full bg-[#2a1518] rounded-full h-2.5 overflow-hidden border border-[#2a1518]/60"
+                >
+                  <div
+                    className="bg-[#a8ff3e] h-full rounded-full shadow-[0_0_8px_#a8ff3e] transition-all duration-300"
+                    style={{ width: `${rhymeScore}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Wordplay Score */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-xs font-bold text-white uppercase tracking-wider">
+                  <span>Wordplay Score</span>
+                  <span className="text-[#a8ff3e] font-sans">{wordplayScore}%</span>
+                </div>
+                <div 
+                  role="progressbar"
+                  aria-valuenow={wordplayScore}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  className="w-full bg-[#2a1518] rounded-full h-2.5 overflow-hidden border border-[#2a1518]/60"
+                >
+                  <div
+                    className="bg-[#a8ff3e] h-full rounded-full shadow-[0_0_8px_#a8ff3e] transition-all duration-300"
+                    style={{ width: `${wordplayScore}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Syllable Weight (Vocabulary) */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-xs font-bold text-white uppercase tracking-wider">
+                  <span>Syllable Weight (Vocabulary)</span>
+                  <span className="text-[#a8ff3e] font-sans">{syllableWeight}%</span>
+                </div>
+                <div 
+                  role="progressbar"
+                  aria-valuenow={syllableWeight}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  className="w-full bg-[#2a1518] rounded-full h-2.5 overflow-hidden border border-[#2a1518]/60"
+                >
+                  <div
+                    className="bg-[#a8ff3e] h-full rounded-full shadow-[0_0_8px_#a8ff3e] transition-all duration-300"
+                    style={{ width: `${syllableWeight}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Lyrical Statistics */}
+              <div className="border-t border-[#2a2a2a]/60 pt-4 mt-2">
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-3">Lyrical Breakdown</h3>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="flex justify-between bg-[#1a1a1a] p-2 rounded-lg border border-[#2a2a2a]">
+                    <span className="text-[#888888]">Similes</span>
+                    <span className="text-white font-bold">{similesCount}</span>
+                  </div>
+                  <div className="flex justify-between bg-[#1a1a1a] p-2 rounded-lg border border-[#2a2a2a]">
+                    <span className="text-[#888888]">Metaphors</span>
+                    <span className="text-white font-bold">{metaphorsCount}</span>
+                  </div>
+                  <div className="flex justify-between bg-[#1a1a1a] p-2 rounded-lg border border-[#2a2a2a]">
+                    <span className="text-[#888888]">Puns / Homophones</span>
+                    <span className="text-white font-bold">{punsCount}</span>
+                  </div>
+                  <div className="flex justify-between bg-[#1a1a1a] p-2 rounded-lg border border-[#2a2a2a]">
+                    <span className="text-[#888888]">Double Entendres</span>
+                    <span className="text-white font-bold">{doubleEntendresCount}</span>
+                  </div>
+                  <div className="flex justify-between bg-[#1a1a1a] p-2 rounded-lg border border-[#2a2a2a] col-span-2">
+                    <span className="text-[#888888]">Lexical Diversity (TTR)</span>
+                    <span className="text-white font-bold">{(vocabularyUniqueness * 100).toFixed(1)}%</span>
+                  </div>
+                </div>
+              </div>
+
               <p className="text-xs text-[#888888] italic font-sans mt-1 leading-normal">
-                Scores are AI-generated based on lyric analysis. Beat-sync scoring coming soon.
+                Scores are AI-generated based on lyric and beat analysis.
               </p>
 
               {/* Summary Row */}

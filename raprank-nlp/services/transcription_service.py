@@ -19,7 +19,12 @@ WHISPER_BASE_URL: str = os.getenv(
 ).rstrip("/")
 
 
-async def transcribe_audio(audio_bytes: bytes, filename: str) -> dict:
+async def transcribe_audio(
+    audio_bytes: bytes, 
+    filename: str, 
+    language: str | None = None,
+    lyrics: str | None = None
+) -> dict:
     """
     POST audio to raprank-whisper and return the parsed JSON response.
 
@@ -36,12 +41,16 @@ async def transcribe_audio(audio_bytes: bytes, filename: str) -> dict:
         httpx.TimeoutException — service took >120 s (common on cold start)
     """
     url = f"{WHISPER_BASE_URL}/transcribe"
-    logger.info("Sending %d bytes to %s", len(audio_bytes), url)
+    params = {"language": language} if language else {}
+    data = {"lyrics": lyrics} if lyrics else {}
+    logger.info("Sending %d bytes to %s (language hint: %s)", len(audio_bytes), url, language)
 
-    async with httpx.AsyncClient(timeout=900.0) as client:
+    async with httpx.AsyncClient(timeout=3600.0) as client:
         response = await client.post(
             url,
             files={"file": (filename, audio_bytes, _content_type(filename))},
+            params=params,
+            data=data,
         )
         response.raise_for_status()
         data = response.json()
