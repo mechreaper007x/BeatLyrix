@@ -1,11 +1,10 @@
--- Create the RapRank Database
-CREATE DATABASE raprank_db;
-
--- Create the RapRank Database User
-CREATE USER raprank_user WITH PASSWORD 'raprank123';
-
--- Grant Privileges
-GRANT ALL PRIVILEGES ON DATABASE raprank_db TO raprank_user;
-
--- Reset the superuser postgres password to 'postgres'
-ALTER USER postgres WITH PASSWORD 'postgres';
+-- ─────────────────────────────────────────────────────────────────────────────
+-- RapRank Database Setup (Safe for Docker and Local installs)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- NOTE: In docker-compose, the database 'raprank_db' and user 'raprank_user'
+-- are created automatically via environment variables. Executing raw CREATE DB
+-- or CREATE USER statements during startup will cause the container to crash.
+--
+-- This file is left empty/safe. For manual bare-metal setups, refer to the
+-- README.md or run these commands manually in your psql client.
+-- ─────────────────────────────────────────────────────────────────────────────

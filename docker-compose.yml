@@ -61,7 +61,7 @@ services:
     environment:
       WHISPER_API_URL: ${WHISPER_API_URL:-https://mechreaper007x-raprank-whisper.hf.space}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
