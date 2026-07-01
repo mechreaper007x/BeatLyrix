@@ -33,6 +33,10 @@ class AnalyzeRequest(BaseModel):
         default=None,
         description="Absolute URL to download the audio track for flow scoring.",
     )
+    track_id: Optional[int] = Field(
+        default=None,
+        description="Optional core registry database track ID for real-time status updates.",
+    )
 
 
 # ── Sub-models ────────────────────────────────────────────────────────────────

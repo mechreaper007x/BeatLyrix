@@ -44,6 +44,15 @@ public class TrackController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{id}/status")
+    public ResponseEntity<Void> updateTrackStatus(
+            @PathVariable Long id,
+            @RequestParam com.raprank.backend.entity.Track.TrackStatus status
+    ) {
+        trackService.updateTrackStatus(id, status);
+        return ResponseEntity.ok().build();
+    }
+
     private Long getArtistId(UserDetails userDetails) {
         return artistRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Artist not found"))

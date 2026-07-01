@@ -28,23 +28,7 @@ export default function UploadForm() {
     };
   }, [audioUrl]);
 
-  // Syllables checking animation text loops during analysis stage
-  useEffect(() => {
-    if (stage !== "analyzing") return;
-    const stages = [
-      "Checking syllables & cadence...",
-      "Analyzing multi-syllabic rhymes...",
-      "Scoring alliteration & wordplay...",
-      "Evaluating flow stability...",
-    ];
-    let idx = 0;
-    const interval = setInterval(() => {
-      idx = (idx + 1) % stages.length;
-      setAnalysisText(stages[idx]);
-    }, 1500);
-
-    return () => clearInterval(interval);
-  }, [stage]);
+  // Analysis text is set dynamically via real-time polling updates from the backend
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -182,13 +166,13 @@ export default function UploadForm() {
 
   const pollAnalysisStatus = (trackId: number) => {
     let attempts = 0;
-    const maxAttempts = 200; // 5 minutes timeout
+    const maxAttempts = 600; // 15 minutes timeout (at 1.5s intervals)
     
     const interval = setInterval(async () => {
       attempts++;
       if (attempts > maxAttempts) {
         clearInterval(interval);
-        setErrorMessage("Analysis polling timed out (5m). The external AI service took too long.");
+        setErrorMessage("Analysis polling timed out (15m). The external AI service took too long.");
         setStage("error");
         return;
       }
@@ -208,6 +192,19 @@ export default function UploadForm() {
           } else if (data.totalScore !== null && data.scoreBreakdown !== null) {
             clearInterval(interval);
             setStage("success");
+          } else {
+            // Dynamically set analysis text based on real status from backend
+            if (data.status === "PENDING") {
+              setAnalysisText("Registering track metadata...");
+            } else if (data.status === "DOWNLOADING_AUDIO") {
+              setAnalysisText("Downloading audio file for scoring...");
+            } else if (data.status === "TRANSCRIBING") {
+              setAnalysisText("Transcribing audio via Whisper AI (this may take a few minutes)...");
+            } else if (data.status === "ANALYZING_FLOW") {
+              setAnalysisText("Aligning vocals with beat-sync grid...");
+            } else if (data.status === "ANALYZING_TEXT") {
+              setAnalysisText("Calculating rhymes, alliteration, and cadence...");
+            }
           }
         } else {
           throw new Error(`Failed response from core backend: ${response.statusText}`);

@@ -38,7 +38,7 @@ async def transcribe_audio(audio_bytes: bytes, filename: str) -> dict:
     url = f"{WHISPER_BASE_URL}/transcribe"
     logger.info("Sending %d bytes to %s", len(audio_bytes), url)
 
-    async with httpx.AsyncClient(timeout=120.0) as client:
+    async with httpx.AsyncClient(timeout=900.0) as client:
         response = await client.post(
             url,
             files={"file": (filename, audio_bytes, _content_type(filename))},

@@ -73,6 +73,14 @@ public class TrackService {
         trackRepository.delete(track);
     }
 
+    @Transactional
+    public void updateTrackStatus(Long trackId, Track.TrackStatus status) {
+        Track track = trackRepository.findById(trackId)
+                .orElseThrow(() -> new RuntimeException("Track not found"));
+        track.setStatus(status);
+        trackRepository.save(track);
+    }
+
     public TrackResponse mapToTrackResponse(Track track) {
         long likeCount = interactionRepository.countByTrackIdAndType(track.getId(), Interaction.InteractionType.LIKE);
         long commentCount = interactionRepository.countByTrackIdAndType(track.getId(), Interaction.InteractionType.COMMENT);

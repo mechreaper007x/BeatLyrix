@@ -38,8 +38,9 @@ public class ScoringOrchestrationService {
     public void triggerAnalysis(Track track) {
         try {
             String url = pythonServiceUrl + "/analyze";
-            Map<String, String> request = new HashMap<>();
+            Map<String, Object> request = new HashMap<>();
             request.put("lyrics", track.getLyricsText());
+            request.put("track_id", track.getId());
             if (track.getAudioUrl() != null && !track.getAudioUrl().isEmpty()) {
                 request.put("audio_url", goServiceUrl + track.getAudioUrl());
             }

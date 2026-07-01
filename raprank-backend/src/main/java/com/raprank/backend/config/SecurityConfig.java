@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/leaderboard/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/tracks/{id}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/artists/{id}").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/tracks/{id}/status").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/tracks").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/tracks/{id}/like").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/tracks/{id}/comments").authenticated()

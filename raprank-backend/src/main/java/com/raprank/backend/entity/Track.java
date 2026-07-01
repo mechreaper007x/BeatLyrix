@@ -46,6 +46,12 @@ public class Track {
     }
 
     public enum TrackStatus {
-        PENDING, ANALYZED, FAILED
+        PENDING,
+        DOWNLOADING_AUDIO,
+        TRANSCRIBING,
+        ANALYZING_FLOW,
+        ANALYZING_TEXT,
+        ANALYZED,
+        FAILED
     }
 }
