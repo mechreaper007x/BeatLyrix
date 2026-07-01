@@ -85,7 +85,7 @@ async def analyze(request: AnalyzeRequest) -> ScoreBreakdown:
     allit_score, allit_pairs = alliteration_service.calculate(lyrics)
     vocab_score, ttr = vocabulary_service.calculate(lyrics)
 
-    # ── Flow scoring (only when word timestamps are provided) ─────────────
+    # ── Flow scoring (only when word timestamps or audio_url is provided) ─────────
     flow_score: float | None = None
     flow_meta: FlowMetadata | None = None
 
@@ -97,6 +97,31 @@ async def analyze(request: AnalyzeRequest) -> ScoreBreakdown:
             "/analyze received %d word timestamps but no audio — flow skipped",
             len(words_dicts),
         )
+    elif request.audio_url:
+        try:
+            logger.info("Downloading audio from %s for flow scoring...", request.audio_url)
+            filename = request.audio_url.split("/")[-1] or "audio.mp3"
+            import httpx
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                audio_res = await client.get(request.audio_url)
+                audio_res.raise_for_status()
+                audio_bytes = audio_res.content
+
+            logger.info("Transcribing downloaded audio for flow alignment...")
+            transcription = await transcribe_audio(audio_bytes, filename)
+            words_raw = transcription.get("words", [])
+
+            if words_raw:
+                raw_score, meta_dict = calculate_beat_sync(
+                    audio_bytes, filename, words_raw
+                )
+                if "error" not in meta_dict:
+                    flow_score = raw_score
+                    flow_meta = FlowMetadata(**meta_dict)
+                else:
+                    logger.warning("Beat sync returned error: %s", meta_dict["error"])
+        except Exception as exc:
+            logger.exception("Flow analysis from audio_url failed: %s", exc)
 
     # ── Weighted total ────────────────────────────────────────────────────
     if flow_score is not None:

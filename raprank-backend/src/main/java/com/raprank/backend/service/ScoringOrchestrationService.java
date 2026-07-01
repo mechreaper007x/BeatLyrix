@@ -30,6 +30,9 @@ public class ScoringOrchestrationService {
     @Value("${app.python.service.url}")
     private String pythonServiceUrl;
 
+    @Value("${app.go.service.url}")
+    private String goServiceUrl;
+
     @Async
     @Transactional
     public void triggerAnalysis(Track track) {
@@ -37,8 +40,12 @@ public class ScoringOrchestrationService {
             String url = pythonServiceUrl + "/analyze";
             Map<String, String> request = new HashMap<>();
             request.put("lyrics", track.getLyricsText());
+            if (track.getAudioUrl() != null && !track.getAudioUrl().isEmpty()) {
+                request.put("audio_url", goServiceUrl + track.getAudioUrl());
+            }
 
-            log.info("Sending track {} lyrics to NLP service...", track.getId());
+            log.info("Sending track {} to NLP service at {} (audio_url: {})...", 
+                    track.getId(), url, request.get("audio_url"));
             PyAnalysisResponse response = restTemplate.postForObject(url, request, PyAnalysisResponse.class);
 
             if (response != null) {

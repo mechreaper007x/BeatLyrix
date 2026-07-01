@@ -30,8 +30,8 @@ public class Score {
     @Column(nullable = false)
     private Double alliterationScore; // 0-100
 
-    @Column(nullable = false)
-    private Double flowScore;       // 0-100
+    @Column(nullable = true)
+    private Double flowScore;       // 0-100 (nullable if audio analysis fails or is missing)
 
     @Column(nullable = false)
     private Double totalScore;      // weighted average
