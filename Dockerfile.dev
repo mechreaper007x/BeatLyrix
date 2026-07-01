@@ -1,0 +1,18 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# RapRank — Frontend (Vite dev server)
+# Used only by docker-compose for local development.
+# ─────────────────────────────────────────────────────────────────────────────
+FROM node:20-alpine
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+# Source is mounted as a volume at runtime (see docker-compose.yml)
+# so this COPY is only used if the volume mount is absent.
+COPY . .
+
+EXPOSE 5173
+
+# --host 0.0.0.0 makes Vite reachable from outside the container
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

@@ -1,0 +1,150 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# RapRank — Docker Compose (Local Development)
+#
+# Usage:
+#   cp .env.example .env          # first time only
+#   docker-compose up --build     # start everything
+#   docker-compose down -v        # stop + wipe volumes
+#
+# Service map:
+#   postgres  → localhost:5432
+#   redis     → localhost:6379
+#   nlp       → localhost:8000   (FastAPI NLP scoring)
+#   upload    → localhost:9090   (Go audio upload)
+#   backend   → localhost:8080   (Spring Boot API)
+#   frontend  → localhost:5173   (Vite dev server)
+#
+# Whisper runs on Hugging Face Spaces (external) — no local service needed.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── PostgreSQL ────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: raprank_db
+      POSTGRES_USER: raprank_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-raprank123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./setup.sql:/docker-entrypoint-initdb.d/01_setup.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raprank_user -d raprank_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── NLP Scoring Service (FastAPI) ─────────────────────────────────────────
+  nlp:
+    build:
+      context: ./raprank-nlp
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      WHISPER_API_URL: ${WHISPER_API_URL:-https://mechreaper007x-raprank-whisper.hf.space}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── Audio Upload Service (Go) ─────────────────────────────────────────────
+  upload:
+    build:
+      context: ./raprank-upload
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      # Persist uploaded audio files across container restarts
+      - uploads:/app/uploads/audio
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── Spring Boot Backend ───────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./raprank-backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # ── Database ───────────────────────────────
+      # "postgres" = Docker service name (resolves via internal DNS)
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/raprank_db
+      SPRING_DATASOURCE_USERNAME: raprank_user
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-raprank123}
+      # ── Redis ──────────────────────────────────
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      # ── JWT ────────────────────────────────────
+      APP_JWT_SECRET: ${JWT_SECRET:-raprank-super-secret-key-minimum-32-chars-long-2026}
+      APP_JWT_EXPIRATION: 86400000
+      # ── Internal microservices ─────────────────
+      # Use Docker service names — NOT localhost
+      APP_PYTHON_SERVICE_URL: http://nlp:8000
+      APP_GO_SERVICE_URL: http://upload:9090
+      # ── Storage ────────────────────────────────
+      APP_STORAGE_AUDIO_DIR: uploads/audio
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nlp:
+        condition: service_healthy
+      upload:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── Frontend (Vite dev server) ────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      # Mount source for hot reload — node_modules stays inside container
+      - .:/app
+      - /app/node_modules
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080
+      VITE_UPLOAD_URL: http://localhost:9090
+    depends_on:
+      - backend
+
+# ── Named volumes ─────────────────────────────────────────────────────────────
+volumes:
+  pgdata:
+  uploads:

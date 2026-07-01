@@ -28,7 +28,7 @@ func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[String]string{"status": "ok", "service": "raprank-upload"})
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok", "service": "raprank-upload"})
 }
 
 func main() {
