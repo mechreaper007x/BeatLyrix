@@ -29,6 +29,10 @@ class AnalyzeRequest(BaseModel):
             "When provided, enables flow/beat-sync scoring without audio."
         ),
     )
+    audio_url: Optional[str] = Field(
+        default=None,
+        description="Absolute URL to download the audio track for flow scoring.",
+    )
 
 
 # ── Sub-models ────────────────────────────────────────────────────────────────
