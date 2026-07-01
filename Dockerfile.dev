@@ -12,7 +12,7 @@ RUN npm install
 # so this COPY is only used if the volume mount is absent.
 COPY . .
 
-EXPOSE 5173
+EXPOSE 3000
 
 # --host 0.0.0.0 makes Vite reachable from outside the container
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
