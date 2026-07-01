@@ -1,15 +1,80 @@
-from pydantic import BaseModel
-from typing import List
+"""
+Pydantic schemas for RapRank NLP Service v2.
+"""
+from __future__ import annotations
+
+from typing import List, Optional
+from pydantic import BaseModel, Field
+
+
+# ── Request ───────────────────────────────────────────────────────────────────
+
+class WordTimestamp(BaseModel):
+    """Word-level timing entry from faster-whisper."""
+    word: str
+    start: float
+    end: float
+
 
 class AnalyzeRequest(BaseModel):
-    lyrics: str
+    lyrics: str = Field(..., description="Full lyric text to analyse.")
+    language: str = Field(
+        default="auto",
+        description="ISO language hint: 'en', 'hi', or 'auto' for auto-detect.",
+    )
+    words: Optional[List[WordTimestamp]] = Field(
+        default=None,
+        description=(
+            "Word-level timestamps from faster-whisper. "
+            "When provided, enables flow/beat-sync scoring without audio."
+        ),
+    )
+
+
+# ── Sub-models ────────────────────────────────────────────────────────────────
+
+class RhymeMatch(BaseModel):
+    """A detected rhyme pair between two lyric lines."""
+    line_a: int = Field(..., description="0-based index of the first line.")
+    line_b: int = Field(..., description="0-based index of the second line.")
+    word_a: str
+    word_b: str
+    is_multisyllabic: bool = Field(
+        ..., description="True when ≥2 syllable groups match (richer rhyme)."
+    )
+
+
+class FlowMetadata(BaseModel):
+    """Diagnostic data from beat-sync analysis."""
+    tempo_bpm: float
+    on_beat_ratio: float = Field(..., description="Fraction of word onsets landing on a beat.")
+    avg_deviation_ms: float = Field(..., description="Mean ms distance from nearest beat.")
+    words_analyzed: int
+
+
+# ── Response ──────────────────────────────────────────────────────────────────
 
 class ScoreBreakdown(BaseModel):
-    syllable_score: float
-    alliteration_score: float
-    flow_score: float
-    total_score: float
+    # ── Core scores ──────────────────────────────────────────
+    syllable_score: float = Field(..., ge=0, le=100)
+    rhyme_score: float = Field(..., ge=0, le=100)
+    alliteration_score: float = Field(..., ge=0, le=100)
+    vocabulary_score: float = Field(..., ge=0, le=100)
+    flow_score: Optional[float] = Field(
+        default=None,
+        description="Beat-sync score (0-100). null when audio not provided.",
+    )
+    total_score: float = Field(..., ge=0, le=100)
+
+    # ── Stats ─────────────────────────────────────────────────
     word_count: int
     line_count: int
     avg_syllables_per_word: float
+    vocabulary_uniqueness: float = Field(..., description="Type-token ratio (0-1).")
+    detected_language: str = Field(..., description="'en', 'hi', or 'mixed'.")
+
+    # ── Detail lists ─────────────────────────────────────────
     alliteration_pairs: List[str]
+    rhyme_pairs: List[RhymeMatch]
+    multisyllabic_rhyme_count: int
+    flow_metadata: Optional[FlowMetadata] = None
