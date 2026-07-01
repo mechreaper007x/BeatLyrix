@@ -182,13 +182,13 @@ export default function UploadForm() {
 
   const pollAnalysisStatus = (trackId: number) => {
     let attempts = 0;
-    const maxAttempts = 60; // 90 seconds timeout
+    const maxAttempts = 200; // 5 minutes timeout
     
     const interval = setInterval(async () => {
       attempts++;
       if (attempts > maxAttempts) {
         clearInterval(interval);
-        setErrorMessage("Analysis polling timed out (90s). The scoring service took too long.");
+        setErrorMessage("Analysis polling timed out (5m). The external AI service took too long.");
         setStage("error");
         return;
       }
