@@ -15,6 +15,7 @@ export default function UploadForm() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [analysisText, setAnalysisText] = useState("Checking syllables...");
   const [newTrackId, setNewTrackId] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -119,6 +120,7 @@ export default function UploadForm() {
 
     setStage("uploading");
     setUploadProgress(10);
+    setErrorMessage(null);
 
     try {
       // 1. Upload to Go Service (port 9090)
@@ -132,7 +134,7 @@ export default function UploadForm() {
       });
 
       if (!goResponse.ok) {
-        throw new Error("Failed to upload audio to file storage.");
+        throw new Error("Failed to upload audio to file storage service.");
       }
 
       setUploadProgress(70);
@@ -160,7 +162,7 @@ export default function UploadForm() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to submit track to core registry.");
+        throw new Error("Failed to submit track to core registry service.");
       }
 
       const trackData = await response.json();
@@ -173,6 +175,7 @@ export default function UploadForm() {
 
     } catch (err: any) {
       console.error("Upload/Analysis error:", err);
+      setErrorMessage(err.message || String(err));
       setStage("error");
     }
   };
@@ -185,6 +188,7 @@ export default function UploadForm() {
       attempts++;
       if (attempts > maxAttempts) {
         clearInterval(interval);
+        setErrorMessage("Analysis polling timed out (45s). The scoring service took too long.");
         setStage("error");
         return;
       }
@@ -197,13 +201,21 @@ export default function UploadForm() {
 
         if (response.ok) {
           const data = await response.json();
-          if (data.totalScore !== null && data.scoreBreakdown !== null) {
+          if (data.status === "FAILED") {
+            clearInterval(interval);
+            setErrorMessage("Lyric analysis failed in background. Check backend logs.");
+            setStage("error");
+          } else if (data.totalScore !== null && data.scoreBreakdown !== null) {
             clearInterval(interval);
             setStage("success");
           }
+        } else {
+          throw new Error(`Failed response from core backend: ${response.statusText}`);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error polling status:", err);
+        // Do not immediately fail for temporary polling errors, just log it.
+        // If it persists, it will time out.
       }
     }, 1500);
   };
@@ -213,6 +225,7 @@ export default function UploadForm() {
     setLyrics("");
     removeFile();
     setNewTrackId(null);
+    setErrorMessage(null);
     setStage("idle");
   };
 
@@ -580,6 +593,12 @@ export default function UploadForm() {
             <p className="text-sm font-semibold text-rose-300/80 max-w-sm mx-auto">
               Ingestion service did not respond. Check your internet connection and verify that your Spring Boot auth endpoints are running.
             </p>
+            {errorMessage && (
+              <div className="mt-4 p-3 bg-red-950/30 border border-red-500/20 rounded-xl text-xs font-mono text-rose-400 max-w-md mx-auto select-text break-all">
+                <span className="font-bold uppercase block mb-1">Error Debugger Log:</span>
+                {errorMessage}
+              </div>
+            )}
           </div>
 
           {/* Action buttons */}

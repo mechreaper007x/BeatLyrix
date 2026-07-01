@@ -23,5 +23,6 @@ public class TrackResponse {
     private long likeCount;
     private long commentCount;
     private LocalDateTime createdAt;
+    private String status;         // PENDING, ANALYZED, FAILED
     private ScoreBreakdownResponse scoreBreakdown;
 }

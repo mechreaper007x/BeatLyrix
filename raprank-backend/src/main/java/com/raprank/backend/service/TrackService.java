@@ -107,6 +107,7 @@ public class TrackService {
                 .likeCount(likeCount)
                 .commentCount(commentCount)
                 .createdAt(track.getCreatedAt())
+                .status(track.getStatus().name())
                 .scoreBreakdown(breakdown)
                 .build();
     }
