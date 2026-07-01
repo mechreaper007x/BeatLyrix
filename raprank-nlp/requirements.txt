@@ -1,0 +1,5 @@
+fastapi==0.111.0
+uvicorn==0.30.0
+pyphen==0.14.0
+syllapy==0.2.2
+pydantic==2.7.0
