@@ -58,6 +58,8 @@ class FlowMetadata(BaseModel):
     on_beat_ratio: float = Field(..., description="Fraction of word onsets landing on a beat.")
     avg_deviation_ms: float = Field(..., description="Mean ms distance from nearest beat.")
     words_analyzed: int
+    syllable_rate: Optional[float] = Field(default=None, description="Syllables per second.")
+    complexity_bonus: Optional[float] = Field(default=None, description="Flow complexity bonus.")
 
 
 # ── Response ──────────────────────────────────────────────────────────────────

@@ -71,6 +71,51 @@ def _multi_rhyme_key_hi(word: str) -> Optional[str]:
     return word[-5:] if len(word) >= 5 else None
 
 
+# ── Hinglish helpers ──────────────────────────────────────────────────────────
+
+def normalize_hinglish(word: str) -> str:
+    word = word.lower()
+    word = word.replace("aa", "a")
+    word = word.replace("ee", "i")
+    word = word.replace("oo", "u")
+    word = word.replace("bh", "b")
+    word = word.replace("dh", "d")
+    word = word.replace("kh", "k")
+    word = word.replace("gh", "g")
+    word = word.replace("ph", "f")
+    word = word.replace("th", "t")
+    word = word.replace("ch", "c")
+    word = word.replace("sh", "s")
+    return word
+
+
+def _rhyme_key_hinglish(word: str) -> Optional[str]:
+    word = normalize_hinglish(word)
+    if len(word) < 2:
+        return None
+    
+    vowels = "aeiouy"
+    vowel_idxs = []
+    i = 0
+    while i < len(word):
+        if word[i] in vowels:
+            vowel_idxs.append(i)
+            while i < len(word) and word[i] in vowels:
+                i += 1
+        else:
+            i += 1
+            
+    if not vowel_idxs:
+        return None
+        
+    if len(vowel_idxs) >= 2:
+        start_idx = vowel_idxs[-2]
+    else:
+        start_idx = vowel_idxs[-1]
+        
+    return word[start_idx:]
+
+
 # ── Last-word extraction ───────────────────────────────────────────────────────
 
 def _last_word(line: str) -> Optional[str]:
@@ -124,10 +169,37 @@ def calculate(lyrics: str) -> tuple[float, list[RhymeMatch], int]:
                 key_b = _rhyme_key_en(word_b)
                 multi_a = _multi_rhyme_key_en(word_a)
                 multi_b = _multi_rhyme_key_en(word_b)
-                is_multi = bool(
-                    multi_a and multi_b and multi_a == multi_b
-                    and len(multi_a) > 2
-                )
+                
+                is_hinglish_a = (key_a is None)
+                is_hinglish_b = (key_b is None)
+                
+                if is_hinglish_a or is_hinglish_b:
+                    key_a = _rhyme_key_hinglish(word_a)
+                    key_b = _rhyme_key_hinglish(word_b)
+                    
+                    def count_vowels_hinglish(suffix: Optional[str]) -> int:
+                        if not suffix:
+                            return 0
+                        vowels = "aeiouy"
+                        count = 0
+                        i = 0
+                        while i < len(suffix):
+                            if suffix[i] in vowels:
+                                count += 1
+                                while i < len(suffix) and suffix[i] in vowels:
+                                    i += 1
+                            else:
+                                i += 1
+                        return count
+                        
+                    is_multi = bool(
+                        key_a and key_b and key_a == key_b and count_vowels_hinglish(key_a) >= 2
+                    )
+                else:
+                    is_multi = bool(
+                        multi_a and multi_b and multi_a == multi_b
+                        and len(multi_a) > 2
+                    )
 
             if key_a and key_b and key_a == key_b:
                 pair = (idx_a, idx_b)

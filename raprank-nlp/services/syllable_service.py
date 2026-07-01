@@ -35,7 +35,7 @@ def _count_hindi(word: str) -> int:
     """
     Each vowel nucleus = 1 syllable.
     Independent vowel OR matra    → +1
-    Consonant NOT followed by halant → +1 (inherent 'a' is present)
+    Consonant NOT followed by halant or matra → +1 (inherent 'a' is present)
     """
     chars = list(word)
     count = 0
@@ -43,9 +43,9 @@ def _count_hindi(word: str) -> int:
         if ch in _DEVA_VOWELS or ch in _DEVA_MATRAS:
             count += 1
         elif "\u0900" <= ch <= "\u0939" or "\u0958" <= ch <= "\u095F":
-            # It's a consonant — count if NOT followed by halant
+            # It's a consonant — count if NOT followed by halant or matra
             nxt = chars[i + 1] if i + 1 < len(chars) else ""
-            if nxt != _HALANT:
+            if nxt != _HALANT and nxt not in _DEVA_MATRAS:
                 count += 1
     return max(count, 1)
 

@@ -19,6 +19,9 @@ import logging
 import os
 import tempfile
 
+from services.syllable_service import count_syllables
+from services.language_utils import clean_word
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -98,6 +101,27 @@ def calculate_beat_sync(
         on_beat_ratio = on_beat / len(word_starts)
         avg_dev_ms = (sum(deviations) / len(deviations)) * 1000.0
 
+        # Calculate syllable density / complexity bonus
+        total_syllables = 0
+        for w in words:
+            word_str = w.get("word", "")
+            cleaned = clean_word(word_str)
+            if cleaned:
+                total_syllables += count_syllables(cleaned)
+                
+        # Calculate active track duration (first word start to last word end)
+        start_time = words[0].get("start", 0.0)
+        end_time = words[-1].get("end", start_time + 1.0)
+        duration = max(end_time - start_time, 1.0)
+        
+        syllable_rate = total_syllables / duration
+        
+        # Scaling complexity bonus: up to +15 points for rates > 3.0 syllables/sec, maxing out at 6.0 syllables/sec
+        if syllable_rate > 3.0:
+            complexity_bonus = min(((syllable_rate - 3.0) / 3.0) * 15.0, 15.0)
+        else:
+            complexity_bonus = 0.0
+
         # Piecewise scoring curve
         r = on_beat_ratio
         if r < 0.10:
@@ -113,15 +137,20 @@ def calculate_beat_sync(
         else:
             score = min(92.0 + (r - 0.80) * 40.0, 100.0)
 
+        # Apply complexity bonus to flow score
+        score = min(score + complexity_bonus, 100.0)
+
         metadata = {
             "tempo_bpm": round(tempo, 1),
             "on_beat_ratio": round(on_beat_ratio, 4),
             "avg_deviation_ms": round(avg_dev_ms, 1),
             "words_analyzed": len(word_starts),
+            "syllable_rate": round(syllable_rate, 2),
+            "complexity_bonus": round(complexity_bonus, 2),
         }
         logger.info(
-            "Beat sync: tempo=%.1f BPM, on_beat=%.1f%%, score=%.1f",
-            tempo, on_beat_ratio * 100, score,
+            "Beat sync: tempo=%.1f BPM, on_beat=%.1f%%, syllable_rate=%.2f syl/sec, complexity_bonus=%.2f, score=%.1f",
+            tempo, on_beat_ratio * 100, syllable_rate, complexity_bonus, score,
         )
         return round(score, 2), metadata
 

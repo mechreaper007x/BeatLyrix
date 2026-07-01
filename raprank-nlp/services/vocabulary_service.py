@@ -26,7 +26,8 @@ _STOP_EN: frozenset[str] = frozenset({
 
 def calculate(lyrics: str) -> tuple[float, float]:
     """
-    Returns (vocabulary_score 0-100, ttr 0.0-1.0).
+    Returns (vocabulary_score 0-100, msttr 0.0-1.0).
+    Uses Mean Segmental Type-Token Ratio (MSTTR) with segment size of 50.
     """
     words: list[str] = []
     for line in content_lines(lyrics):
@@ -38,18 +39,31 @@ def calculate(lyrics: str) -> tuple[float, float]:
     if not words:
         return 0.0, 0.0
 
-    ttr = len(set(words)) / len(words)
-
-    # Piecewise scoring: TTR ≥ 0.7 is excellent in rap
-    if ttr < 0.3:
-        score = (ttr / 0.3) * 30.0
-    elif ttr < 0.5:
-        score = 30.0 + ((ttr - 0.3) / 0.2) * 30.0
-    elif ttr < 0.7:
-        score = 60.0 + ((ttr - 0.5) / 0.2) * 25.0
-    elif ttr < 0.85:
-        score = 85.0 + ((ttr - 0.7) / 0.15) * 12.0
+    segment_size = 50
+    ttr_values = []
+    
+    # Divide the words into segments of size 50
+    for i in range(0, len(words), segment_size):
+        segment = words[i:i + segment_size]
+        if len(segment) == segment_size:
+            ttr_values.append(len(set(segment)) / segment_size)
+            
+    # Fallback to standard TTR if text is shorter than the segment size
+    if not ttr_values:
+        msttr = len(set(words)) / len(words)
     else:
-        score = min(97.0 + (ttr - 0.85) * 20.0, 100.0)
+        msttr = sum(ttr_values) / len(ttr_values)
 
-    return round(score, 2), round(ttr, 4)
+    # Piecewise scoring: MSTTR thresholds adjusted for typical values
+    if msttr < 0.50:
+        score = (msttr / 0.50) * 30.0
+    elif msttr < 0.65:
+        score = 30.0 + ((msttr - 0.50) / 0.15) * 30.0
+    elif msttr < 0.78:
+        score = 60.0 + ((msttr - 0.65) / 0.13) * 20.0
+    elif msttr < 0.88:
+        score = 80.0 + ((msttr - 0.78) / 0.10) * 15.0
+    else:
+        score = min(95.0 + ((msttr - 0.88) / 0.12) * 5.0, 100.0)
+
+    return round(score, 2), round(msttr, 4)
