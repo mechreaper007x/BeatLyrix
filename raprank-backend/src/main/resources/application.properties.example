@@ -1,8 +1,8 @@
 # ─── Database ───────────────────────────────────────────
 spring.datasource.url=jdbc:postgresql://localhost:5432/raprank_db
-spring.datasource.username=raprank_user
-spring.datasource.password=raprank123
+spring.datasource.username=YOUR_DB_USER
 spring.datasource.driver-class-name=org.postgresql.Driver
+spring.datasource.password=YOUR_DB_PASSWORD
 
 # ─── JPA ────────────────────────────────────────────────
 spring.jpa.hibernate.ddl-auto=update
@@ -15,7 +15,8 @@ spring.data.redis.host=localhost
 spring.data.redis.port=6379
 
 # ─── JWT ────────────────────────────────────────────────
-app.jwt.secret=raprank-super-secret-key-minimum-32-chars-long-2026
+# Generate a strong random secret: openssl rand -base64 48
+app.jwt.secret=YOUR_JWT_SECRET_MIN_32_CHARS
 app.jwt.expiration=86400000
 
 # ─── File Upload ────────────────────────────────────────

@@ -48,6 +48,9 @@ target/
 *.war
 *.zip
 
+# spring secrets — never commit real credentials
+raprank-backend/src/main/resources/application.properties
+
 # go binaries
 *.exe
 /raprank-upload/raprank-upload
