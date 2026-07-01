@@ -74,7 +74,8 @@ def calculate_beat_sync(
 
         beat_times: list[float] = librosa.frames_to_time(beat_frames, sr=sr).tolist()
         beat_period = 60.0 / tempo  # seconds per beat
-        tolerance = beat_period / 8  # ±12.5% of a beat
+        grid_size = beat_period / 4.0 # 16th notes
+        tolerance = grid_size / 3.0 # strict pocket: ±8.3% of a quarter note
 
         # Evaluate each word onset
         word_starts = [w["start"] for w in words if "start" in w]
@@ -85,8 +86,11 @@ def calculate_beat_sync(
         deviations: list[float] = []
 
         for onset in word_starts:
-            nearest = min(beat_times, key=lambda bt: abs(bt - onset))
-            dev = abs(nearest - onset)
+            closest_beat = min(beat_times, key=lambda bt: abs(bt - onset))
+            offset = onset - closest_beat
+            nearest_grid_offset = round(offset / grid_size) * grid_size
+            dev = abs(offset - nearest_grid_offset)
+            
             deviations.append(dev)
             if dev <= tolerance:
                 on_beat += 1

@@ -65,33 +65,39 @@ def calculate(lyrics: str) -> tuple[float, float]:
     Returns (syllable_score 0-100, avg_syllables_per_word).
     """
     total_syllables = 0
-    total_words = 0
+    total_lines = 0
 
     for line in content_lines(lyrics):
+        line_syllables = 0
+        words_in_line = 0
         for raw_word in line.split():
             word = clean_word(raw_word)
             if not word:
                 continue
-            total_syllables += count_syllables(word)
-            total_words += 1
+            line_syllables += count_syllables(word)
+            words_in_line += 1
+            
+        if words_in_line > 0:
+            total_syllables += line_syllables
+            total_lines += 1
 
-    if total_words == 0:
+    if total_lines == 0:
         return 0.0, 0.0
 
-    avg = total_syllables / total_words
+    avg_syllables_per_line = total_syllables / total_lines
 
-    # Piecewise linear scoring curve
-    if avg < 1.1:
+    # Piecewise linear scoring curve based on syllables per line
+    if avg_syllables_per_line < 6.0:
         score = 30.0
-    elif avg < 1.5:
-        score = 30.0 + ((avg - 1.1) / 0.4) * 20.0
-    elif avg < 2.0:
-        score = 50.0 + ((avg - 1.5) / 0.5) * 20.0
-    elif avg < 2.5:
-        score = 70.0 + ((avg - 2.0) / 0.5) * 15.0
-    elif avg < 3.0:
-        score = 85.0 + ((avg - 2.5) / 0.5) * 10.0
+    elif avg_syllables_per_line < 8.0:
+        score = 30.0 + ((avg_syllables_per_line - 6.0) / 2.0) * 20.0
+    elif avg_syllables_per_line < 10.0:
+        score = 50.0 + ((avg_syllables_per_line - 8.0) / 2.0) * 20.0
+    elif avg_syllables_per_line < 12.0:
+        score = 70.0 + ((avg_syllables_per_line - 10.0) / 2.0) * 15.0
+    elif avg_syllables_per_line < 14.0:
+        score = 85.0 + ((avg_syllables_per_line - 12.0) / 2.0) * 10.0
     else:
-        score = min(95.0 + (avg - 3.0) * 5.0, 100.0)
+        score = min(95.0 + (avg_syllables_per_line - 14.0) * 2.5, 100.0)
 
-    return round(score, 2), round(avg, 2)
+    return round(score, 2), round(avg_syllables_per_line, 2)
