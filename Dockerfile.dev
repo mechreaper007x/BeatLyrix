@@ -6,7 +6,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Source is mounted as a volume at runtime (see docker-compose.yml)
 # so this COPY is only used if the volume mount is absent.
