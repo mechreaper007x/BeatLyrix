@@ -14,8 +14,7 @@ import logging
 
 import pronouncing
 
-from services.language_utils import is_hindi_word, clean_word, content_lines, devanagari_to_roman
-from services.vocabulary_service import _STOP_WORDS
+from services.language_utils import is_hindi_word, clean_word, content_lines, devanagari_to_roman, get_multilingual_stopwords
 
 logger = logging.getLogger(__name__)
 
@@ -23,53 +22,51 @@ logger = logging.getLogger(__name__)
 def _first_sound(word: str) -> str | None:
     """
     Return the base sound character or phoneme for the start of the word.
-    Handles English pronunciation lookup and Devanagari transliteration.
+    Handles Devanagari consonants directly, falls back to CMU phonetic mapping.
     """
-    word = word.strip().lower()
     if not word:
         return None
-
-    # If Hindi Devanagari, convert to Roman first to unify spelling
     if is_hindi_word(word):
-        word = devanagari_to_roman(word).lower()
+        # Return first character (Devanagari consonant)
+        return word[0]
 
-    # Clean non-alphanumeric at start
-    word = re.sub(r"^[^a-z0-9]+", "", word)
-    if not word:
-        return None
-
-    # Try English pronouncing dict lookup
-    phones = pronouncing.phones_for_word(word)
-    if phones:
-        first_phone = phones[0].split()[0]
-        # Strip numbers (stress markings on vowels)
-        return re.sub(r"\d+", "", first_phone)
-
-    # For Hinglish/transliterated words, take the first 1 or 2 characters
-    if len(word) >= 2 and word.startswith(("kh", "gh", "ch", "jh", "th", "dh", "ph", "bh", "sh")):
-        return word[:2]
-
-    ch = word[0]
-    return ch if ch.isalpha() else None
+    # English phonetic lookup
+    phones_list = pronouncing.phones_for_word(word)
+    if phones_list:
+        # Extract the first phoneme (consonant or vowel stress)
+        first_phone = phones_list[0].split()[0]
+        # Strip trailing numbers (stress markers)
+        return re.sub(r"\d", "", first_phone)
+    
+    # Fallback to character start
+    return word[0].lower()
 
 
 def _normalize_hinglish_sound(sound: str) -> str:
-    """Normalize aspirated and transliterated consonant clusters to a base phoneme."""
-    mapping = {
-        "kh": "k",
-        "gh": "g",
-        "ch": "c",
-        "jh": "j",
-        "th": "t",
-        "dh": "d",
-        "ph": "p",
-        "bh": "b",
-        "sh": "s"
+    """Consolidate Hinglish consonant sounds (e.g., kh/k -> k)."""
+    # Devanagari mapping
+    deva_map = {
+        'ख': 'क', 'घ': 'ग', 'छ': 'च', 'झ': 'ज', 'ठ': 'ट', 'ढ': 'ड',
+        'थ': 'त', 'ध': 'द', 'फ': 'प', 'भ': 'ब', 'श': 'स', 'ष': 's'
     }
-    return mapping.get(sound, sound)
+    if sound in deva_map:
+        return deva_map[sound]
+    # English/Roman phonetic mapping (lowercased)
+    snd = sound.lower()
+    if snd.startswith("kh"): return "k"
+    if snd.startswith("gh"): return "g"
+    if snd.startswith("ch"): return "c"
+    if snd.startswith("jh"): return "j"
+    if snd.startswith("th"): return "t"
+    if snd.startswith("dh"): return "d"
+    if snd.startswith("ph"): return "p"
+    if snd.startswith("bh"): return "b"
+    if snd.startswith("sh"): return "s"
+    return snd
 
 
 def _clean(word: str) -> str:
+    # Preserve Devanagari chars during punctuation stripping
     return re.sub(r"[^\w\u0900-\u097F]", "", word).strip()
 
 
@@ -81,11 +78,12 @@ def calculate(lyrics: str) -> tuple[float, list[str]]:
     allit_details: list[str] = []
     total_allit_weight = 0.0
     valid_lines_count = 0
+    stop_words = get_multilingual_stopwords()
 
     for line in lines:
         words = [_clean(w) for w in line.split()]
         # Filter out empty words, stop words, and single-letter words
-        words = [w for w in words if w and len(w) > 1 and w.lower() not in _STOP_WORDS]
+        words = [w for w in words if w and len(w) > 1 and w.lower() not in stop_words]
         if len(words) < 3:
             continue
 
