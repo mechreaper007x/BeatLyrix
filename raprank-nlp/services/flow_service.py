@@ -117,7 +117,7 @@ def calculate_beat_sync(
             if int_dur <= 0.1:
                 continue
             
-            syl_in_int = sum(1 for onset in refined_onsets if int_start <= onset < int_end)
+            syl_in_int = sum(1 for onset in onsets_only if int_start <= onset < int_end)
             rates.append(syl_in_int / int_dur)
 
         if len(rates) > 1:
