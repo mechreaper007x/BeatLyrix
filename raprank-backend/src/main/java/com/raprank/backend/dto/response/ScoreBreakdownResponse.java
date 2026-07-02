@@ -53,4 +53,7 @@ public class ScoreBreakdownResponse {
 
     @JsonAlias("generated_lyrics")
     private String generatedLyrics;
+
+    @JsonAlias("wordplay_explanation")
+    private String wordplayExplanation;
 }

@@ -188,6 +188,7 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
   const punsCount = track.scoreBreakdown?.punsCount ?? track.scoreBreakdown?.puns_count ?? 0;
   const similesCount = track.scoreBreakdown?.similesCount ?? track.scoreBreakdown?.similes_count ?? 0;
   const metaphorsCount = track.scoreBreakdown?.metaphorsCount ?? track.scoreBreakdown?.metaphors_count ?? 0;
+  const wordplayExplanation = track.scoreBreakdown?.wordplayExplanation ?? track.scoreBreakdown?.wordplay_explanation;
 
   return (
     <div className="w-full flex flex-col bg-[#1c1410] text-[#ffffff] min-h-screen">
@@ -471,6 +472,34 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
                   </div>
                 </div>
               </div>
+
+              {/* Wordplay Explanation Accordion */}
+              {wordplayExplanation && (
+                <div className="bg-[#1a1a1a] border border-[#2a2a2a] hover:border-[#a8ff3e]/40 rounded-2xl p-4.5 mt-4 space-y-3 transition-colors duration-300 shadow-lg">
+                  <div className="flex items-center gap-2 border-b border-[#2a2a2a]/80 pb-2.5">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 text-[#a8ff3e]"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                      />
+                    </svg>
+                    <h4 className="text-xs font-bold text-[#a8ff3e] uppercase tracking-wider">
+                      Wordplay Critique & Analysis
+                    </h4>
+                  </div>
+                  <div className="text-xs text-rose-100/80 font-sans leading-relaxed whitespace-pre-line select-text max-h-72 overflow-y-auto pr-1">
+                    {wordplayExplanation}
+                  </div>
+                </div>
+              )}
 
               <p className="text-xs text-[#888888] italic font-sans mt-1 leading-normal">
                 Scores are AI-generated based on lyric and beat analysis.

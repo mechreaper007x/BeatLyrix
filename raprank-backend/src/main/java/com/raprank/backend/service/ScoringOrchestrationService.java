@@ -121,5 +121,6 @@ public class ScoringOrchestrationService {
         private Integer similes_count;
         private Integer metaphors_count;
         private String generated_lyrics;
+        private String wordplay_explanation;
     }
 }
