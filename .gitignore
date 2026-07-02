@@ -61,3 +61,12 @@ __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
+.venv/
+venv/
+ENV/
+**/__pycache__/
+
+# BeatLyrix local uploads & generated test outputs
+/raprank-upload/uploads/audio/*.mp3
+raprank-nlp/*.txt
+raprank-nlp/*.log
