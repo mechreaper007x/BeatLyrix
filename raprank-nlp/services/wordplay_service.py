@@ -23,17 +23,17 @@ ALL_STOP_WORDS = get_multilingual_stopwords()
 RAP_DOUBLE_ENTENDRE_WORDS: Set[str] = scoring_config.WORDPLAY["RAP_DOUBLE_ENTENDRE_WORDS"]
 
 # Regex patterns for similes
-# 1. "like [noun]" (checked programmatically for preceding pronouns)
+# 1. "like [noun]" (checked programmatically for preceding pronouns, allowing optional articles)
 # 2. "as [adj] as [noun]"
 # 3. Hindi/Hinglish particles like jaise, jaisa, jaisi, tarah
-SIMILE_LIKE_RE = re.compile(r"\blike\s+([a-zA-Z\u0900-\u097F]+)\b", re.IGNORECASE)
+SIMILE_LIKE_RE = re.compile(r"\blike\s+(?:a\s+|an\s+|the\s+|my\s+|your\s+|our\s+)?([a-zA-Z\u0900-\u097F]+)\b", re.IGNORECASE)
 SIMILE_AS_AS_RE = re.compile(r"\bas\s+\w+\s+as\s+(\w+)\b", re.IGNORECASE)
 SIMILE_HINDI_RE = re.compile(r"\b(\w+)\s+(jaise|jaisa|jaisi|tarah|जैसे|जैसा|जैसी|तरह)\b", re.IGNORECASE)
-SIMILE_HINDI_PRE_RE = re.compile(r"\b(jaise|jaisa|jaisi|जैसे|जैसा|जैसी)\s+([a-zA-Z\u0900-\u097F]+)\b", re.IGNORECASE)
+SIMILE_HINDI_PRE_RE = re.compile(r"\b(jaise|jaisa|jaisi|जैसे|जैसा|जैसी)\s+(?:[a-zA-Z\u0900-\u097F]+\s+){0,2}([a-zA-Z\u0900-\u097F]+)\b", re.IGNORECASE)
 
 # Regex patterns for copula metaphors (e.g. "I am a beast", "main hoon aag")
-METAPHOR_IM_RE = re.compile(r"\b(i\s+am|i\'m|you\s+are|you\'re|he\s+is|he\'s|she\s+is|she\'s|we\s+are|we\'re)\s+([a-zA-Z\u0900-\u097F]+)", re.IGNORECASE)
-METAPHOR_HINDI_RE = re.compile(r"\b(main\s+hoon|tu\s+hai|woh\s+hai|मैं\s+हूँ|तू\s+है|वह\s+है)\s+([a-zA-Z\u0900-\u097F]+)", re.IGNORECASE)
+METAPHOR_IM_RE = re.compile(r"\b(i\s+am|i\'m|you\s+are|you\'re|he\s+is|he\'s|she\s+is|she\'s|we\s+are|we\'re)\s+(?:a\s+|an\s+|the\s+)?([a-zA-Z\u0900-\u097F]+)", re.IGNORECASE)
+METAPHOR_HINDI_RE = re.compile(r"\b(main\s+hoon|tu\s+hai|woh\s+hai|मैं\s+हूँ|तू\s+है|वह\s+है)\s+(?:ek\s+)?([a-zA-Z\u0900-\u097F]+)", re.IGNORECASE)
 
 
 def is_noun_or_adj_in_wordnet(word: str) -> bool:
@@ -143,23 +143,48 @@ SIMILAR_CONSONANTS = [
 ]
 
 
+def edit_distance(l1: list, l2: list) -> int:
+    m, n = len(l1), len(l2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    for i in range(m + 1):
+        dp[i][0] = i
+    for j in range(n + 1):
+        dp[0][j] = j
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if l1[i-1] == l2[j-1]:
+                dp[i][j] = dp[i-1][j-1]
+            else:
+                dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
+    return dp[m][n]
+
+
 def are_near_homophones(p1: str, p2: str) -> bool:
     """Check if two pronunciations are identical or very close (near-homophones)."""
     p1_clean = re.sub(r"\d+", "", p1).split()
     p2_clean = re.sub(r"\d+", "", p2).split()
     
+    if not p1_clean or not p2_clean:
+        return False
+        
     if p1_clean == p2_clean:
         return True
         
-    if len(p1_clean) == len(p2_clean) and len(p1_clean) >= 2:
-        diff_indices = [i for i, (a, b) in enumerate(zip(p1_clean, p2_clean)) if a != b]
-        if len(diff_indices) == 1:
-            idx = diff_indices[0]
-            phone_a = p1_clean[idx]
-            phone_b = p2_clean[idx]
-            for s in SIMILAR_CONSONANTS:
-                if phone_a in s and phone_b in s:
-                    return True
+    dist = edit_distance(p1_clean, p2_clean)
+    if dist == 1:
+        # If edit distance is 1, require starting phone to match to prevent simple rhymes
+        if p1_clean[0] == p2_clean[0]:
+            return True
+        # Or if the difference is a single consonant within the same phonetic group
+        if len(p1_clean) == len(p2_clean):
+            diff_indices = [i for i, (a, b) in enumerate(zip(p1_clean, p2_clean)) if a != b]
+            if len(diff_indices) == 1:
+                phone_a = p1_clean[diff_indices[0]]
+                phone_b = p2_clean[diff_indices[0]]
+                for s in SIMILAR_CONSONANTS:
+                    if phone_a in s and phone_b in s:
+                        return True
+                        
     return False
 
 

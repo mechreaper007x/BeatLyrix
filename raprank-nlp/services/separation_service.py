@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 
 _DEMUCS_AVAILABLE = False
 try:
+    import config.ffmpeg_patch
     import demucs.separate
     _DEMUCS_AVAILABLE = True
 except ImportError:

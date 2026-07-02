@@ -50,4 +50,7 @@ public class ScoreBreakdownResponse {
 
     @JsonAlias("metaphors_count")
     private Integer metaphorsCount;
+
+    @JsonAlias("generated_lyrics")
+    private String generatedLyrics;
 }

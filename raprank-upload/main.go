@@ -39,6 +39,7 @@ func main() {
 
 	// API routes with CORS configuration
 	http.HandleFunc("/upload", corsMiddleware(handlers.HandleUpload))
+	http.HandleFunc("/upload-pipeline", corsMiddleware(handlers.HandlePipelineUpload))
 	http.HandleFunc("/health", corsMiddleware(healthHandler))
 
 	log.Println("Go Audio Upload Service running on port 9090...")

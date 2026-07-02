@@ -14,7 +14,14 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import httpx
+from mistralai.client.sdk import Mistral
+from dotenv import load_dotenv
+import config.ffmpeg_patch
+
+load_dotenv()
+
 
 async def update_status(track_id: int | None, status: str):
     if not track_id:
@@ -30,6 +37,72 @@ async def update_status(track_id: int | None, status: str):
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
+
+async def format_lyrics_with_mistral(pasted_lyrics: str, whisper_transcript: str) -> str:
+    api_key = os.getenv("MISTRAL_API_KEY")
+    if not api_key:
+        logger.warning("No MISTRAL_API_KEY found, skipping SLM formatting.")
+        return pasted_lyrics
+    
+    try:
+        client = Mistral(api_key=api_key)
+        prompt = (
+            "You are an expert rap lyricist. I will provide you with the user's pasted lyrics and a raw Whisper audio transcript. "
+            "The user's lyrics have the correct words, but might have messy formatting. The Whisper transcript shows the natural flow "
+            "and pauses of the audio. Please format the user's lyrics into perfect structural rap verses and 4-line bars, using "
+            "the Whisper transcript to determine where the line breaks should go. Output ONLY the formatted user lyrics, no intro or outro.\n\n"
+            f"USER LYRICS:\n{pasted_lyrics}\n\nWHISPER TRANSCRIPT:\n{whisper_transcript}"
+        )
+        
+        response = await client.chat.complete_async(
+            model="open-mistral-nemo",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as exc:
+        logger.error("Mistral formatting failed: %s", exc)
+        return pasted_lyrics
+
+
+async def analyze_wordplay_with_mistral(lyrics: str) -> tuple[float | None, str | None]:
+    api_key = os.getenv("MISTRAL_API_KEY")
+    if not api_key:
+        return None, None
+        
+    try:
+        client = Mistral(api_key=api_key)
+        prompt = (
+            "You are an expert rap literary critic and analyst. Analyze the following rap lyrics for deep wordplay, "
+            "conceptual metaphors, double meanings (double entendres), puns, sarcasm, and cultural/bilingual references "
+            "(specifically looking for Devanagari/Hindi/Hinglish wordplay if present, e.g. the 'Aadhaar Card' or 'pupils/motiyabind' references).\n\n"
+            "Provide two things in your response:\n"
+            "1. A corrected semantic wordplay score from 0.0 to 100.0, representing the true density and intelligence of the literary devices. "
+            "Start your response with 'SCORE: <value>' where <value> is a number between 0 and 100.\n"
+            "2. A detailed, bulleted explanation of the specific metaphors, puns, and double meanings you found in the lyrics.\n\n"
+            f"LYRICS TO ANALYZE:\n{lyrics}"
+        )
+        
+        response = await client.chat.complete_async(
+            model="open-mistral-nemo",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        content = response.choices[0].message.content.strip()
+        
+        # Parse the score
+        score = None
+        score_match = re.search(r"SCORE:\s*([\d\.]+)", content, re.IGNORECASE)
+        if score_match:
+            try:
+                score = float(score_match.group(1))
+            except ValueError:
+                pass
+                
+        # Clean the explanation (remove the SCORE line from the start if present)
+        explanation = re.sub(r"^SCORE:\s*[\d\.]+\s*", "", content, flags=re.IGNORECASE).strip()
+        return score, explanation
+    except Exception as exc:
+        logger.error("Mistral wordplay analysis failed: %s", exc)
+        return None, None
 
 from models.schemas import (
     AnalyzeRequest,
@@ -97,13 +170,9 @@ async def analyze(request: AnalyzeRequest) -> ScoreBreakdown:
         else detect_language(lyrics)
     )
 
-    # ── Run all text-based scoring services ───────────────────────────────
-    await update_status(request.track_id, "ANALYZING_TEXT")
-    syllable_score, avg_syl, syllable_weight_score, weight_ratio = syllable_service.calculate(lyrics)
-    rhyme_score, rhyme_pairs, multisyl_count, internal_score, chain_score = rhyme_service.calculate(lyrics)
-    allit_score, allit_pairs = alliteration_service.calculate(lyrics)
-    vocab_score, ttr = vocabulary_service.calculate(lyrics)
-    wordplay_score, wordplay_meta = wordplay_service.calculate(lyrics)
+    generated_lyrics = None
+    flow_score: float | None = None
+    flow_meta: FlowMetadata | None = None
 
     # ── Flow scoring (only when word timestamps or audio_url is provided) ─────────
     flow_score: float | None = None
@@ -145,6 +214,15 @@ async def analyze(request: AnalyzeRequest) -> ScoreBreakdown:
             logger.info("Transcribing audio for flow alignment (hint lang: %s)...", lang)
             transcription = await transcribe_audio(transcribe_bytes, filename, lang, lyrics)
             words_raw = transcription.get("words", [])
+            whisper_text = transcription.get("text", "")
+            
+            if whisper_text:
+                logger.info("Using Mistral to format lyrics based on Whisper transcription...")
+                formatted = await format_lyrics_with_mistral(lyrics, whisper_text)
+                if formatted and formatted != lyrics:
+                    logger.info("Lyrics successfully formatted by Mistral.")
+                    generated_lyrics = formatted
+                    lyrics = generated_lyrics
 
             if words_raw:
                 await update_status(request.track_id, "ANALYZING_FLOW")
@@ -161,6 +239,22 @@ async def analyze(request: AnalyzeRequest) -> ScoreBreakdown:
                     logger.warning("Beat sync returned error: %s", meta_dict["error"])
         except Exception as exc:
             logger.exception("Flow analysis from audio_url failed: %s", exc)
+
+    # ── Run all text-based scoring services ───────────────────────────────
+    await update_status(request.track_id, "ANALYZING_TEXT")
+    syllable_score, avg_syl, syllable_weight_score, weight_ratio = syllable_service.calculate(lyrics)
+    rhyme_score, rhyme_pairs, multisyl_count, internal_score, chain_score = rhyme_service.calculate(lyrics)
+    allit_score, allit_pairs = alliteration_service.calculate(lyrics)
+    vocab_score, ttr = vocabulary_service.calculate(lyrics)
+    wordplay_score, wordplay_meta = wordplay_service.calculate(lyrics)
+    wordplay_explanation = None
+
+    # Call Mistral for deep wordplay analysis
+    llm_wordplay_score, explanation = await analyze_wordplay_with_mistral(lyrics)
+    if llm_wordplay_score is not None:
+        # Hybrid wordplay scoring: 30% static, 70% LLM
+        wordplay_score = 0.3 * wordplay_score + 0.7 * llm_wordplay_score
+        wordplay_explanation = explanation
 
     # ── Weighted total from Config ─────────────────────────────────────────
     if flow_score is not None:
@@ -213,6 +307,8 @@ async def analyze(request: AnalyzeRequest) -> ScoreBreakdown:
         rhyme_pairs=rhyme_pairs,
         multisyllabic_rhyme_count=multisyl_count,
         flow_metadata=flow_meta,
+        generated_lyrics=generated_lyrics,
+        wordplay_explanation=wordplay_explanation,
     )
 
 
@@ -279,6 +375,14 @@ async def transcribe_and_analyze(file: UploadFile = File(...)) -> JSONResponse:
     allit_score, allit_pairs = alliteration_service.calculate(lyrics)
     vocab_score, ttr = vocabulary_service.calculate(lyrics)
     wordplay_score, wordplay_meta = wordplay_service.calculate(lyrics)
+    wordplay_explanation = None
+
+    # Call Mistral for deep wordplay analysis
+    llm_wordplay_score, explanation = await analyze_wordplay_with_mistral(lyrics)
+    if llm_wordplay_score is not None:
+        # Hybrid wordplay scoring: 30% static, 70% LLM
+        wordplay_score = 0.3 * wordplay_score + 0.7 * llm_wordplay_score
+        wordplay_explanation = explanation
 
     # ── Step 3: Beat-sync flow scoring ───────────────────────────────────
     flow_score: float | None = None
@@ -347,6 +451,7 @@ async def transcribe_and_analyze(file: UploadFile = File(...)) -> JSONResponse:
         rhyme_pairs=rhyme_pairs,
         multisyllabic_rhyme_count=multisyl_count,
         flow_metadata=flow_meta,
+        wordplay_explanation=wordplay_explanation,
     )
 
     return JSONResponse(

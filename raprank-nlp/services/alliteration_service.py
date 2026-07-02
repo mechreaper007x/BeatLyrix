@@ -26,8 +26,8 @@ def _first_sound(word: str) -> str | None:
     """
     if not word:
         return None
-    if is_hindi_word(word):
-        # Return first character (Devanagari consonant)
+    if any(0x0900 <= ord(c) <= 0x097F for c in word):
+        # Return first character (Devanagari consonant) directly
         return word[0]
 
     # English phonetic lookup
@@ -38,36 +38,57 @@ def _first_sound(word: str) -> str | None:
         # Strip trailing numbers (stress markers)
         return re.sub(r"\d", "", first_phone)
     
+    # Fallback for Romanized Hinglish: check for common consonant clusters
+    w_lower = word.lower()
+    for cluster in ["kh", "gh", "ch", "jh", "th", "dh", "ph", "bh", "sh", "gy"]:
+        if w_lower.startswith(cluster):
+            return cluster
+            
     # Fallback to character start
     return word[0].lower()
 
 
 def _normalize_hinglish_sound(sound: str) -> str:
-    """Consolidate Hinglish consonant sounds (e.g., kh/k -> k)."""
-    # Devanagari mapping
-    deva_map = {
-        'ख': 'क', 'घ': 'ग', 'छ': 'च', 'झ': 'ज', 'ठ': 'ट', 'ढ': 'ड',
-        'थ': 'त', 'ध': 'द', 'फ': 'प', 'भ': 'ब', 'श': 'स', 'ष': 's'
-    }
-    if sound in deva_map:
-        return deva_map[sound]
-    # English/Roman phonetic mapping (lowercased)
+    """Consolidate sound mapping for case-insensitivity and cross-script alignment."""
     snd = sound.lower()
-    if snd.startswith("kh"): return "k"
-    if snd.startswith("gh"): return "g"
-    if snd.startswith("ch"): return "c"
-    if snd.startswith("jh"): return "j"
-    if snd.startswith("th"): return "t"
-    if snd.startswith("dh"): return "d"
-    if snd.startswith("ph"): return "p"
-    if snd.startswith("bh"): return "b"
-    if snd.startswith("sh"): return "s"
+    # Map Devanagari starting characters to Romanized equivalents to support cross-script matching
+    deva_consonants = {
+        'क': 'k', 'ख': 'kh', 'ग': 'g', 'घ': 'gh', 'ङ': 'ng',
+        'च': 'ch', 'छ': 'chh', 'ज': 'j', 'झ': 'jh', 'ञ': 'ny',
+        'ट': 't', 'ठ': 'th', 'ड': 'd', 'ढ': 'dh', 'ण': 'n',
+        'त': 't', 'थ': 'th', 'द': 'd', 'ध': 'dh', 'न': 'n',
+        'प': 'p', 'फ': 'ph', 'ब': 'b', 'भ': 'bh', 'म': 'm',
+        'य': 'y', 'र': 'r', 'ल': 'l', 'व': 'v', 'श': 'sh', 'ष': 'sh', 'स': 's', 'ह': 'h',
+        'ळ': 'l', 'क्ष': 'ksh', 'त्र': 'tr', 'ज्ञ': 'gy'
+    }
+    if snd in deva_consonants:
+        return deva_consonants[snd]
     return snd
 
 
 def _clean(word: str) -> str:
     # Preserve Devanagari chars during punctuation stripping
     return re.sub(r"[^\w\u0900-\u097F]", "", word).strip()
+
+
+def _get_contiguous_chains(items: list[tuple[int, str]]) -> list[list[tuple[int, str]]]:
+    """Find contiguous subchains of matching words where they are adjacent in the filtered list (gap of 1)."""
+    chains = []
+    current_chain = []
+    for filt_idx, w in items:
+        if not current_chain:
+            current_chain.append((filt_idx, w))
+        else:
+            prev_idx, prev_w = current_chain[-1]
+            if filt_idx - prev_idx == 1:
+                current_chain.append((filt_idx, w))
+            else:
+                if len(current_chain) >= 3:
+                    chains.append(current_chain)
+                current_chain = [(filt_idx, w)]
+    if len(current_chain) >= 3:
+        chains.append(current_chain)
+    return chains
 
 
 def calculate(lyrics: str) -> tuple[float, list[str]]:
@@ -82,38 +103,37 @@ def calculate(lyrics: str) -> tuple[float, list[str]]:
 
     for line in lines:
         words = [_clean(w) for w in line.split()]
-        # Filter out empty words, stop words, and single-letter words
-        words = [w for w in words if w and len(w) > 1 and w.lower() not in stop_words]
-        if len(words) < 3:
+        # Skip empty words but preserve their original indices in the line
+        words_indexed = [(orig_idx, w) for orig_idx, w in enumerate(words) if w]
+        if not words_indexed:
+            continue
+            
+        # Filter out stop words and single-letter words for sound grouping
+        filtered_words = [w for _, w in words_indexed if len(w) > 1 and w.lower() not in stop_words]
+                
+        if len(filtered_words) < 3:
             continue
 
         valid_lines_count += 1
-        line_sounds = []
-        for w in words:
+        sound_groups = {}
+        for filt_idx, w in enumerate(filtered_words):
             snd = _first_sound(w)
             if snd:
                 snd = _normalize_hinglish_sound(snd)
-            line_sounds.append(snd)
-
-        # Count sound occurrences in the line
-        sound_counts: dict[str, list[int]] = {}
-        for idx, snd in enumerate(line_sounds):
-            if snd:
-                sound_counts.setdefault(snd, []).append(idx)
+                sound_groups.setdefault(snd, []).append((filt_idx, w))
 
         line_matches = []
-        for snd, idxs in sound_counts.items():
-            # Require at least 3 words in the line to share the sound
-            if len(idxs) >= 3:
-                # Exclude lines that are just the same word repeated
-                unique_words = set(words[idx].lower() for idx in idxs)
+        for snd, items in sound_groups.items():
+            # Check for contiguous chains (adjacent in filtered list)
+            chains = _get_contiguous_chains(items)
+            for chain in chains:
+                unique_words = set(w.lower() for _, w in chain)
                 if len(unique_words) >= 3:
-                    matched_words = [words[idx] for idx in idxs]
+                    matched_words = [w for _, w in chain]
                     match_key = f"{snd.upper()}: " + " - ".join(matched_words)
                     line_matches.append(match_key)
-                    # Weight proportional to length of chain
-                    line_weight = len(idxs) - 2
-                    total_allit_weight += min(line_weight, 3.0)  # cap weight per line
+                    line_weight = len(chain) - 2
+                    total_allit_weight += min(line_weight, 3.0)
 
         if line_matches:
             allit_details.extend(line_matches)
@@ -123,15 +143,15 @@ def calculate(lyrics: str) -> tuple[float, list[str]]:
 
     density = total_allit_weight / valid_lines_count
 
-    # Calibrate: since we require 3+ words, any density > 0.05 (1 chain every 20 lines) is good.
-    # 0.15 (1 chain every 6 lines) is elite.
-    if density == 0.0:
+    # Calibrate: since we require 3+ adjacent words, any density > 0.05 (1 chain every 20 lines) is good.
+    # We use a continuous curve so there are no sudden jumps from 0% to 40%.
+    if density < 0.05:
         score = 0.0
-    elif density < 0.05:
-        score = (density / 0.05) * 40.0
     elif density < 0.15:
-        score = 40.0 + ((density - 0.05) / 0.10) * 45.0  # up to 85
+        score = ((density - 0.05) / 0.10) * 50.0  # Scales 0% to 50%
+    elif density < 0.30:
+        score = 50.0 + ((density - 0.15) / 0.15) * 35.0  # Scales 50% to 85%
     else:
-        score = min(85.0 + ((density - 0.15) / 0.15) * 15.0, 100.0)
+        score = min(85.0 + ((density - 0.30) / 0.30) * 15.0, 100.0)
 
     return round(score, 2), allit_details

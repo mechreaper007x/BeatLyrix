@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Optional, List, Tuple
 
 import pronouncing
+import re
 
 from models.schemas import RhymeMatch
 from services.language_utils import is_hindi_word, clean_word, content_lines, devanagari_to_roman
@@ -112,6 +113,15 @@ def _rhyme_key_hinglish(word: str) -> Optional[str]:
         return None
         
     start_idx = vowel_idxs[-1]
+    
+    # If the word ends in a vowel group (e.g. "bade", "uske"), include the preceding consonant
+    if start_idx == len(word) - 1 or (start_idx < len(word) - 1 and all(c in vowels for c in word[start_idx:])):
+        consonant_idx = start_idx - 1
+        while consonant_idx >= 0 and word[consonant_idx] in vowels:
+            consonant_idx -= 1
+        if consonant_idx >= 0:
+            return word[consonant_idx:]
+            
     return word[start_idx:]
 
 
@@ -135,7 +145,78 @@ def _multi_rhyme_key_hinglish(word: str) -> Optional[str]:
         return None
         
     start_idx = vowel_idxs[-2]
+    
+    # If the word ends in a vowel group, include the preceding consonant
+    if vowel_idxs[-1] == len(word) - 1 or (vowel_idxs[-1] < len(word) - 1 and all(c in vowels for c in word[vowel_idxs[-1]:])):
+        consonant_idx = start_idx - 1
+        while consonant_idx >= 0 and word[consonant_idx] in vowels:
+            consonant_idx -= 1
+        if consonant_idx >= 0:
+            return word[consonant_idx:]
+            
     return word[start_idx:]
+
+
+def _normalize_hinglish_vowels(word: str) -> str:
+    word = word.lower()
+    word = word.replace("aa", "a")
+    word = word.replace("ee", "i")
+    word = word.replace("oo", "u")
+    word = word.replace("y", "i")
+    return word
+
+
+def _get_line_vowels(line: str) -> list[str]:
+    words = [clean_word(w) for w in line.split()]
+    words = [w for w in words if w]
+    if not words:
+        return []
+    last_words = words[-2:] if len(words) >= 2 else words[-1:]
+    
+    line_vowels = []
+    for w in last_words:
+        rom = devanagari_to_roman(w) if is_hindi_word(w) else w
+        rom_clean = re.sub(r"[^\w]", "", rom)
+        
+        phones = pronouncing.phones_for_word(rom_clean.lower())
+        if phones:
+            vowel_phones = []
+            for p in phones[0].split():
+                if any(c.isdigit() for c in p):
+                    vowel_phones.append(re.sub(r"\d", "", p).lower())
+            line_vowels.extend(vowel_phones)
+        else:
+            norm = _normalize_hinglish_vowels(rom_clean)
+            spelling_vowels = [c for c in norm if c in "aeiou"]
+            line_vowels.extend(spelling_vowels)
+            
+    return line_vowels
+
+
+def _get_word_vowels(word: str) -> list[str]:
+    rom = devanagari_to_roman(word) if is_hindi_word(word) else word
+    rom_clean = re.sub(r"[^\w]", "", rom)
+    
+    phones = pronouncing.phones_for_word(rom_clean.lower())
+    vowels = []
+    if phones:
+        for p in phones[0].split():
+            if any(c.isdigit() for c in p):
+                vowels.append(re.sub(r"\d", "", p).lower())
+    else:
+        norm = _normalize_hinglish_vowels(rom_clean)
+        vowels = [c for c in norm if c in "aeiou"]
+    return vowels
+
+
+def _get_longest_common_vowel_suffix(v1: list[str], v2: list[str]) -> list[str]:
+    suffix = []
+    for a, b in zip(reversed(v1), reversed(v2)):
+        if a == b:
+            suffix.append(a)
+        else:
+            break
+    return list(reversed(suffix))
 
 
 # ── Word extraction ───────────────────────────────────────────────────────
@@ -276,22 +357,30 @@ def calculate(lyrics: str) -> tuple[float, list[RhymeMatch], int, float, float]:
 
             key_a = _rhyme_key_en(rom_a)
             key_b = _rhyme_key_en(rom_b)
-            multi_a = _multi_rhyme_key_en(rom_a)
-            multi_b = _multi_rhyme_key_en(rom_b)
-
-            is_hinglish_a = (key_a is None)
-            is_hinglish_b = (key_b is None)
-
-            if is_hinglish_a or is_hinglish_b:
+            if key_a is None or key_b is None:
                 key_a = _rhyme_key_hinglish(rom_a)
                 key_b = _rhyme_key_hinglish(rom_b)
-                multi_a = _multi_rhyme_key_hinglish(rom_a)
-                multi_b = _multi_rhyme_key_hinglish(rom_b)
-                is_multi = bool(multi_a and multi_b and multi_a == multi_b)
-            else:
-                is_multi = bool(multi_a and multi_b and multi_a == multi_b and len(multi_a) > 2)
 
-            if key_a and key_b and key_a == key_b:
+            is_end_rhyme = bool(key_a and key_b and key_a == key_b)
+            
+            # Robust multisyllabic rhyme detection across last 2 words of the line
+            is_multi = False
+            v1 = _get_line_vowels(lines[idx_a])
+            v2 = _get_line_vowels(lines[idx_b])
+            common_suffix = _get_longest_common_vowel_suffix(v1, v2)
+            if len(common_suffix) >= 3:
+                is_multi = True
+
+            # Slant Rhyme Matcher: 2-syllable vowel pattern match for Hinglish/Hindi
+            is_slant_rhyme = False
+            if not is_end_rhyme and not is_multi:
+                vowels_a = _get_word_vowels(word_a)
+                vowels_b = _get_word_vowels(word_b)
+                if len(vowels_a) >= 2 and len(vowels_b) >= 2:
+                    if vowels_a[-2:] == vowels_b[-2:]:
+                        is_slant_rhyme = True
+
+            if is_end_rhyme or is_multi or is_slant_rhyme:
                 pair = (idx_a, idx_b)
                 if pair not in seen:
                     seen.add(pair)
@@ -301,7 +390,7 @@ def calculate(lyrics: str) -> tuple[float, list[RhymeMatch], int, float, float]:
                             line_b=idx_b,
                             word_a=word_a,
                             word_b=word_b,
-                            is_multisyllabic=is_multi,
+                            is_multisyllabic=is_multi or is_slant_rhyme,
                         )
                     )
 

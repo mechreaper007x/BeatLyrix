@@ -71,6 +71,10 @@ public class ScoringOrchestrationService {
 
                         scoreRepository.save(score);
 
+                        if (finalResponse.getGenerated_lyrics() != null) {
+                            currentTrack.setLyricsText(finalResponse.getGenerated_lyrics());
+                        }
+                        
                         currentTrack.setStatus(Track.TrackStatus.ANALYZED);
                         trackRepository.save(currentTrack);
                         log.info("Track {} successfully scored and analyzed.", currentTrack.getId());
@@ -116,5 +120,6 @@ public class ScoringOrchestrationService {
         private Integer puns_count;
         private Integer similes_count;
         private Integer metaphors_count;
+        private String generated_lyrics;
     }
 }

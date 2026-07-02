@@ -15,10 +15,12 @@ logger = logging.getLogger(__name__)
 # Try loading torch and torchaudio
 _TORCH_OK = False
 try:
+    import config.ffmpeg_patch
     import torch
     import torchaudio
     _TORCH_OK = True
 except ImportError:
+
     logger.warning("Torch/TorchAudio not available. Forced alignment will fall back to spectral onset detection.")
 
 # Load pre-trained Wav2Vec2 model at module level if available

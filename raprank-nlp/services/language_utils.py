@@ -26,13 +26,63 @@ def get_multilingual_stopwords() -> set[str]:
     if _STOP_WORDS_CACHE is not None:
         return _STOP_WORDS_CACHE
 
+    en_stops = set()
     try:
         nltk.download('stopwords', quiet=True)
         en_stops = set(stopwords.words('english'))
+    except Exception:
+        pass
+    
+    if not en_stops:
+        en_stops = {
+            "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves",
+            "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their",
+            "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are",
+            "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an",
+            "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about",
+            "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up",
+            "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when",
+            "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor",
+            "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"
+        }
+
+    # Add common English conversational words, fillers, and modal verbs to prevent false-positive puns
+    en_stops.update({
+        "uh", "yuh", "yeah", "yo", "like", "go", "get", "got", "do", "did", "does", "make", "made", "take", "took", 
+        "come", "came", "see", "saw", "know", "say", "said", "tell", "told", "give", "gave", "find", "found", 
+        "think", "thought", "look", "looked", "want", "wanted", "put", "let", "us", "would", "could", "should", 
+        "will", "can", "may", "might", "must", "shall"
+    })
+
+    hi_stops_deva = set()
+    try:
         hi_stops_deva = set(stopwords.words('hindi'))
     except Exception:
-        en_stops = set()
-        hi_stops_deva = set()
+        pass
+        
+    if not hi_stops_deva:
+        hi_stops_deva = {
+            "अंदर", "अत", "अदि", "अप", "अपना", "अपने", "अपनी", "अब", "अभी", "अलबत्ता", "अस", "अस्त", "अह", "आदि", "आप", 
+            "इत्यादि", "इन", "इन्हीं", "इन्हें", "इन्हों", "इस", "इसी", "इसे", "उन", "उन्हीं", "उन्हें", "उन्हों", "उस", 
+            "उसी", "उसे", "एक", "एवं", "एस", "ऐसे", "ऐसे ही", "ओर", "और", "कइ", "कई", "कर", "करता", "करते", "करना", 
+            "करने", "करें", "कहते", "कहा", "का", "काफ़ी", "कि", "किन", "किन्होंने", "किन्हें", "किन्हों", "किया", "किर", 
+            "किस", "किसने", "किसे", "की", "के", "केवल", "को", "कोइ", "कोई", "कोन", "कोनसा", "कौन", "कौनसा", "गया", "घर", 
+            "जब", "जहाँ", "जा", "जाता", "जाते", "जाना", "जाने", "जो", "तो", "था", "थी", "थे", "दबारा", "दिया", "दुसरा", 
+            "दूसरे", "दो", "द्वारा", "न", "नही", "नहीं", "ना", "ने", "पर", "पहले", "पूरा", "पे", "फिर", "बनी", "बही", 
+            "बहुत", "बाद", "बाला", "बिलकुल", "भी", "भितर", "मगर", "मानो", "मे", "में", "यदि", "यह", "यहाँ", "यही", "या", 
+            "यिह", "ये", "रखें", "रहा", "रहे", "रही", "लरका", "लोग", "लोगों", "व", "वरन", "वर्ग", "वह", "वहाँ", "वही", 
+            "वाले", "वुह", "वे", "सकता", "सकते", "सकती", "सबसे", "सभ", "सभी", "समय", "समान", "तरह", "सा", "सामने", 
+            "साल", "साभ", "सारे", "से", "सो", "संग", "ही", "हुआ", "हुए", "हुई", "है", "हैं", "हो", "होता", "होते", "होती", 
+            "होना", "होने", "तू", "तुम", "तेरा", "तुम्हारी", "तुम्हारे", "तुम्हारा", "मेरा", "मेरे", "मेरी", "मुझे", "मुझको"
+        }
+
+    # Add extra Hindi verbs / grammar particles to Devanagari stop words
+    hi_stops_deva.update({
+        "करके", "करना", "करता", "करती", "करते", "करो", "करें", "करेंगे", "करूँगा", "कहा", "कहे", "कह", "कहना", 
+        "रहना", "रहा", "रही", "रहे", "रहो", "रहें", "रहेंगे", "रहूँगा", "जाना", "गया", "गई", "गए", "जा", "जाओ", "जाएँ",
+        "आना", "आया", "आई", "आए", "आ", "आओ", "आएँ", "देना", "दिया", "दी", "दिए", "दे", "दो", "दें", "लेना", "लिया",
+        "ली", "लिए", "ले", "लो", "लें"
+    })
 
     hi_stops_roman = set()
     for word in hi_stops_deva:
@@ -48,8 +98,20 @@ def get_multilingual_stopwords() -> set[str]:
             if normalized.endswith("o"):
                 hi_stops_roman.add(normalized + "h")
 
+    # Manually append common romanized / Hinglish pronouns, conjunctions and particles
+    extra_romanized = {
+        "mein", "main", "maine", "mujhe", "mujhko", "mujh", "mera", "mere", "meri", "tu", "tujhe", "tujhko", "tujh", "tera", "tere", "teri",
+        "tum", "tumhe", "tumhara", "tumhare", "tumhari", "apna", "apne", "apni", "aap", "aapka", "aapke", "aapki",
+        "woh", "usne", "usse", "uska", "uske", "uski", "us", "unhone", "unhe", "unka", "unke", "unki", "yeh", "isne", "isse",
+        "iska", "iske", "iski", "is", "inhone", "inhe", "inka", "inke", "inki", "ko", "se", "ka", "ke", "ki", "par", "pe",
+        "ne", "bhi", "hi", "to", "toh", "aur", "ya", "tha", "thi", "the", "hai", "hain", "hoon", "ho", "hoge", "hogi",
+        "hoga", "kar", "karna", "karta", "karti", "karte", "kiya", "kiye", "kiyi", "de", "dena", "diya", "diye",
+        "le", "lena", "liya", "liye", "ja", "jana", "gaya", "gayi", "gaye", "aa", "aana", "aaya", "aayi", "aaye",
+        "jis", "kis"
+    }
+
     # Merge English, Devanagari, and Romanized Hinglish sets
-    _STOP_WORDS_CACHE = en_stops.union(hi_stops_deva).union(hi_stops_roman)
+    _STOP_WORDS_CACHE = en_stops.union(hi_stops_deva).union(hi_stops_roman).union(extra_romanized)
     return _STOP_WORDS_CACHE
 
 
@@ -102,12 +164,15 @@ def clean_word(word: str) -> str:
 
 
 def content_lines(lyrics: str) -> list[str]:
-    """Return non-empty, non-header lyric lines."""
+    """Return non-empty, non-header lyric lines, stripping parenthetical ad-libs."""
     result = []
     for line in lyrics.strip().split("\n"):
         stripped = line.strip()
         if stripped and not (stripped.startswith("[") and stripped.endswith("]")):
-            result.append(stripped)
+            # Strip out parenthetical ad-libs (e.g. "(Woo)", "(Yeah)", "(Brr)")
+            cleaned_line = re.sub(r"\s*\(.*?\)\s*", " ", stripped).strip()
+            if cleaned_line:
+                result.append(cleaned_line)
     return result
 
 

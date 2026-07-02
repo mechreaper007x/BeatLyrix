@@ -112,9 +112,10 @@ export default function UploadForm() {
       // 1. Upload to Go Service (port 9090)
       const goFormData = new FormData();
       goFormData.append("audio", file);
+      goFormData.append("lyrics", lyrics);
 
       setUploadProgress(30);
-      const goResponse = await fetch("http://localhost:9090/upload", {
+      const goResponse = await fetch("http://localhost:9090/upload-pipeline", {
         method: "POST",
         body: goFormData,
       });

@@ -53,7 +53,10 @@ WORDPLAY = {
         "spin", "rock", "roll", "arms", "joint", "high", "line", "lines", "hit", "rap",
         "flow", "crack", "note", "notes", "banda", "paisa", "bhaari", "maal", "trap",
         "ice", "cold", "fire", "smoke", "spit", "pocket", "drive", "ride", "run", "cuff",
-        "lock", "deal", "plate", "scale", "pound", "gram", "dope", "green", "burn"
+        "lock", "deal", "plate", "scale", "pound", "gram", "dope", "green", "burn",
+        "kashmiri", "cashmere", "pupil", "pupils", "motiyabind", "aadhar", "cheeta", "cheetah",
+        "kutta", "kutto", "lagaan", "brahman", "don", "doon", "shakkar", "dalle", "dalal",
+        "saabu", "shroud", "shahrule", "khatoon", "bhed", "bhedchaal", "manjha", "dheel"
     },
     
     # Weights for final wordplay combination
@@ -70,7 +73,8 @@ WORDPLAY = {
     
     # WordNet polysemy thresholds
     "ENTENDRE_MIN_SENSES_RAP": 2,
-    "ENTENDRE_MIN_SENSES_GENERAL": 7,
+    "ENTENDRE_MIN_SENSES_GENERAL": 999,
+
     
     # Overall Wordplay Density Curve
     "CURVE_THRESHOLDS": [0.15, 0.30],
