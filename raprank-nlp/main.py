@@ -36,7 +36,7 @@ async def update_status(track_id: int | None, status: str):
     except Exception as exc:
         logger.warning("Error reporting status %s to backend: %s", status, exc)
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile, Form
 from fastapi.responses import JSONResponse
 
 async def format_lyrics_with_mistral(pasted_lyrics: str, whisper_transcript: str) -> str:
@@ -63,6 +63,37 @@ async def format_lyrics_with_mistral(pasted_lyrics: str, whisper_transcript: str
     except Exception as exc:
         logger.error("Mistral formatting failed: %s", exc)
         return pasted_lyrics
+
+
+async def transliterate_devanagari_to_hinglish(whisper_transcript: str) -> str:
+    api_key = os.getenv("MISTRAL_API_KEY")
+    if not api_key:
+        logger.warning("No MISTRAL_API_KEY found, skipping Hinglish transliteration.")
+        return whisper_transcript
+    
+    try:
+        client = Mistral(api_key=api_key)
+        prompt = (
+            "You are an expert rap transcriber. I will provide you with a raw Whisper audio transcript written in Devanagari script. "
+            "This transcript contains a mix of Hindi and English words (Hinglish) spoken in a rap song. Please transliterate "
+            "the Devanagari text into clean, standard Romanized Hinglish (using the English alphabet).\n\n"
+            "Rules:\n"
+            "1. Convert Devanagari representations of English words back to correct English words (e.g., 'वाच्छु दूइफर' -> 'What you do it for', 'टाइम' -> 'time', 'चिल' -> 'chill', 'शिमी' -> 'shimmy').\n"
+            "2. Convert Hindi/Hinglish words to standard Romanized Hindi spelling (e.g., 'पूछो' -> 'poochho', 'आया' -> 'aaya', 'लौंडा' -> 'launda', 'सुरूर' -> 'suroor', 'मैदान' -> 'maidaan').\n"
+            "3. Format the output into clean, structured rap verses and lines.\n"
+            "4. Output ONLY the transliterated Romanized Hinglish lyrics, no introductory or concluding remarks.\n\n"
+            f"TRANSCRIPT:\n{whisper_transcript}"
+        )
+        
+        response = await client.chat.complete_async(
+            model="open-mistral-nemo",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as exc:
+        logger.error("Mistral transliteration failed: %s", exc)
+        return whisper_transcript
 
 
 async def analyze_wordplay_with_mistral(lyrics: str) -> tuple[float | None, str | None]:
@@ -339,98 +370,109 @@ async def compute_scores_and_breakdown(
 
 @app.post("/analyze", response_model=ScoreBreakdown)
 async def analyze(request: AnalyzeRequest) -> ScoreBreakdown:
-    lyrics = request.lyrics.strip()
-    if not lyrics:
-        raise HTTPException(
-            status_code=400,
-            detail={"error": "lyrics cannot be empty"},
+    try:
+        lyrics = request.lyrics.strip()
+        if not lyrics:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": "lyrics cannot be empty"},
+            )
+
+        lang = (
+            request.language
+            if request.language and request.language != "auto"
+            else detect_language(lyrics)
         )
 
-    lang = (
-        request.language
-        if request.language and request.language != "auto"
-        else detect_language(lyrics)
-    )
+        generated_lyrics = None
+        flow_score: float | None = None
+        flow_meta: FlowMetadata | None = None
 
-    generated_lyrics = None
-    flow_score: float | None = None
-    flow_meta: FlowMetadata | None = None
+        # ── Flow scoring (only when word timestamps or audio_url is provided) ─────────
+        if request.words:
+            words_dicts = [w.model_dump() for w in request.words]
+            # No audio bytes in text-only mode — skip beat detection
+            # (beat detection needs audio; timestamps alone are insufficient)
+            logger.info(
+                "/analyze received %d word timestamps but no audio — flow skipped",
+                len(words_dicts),
+            )
+        elif request.audio_url:
+            try:
+                await update_status(request.track_id, "DOWNLOADING_AUDIO")
+                logger.info("Downloading audio from %s for flow scoring...", request.audio_url)
+                filename = request.audio_url.split("/")[-1] or "audio.mp3"
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    audio_res = await client.get(request.audio_url)
+                    audio_res.raise_for_status()
+                    audio_bytes = audio_res.content
 
-    # ── Flow scoring (only when word timestamps or audio_url is provided) ─────────
-    flow_score: float | None = None
-    flow_meta: FlowMetadata | None = None
-
-    if request.words:
-        words_dicts = [w.model_dump() for w in request.words]
-        # No audio bytes in text-only mode — skip beat detection
-        # (beat detection needs audio; timestamps alone are insufficient)
-        logger.info(
-            "/analyze received %d word timestamps but no audio — flow skipped",
-            len(words_dicts),
-        )
-    elif request.audio_url:
-        try:
-            await update_status(request.track_id, "DOWNLOADING_AUDIO")
-            logger.info("Downloading audio from %s for flow scoring...", request.audio_url)
-            filename = request.audio_url.split("/")[-1] or "audio.mp3"
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                audio_res = await client.get(request.audio_url)
-                audio_res.raise_for_status()
-                audio_bytes = audio_res.content
-
-            # ── Separation ──────────────────────────────────────────
-            await update_status(request.track_id, "SEPARATING_AUDIO")
-            logger.info("Running audio source separation...")
-            separated = separate_vocals(audio_bytes, filename)
-            if separated:
-                vocals_bytes, accompaniment_bytes = separated
-                transcribe_bytes = vocals_bytes
-                flow_bytes = accompaniment_bytes
-                logger.info("Source separation successful. Vocals and accompaniment isolated.")
-            else:
-                transcribe_bytes = audio_bytes
-                flow_bytes = audio_bytes
-                logger.info("Source separation skipped/failed. Using mixed audio.")
-
-            await update_status(request.track_id, "TRANSCRIBING")
-            logger.info("Transcribing audio for flow alignment (hint lang: %s)...", lang)
-            transcription = await transcribe_audio(transcribe_bytes, filename, lang, lyrics)
-            words_raw = transcription.get("words", [])
-            whisper_text = transcription.get("text", "")
-            
-            if whisper_text:
-                logger.info("Using Mistral to format lyrics based on Whisper transcription...")
-                formatted = await format_lyrics_with_mistral(lyrics, whisper_text)
-                if formatted and formatted != lyrics:
-                    logger.info("Lyrics successfully formatted by Mistral.")
-                    generated_lyrics = formatted
-                    lyrics = generated_lyrics
-
-            if words_raw:
-                await update_status(request.track_id, "ANALYZING_FLOW")
-                # Map raw Whisper ASR word timestamps to the user's structured lyrics
-                words_aligned = align_structured_lyrics_to_whisper(lyrics, words_raw)
-                
-                raw_score, meta_dict = calculate_beat_sync(
-                    transcribe_bytes, flow_bytes, filename, words_aligned
-                )
-                if "error" not in meta_dict:
-                    flow_score = raw_score
-                    flow_meta = FlowMetadata(**meta_dict)
+                # ── Separation ──────────────────────────────────────────
+                await update_status(request.track_id, "SEPARATING_AUDIO")
+                logger.info("Running audio source separation...")
+                separated = separate_vocals(audio_bytes, filename)
+                if separated:
+                    vocals_bytes, accompaniment_bytes = separated
+                    transcribe_bytes = vocals_bytes
+                    flow_bytes = accompaniment_bytes
+                    logger.info("Source separation successful. Vocals and accompaniment isolated.")
                 else:
-                    logger.warning("Beat sync returned error: %s", meta_dict["error"])
-        except Exception as exc:
-            logger.exception("Flow analysis from audio_url failed: %s", exc)
+                    transcribe_bytes = audio_bytes
+                    flow_bytes = audio_bytes
+                    logger.info("Source separation skipped/failed. Using mixed audio.")
 
-    # ── Run all text-based scoring and hybrid LLM evaluation ──────────────
-    return await compute_scores_and_breakdown(
-        lyrics=lyrics,
-        lang=lang,
-        flow_score=flow_score,
-        flow_meta=flow_meta,
-        generated_lyrics=generated_lyrics,
-        track_id=request.track_id,
-    )
+                await update_status(request.track_id, "TRANSCRIBING")
+                logger.info("Transcribing audio for flow alignment (hint lang: %s)...", lang)
+                transcription = await transcribe_audio(transcribe_bytes, filename, lang, lyrics)
+                words_raw = transcription.get("words", [])
+                whisper_text = transcription.get("text", "")
+                
+                print("\n" + "=" * 50)
+                print("RAW WHISPER TRANSCRIPTION:")
+                print(whisper_text)
+                print("=" * 50 + "\n")
+                
+                if whisper_text:
+                    logger.info("Using Mistral to format lyrics based on Whisper transcription...")
+                    formatted = await format_lyrics_with_mistral(lyrics, whisper_text)
+                    if formatted and formatted != lyrics:
+                        logger.info("Lyrics successfully formatted by Mistral.")
+                        generated_lyrics = formatted
+                        lyrics = generated_lyrics
+
+                print("\n" + "=" * 50)
+                print("FINAL FORMATTED LYRICS:")
+                print(lyrics)
+                print("=" * 50 + "\n")
+
+                if words_raw:
+                    await update_status(request.track_id, "ANALYZING_FLOW")
+                    # Map raw Whisper ASR word timestamps to the user's structured lyrics
+                    words_aligned = align_structured_lyrics_to_whisper(lyrics, words_raw)
+                    
+                    raw_score, meta_dict = calculate_beat_sync(
+                        transcribe_bytes, flow_bytes, filename, words_aligned
+                    )
+                    if "error" not in meta_dict:
+                        flow_score = raw_score
+                        flow_meta = FlowMetadata(**meta_dict)
+                    else:
+                        logger.warning("Beat sync returned error: %s", meta_dict["error"])
+            except Exception as exc:
+                logger.exception("Flow analysis from audio_url failed: %s", exc)
+
+        # ── Run all text-based scoring and hybrid LLM evaluation ──────────────
+        return await compute_scores_and_breakdown(
+            lyrics=lyrics,
+            lang=lang,
+            flow_score=flow_score,
+            flow_meta=flow_meta,
+            generated_lyrics=generated_lyrics,
+            track_id=request.track_id,
+        )
+    finally:
+        import gc
+        gc.collect()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -442,89 +484,138 @@ _ALLOWED_EXT = {".mp3", ".wav", ".ogg", ".flac", ".m4a", ".webm"}
 
 
 @app.post("/transcribe-and-analyze")
-async def transcribe_and_analyze(file: UploadFile = File(...)) -> JSONResponse:
-    # ── Validate upload ───────────────────────────────────────────────────
-    if not file or not file.filename:
-        raise HTTPException(
-            status_code=400,
-            detail={"error": "No file provided. Send audio via the 'file' field."},
-        )
-
-    import os
-    _, ext = os.path.splitext(file.filename.lower())
-    if ext not in _ALLOWED_EXT:
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "error": (
-                    f"Unsupported format '{ext}'. "
-                    f"Accepted: {', '.join(_ALLOWED_EXT)}"
-                )
-            },
-        )
-
-    audio_bytes = await file.read()
-    if not audio_bytes:
-        raise HTTPException(
-            status_code=400,
-            detail={"error": "Uploaded file is empty."},
-        )
-
-    # ── Step 1: Transcription ─────────────────────────────────────────────
+async def transcribe_and_analyze(
+    file: UploadFile = File(...),
+    language: str | None = Form(default="hi"),
+    lyrics: str | None = Form(default=None)
+) -> JSONResponse:
     try:
-        transcription = await transcribe_audio(audio_bytes, file.filename)
-    except Exception as exc:
-        logger.exception("Whisper API call failed: %s", exc)
-        raise HTTPException(
-            status_code=502,
-            detail={"error": f"Transcription service error: {exc}"},
-        )
-
-    lyrics = transcription.get("text", "").strip()
-    if not lyrics:
-        raise HTTPException(
-            status_code=422,
-            detail={"error": "Transcription returned empty text."},
-        )
-
-    lang = transcription.get("detected_language", "auto")
-    words_raw: list[dict] = transcription.get("words", [])
-
-    # ── Step 2: Beat-sync flow scoring ───────────────────────────────────
-    flow_score: float | None = None
-    flow_meta: FlowMetadata | None = None
-
-    if words_raw:
-        try:
-            raw_score, meta_dict = calculate_beat_sync(
-                audio_bytes, file.filename, words_raw
+        # ── Validate upload ───────────────────────────────────────────────────
+        if not file or not file.filename:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": "No file provided. Send audio via the 'file' field."},
             )
-            if "error" not in meta_dict:
-                flow_score = raw_score
-                flow_meta = FlowMetadata(**meta_dict)
-            else:
-                logger.warning("Beat sync returned error: %s", meta_dict["error"])
+
+        import os
+        _, ext = os.path.splitext(file.filename.lower())
+        if ext not in _ALLOWED_EXT:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": (
+                        f"Unsupported format '{ext}'. "
+                        f"Accepted: {', '.join(_ALLOWED_EXT)}"
+                    )
+                },
+            )
+
+        audio_bytes = await file.read()
+        if not audio_bytes:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": "Uploaded file is empty."},
+            )
+
+        # ── Step 1: Transcription ─────────────────────────────────────────────
+        lyrics_input = lyrics
+        try:
+            transcription = await transcribe_audio(audio_bytes, file.filename, language=language, lyrics=lyrics_input)
         except Exception as exc:
-            logger.exception("Beat sync failed: %s", exc)
-            # Non-fatal — continue without flow score
+            logger.exception("Whisper API call failed: %s", exc)
+            raise HTTPException(
+                status_code=502,
+                detail={"error": f"Transcription service error: {exc}"},
+            )
 
-    # ── Step 3: Run all text-based scoring and hybrid LLM evaluation ──────
-    analysis = await compute_scores_and_breakdown(
-        lyrics=lyrics,
-        lang=lang,
-        flow_score=flow_score,
-        flow_meta=flow_meta,
-        generated_lyrics=None,
-    )
+        whisper_text = transcription.get("text", "").strip()
+        
+        print("\n" + "=" * 50)
+        print("RAW WHISPER TRANSCRIPTION:")
+        print(whisper_text)
+        print("=" * 50 + "\n")
+        
+        if not whisper_text:
+            raise HTTPException(
+                status_code=422,
+                detail={"error": "Transcription returned empty text."},
+            )
 
-    return JSONResponse(
-        content={
-            "transcription": {
-                "text": lyrics,
-                "detected_language": lang,
-                "language_probability": transcription.get("language_probability"),
-                "words": words_raw,
-            },
-            "analysis": analysis.model_dump(),
-        }
-    )
+        lang = transcription.get("detected_language", "auto")
+        words_raw: list[dict] = transcription.get("words", [])
+
+        # If user passed ground-truth lyrics, format them with Mistral using Whisper transcript
+        generated_lyrics = None
+        lyrics_to_score = whisper_text
+        if lyrics_input:
+            logger.info("Using Mistral to format lyrics based on Whisper transcription...")
+            formatted = await format_lyrics_with_mistral(lyrics_input, whisper_text)
+            if formatted and formatted != lyrics_input:
+                logger.info("Lyrics successfully formatted by Mistral.")
+                generated_lyrics = formatted
+                lyrics_to_score = generated_lyrics
+                
+                print("\n" + "=" * 50)
+                print("MISTRAL FORMATTED LYRICS:")
+                print(generated_lyrics)
+                print("=" * 50 + "\n")
+        else:
+            # If no lyrics are provided, but the transcript contains Devanagari/Hindi characters,
+            # transliterate the transcript into clean Romanized Hinglish using Mistral
+            if lang == "hi" or any(ord(c) > 127 for c in whisper_text):
+                logger.info("Devanagari text detected. Transliterating to Romanized Hinglish using Mistral...")
+                transliterated = await transliterate_devanagari_to_hinglish(whisper_text)
+                if transliterated and transliterated != whisper_text:
+                    logger.info("Lyrics successfully transliterated by Mistral.")
+                    generated_lyrics = transliterated
+                    lyrics_to_score = generated_lyrics
+                    
+                    print("\n" + "=" * 50)
+                    print("MISTRAL TRANSLITERATED HINGLISH LYRICS:")
+                    print(generated_lyrics)
+                    print("=" * 50 + "\n")
+
+        # ── Step 2: Beat-sync flow scoring ───────────────────────────────────
+        flow_score: float | None = None
+        flow_meta: FlowMetadata | None = None
+
+        if words_raw:
+            try:
+                words_aligned = words_raw
+                if generated_lyrics:
+                    words_aligned = align_structured_lyrics_to_whisper(lyrics_to_score, words_raw)
+                
+                raw_score, meta_dict = calculate_beat_sync(
+                    audio_bytes, audio_bytes, file.filename, words_aligned
+                )
+                if "error" not in meta_dict:
+                    flow_score = raw_score
+                    flow_meta = FlowMetadata(**meta_dict)
+                else:
+                    logger.warning("Beat sync returned error: %s", meta_dict["error"])
+            except Exception as exc:
+                logger.exception("Beat sync failed: %s", exc)
+
+        # ── Step 3: Run all text-based scoring and hybrid LLM evaluation ──────
+        analysis = await compute_scores_and_breakdown(
+            lyrics=lyrics_to_score,
+            lang=lang,
+            flow_score=flow_score,
+            flow_meta=flow_meta,
+            generated_lyrics=generated_lyrics,
+        )
+
+        return JSONResponse(
+            content={
+                "transcription": {
+                    "text": lyrics_to_score,
+                    "detected_language": lang,
+                    "language_probability": transcription.get("language_probability"),
+                    "words": words_raw,
+                },
+                "analysis": analysis.model_dump(),
+            }
+        )
+    finally:
+        import gc
+        gc.collect()

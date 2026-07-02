@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 # "int8"   → quantised inference; halves memory, keeps speed
 # device="cpu" → HF free tier has no GPU
 # ─────────────────────────────────────────────────────────────
-logger.info("Loading WhisperModel (large-v3-turbo-ct2 / int8 / cpu) …")
-model = WhisperModel("deepdml/faster-whisper-large-v3-turbo-ct2", device="cpu", compute_type="int8")
+logger.info("Loading WhisperModel (fast-whisper-hinglish-Apex-ct2 / int8 / cpu) …")
+model = WhisperModel("AlexAnoshka/fast-whisper-hinglish-Apex-ct2", device="cpu", compute_type="int8")
 logger.info("WhisperModel ready.")
 
 logger.info("Loading Hinglish LID transformer model...")
@@ -103,12 +103,22 @@ async def transcribe(
             tmp_path = tmp.name
 
         whisper_lang = None
+        initial_prompt = None
         if language:
             lang_cleaned = language.strip().lower()
             if lang_cleaned in ("hi", "hindi"):
                 whisper_lang = "hi"
             elif lang_cleaned in ("en", "english"):
                 whisper_lang = "en"
+            elif lang_cleaned == "hinglish":
+                # To get Hinglish in Romanized characters, use the English decoder
+                # but bias it with a code-switched Hinglish initial prompt
+                whisper_lang = "en"
+                initial_prompt = (
+                    "What you do it for? (Uh) What you do it for? "
+                    "poochho inse aaya kaun? jab time mera aaya to palat paaya kaaya kaun? "
+                    "dilli ka launda Japan mein chill, Arigato, aram se kill, kaise ho bhai, kya chal raha hai"
+                )
         elif lyrics and lid_pipeline:
             try:
                 # Classify lyrics text (up to 300 words to avoid token limit issues)
@@ -136,8 +146,8 @@ async def transcribe(
                 logger.warning("LID classification failed: %s", exc)
 
         logger.info(
-            "Transcribing '%s' (%d bytes) → %s (language hint: %s)", 
-            file.filename, len(audio_bytes), tmp_path, whisper_lang
+            "Transcribing '%s' (%d bytes) → %s (language hint: %s, prompt: %s)", 
+            file.filename, len(audio_bytes), tmp_path, whisper_lang, "Yes" if initial_prompt else "No"
         )
 
         # ── Transcription ────────────────────────────────────
@@ -150,6 +160,7 @@ async def transcribe(
                 task="transcribe",
                 word_timestamps=True,
                 beam_size=1,
+                initial_prompt=initial_prompt,
             )
         except Exception as exc:
             logger.exception("Transcription failed for '%s': %s", file.filename, exc)
