@@ -15,6 +15,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+import json
 import httpx
 from mistralai.client.sdk import Mistral
 from dotenv import load_dotenv
@@ -104,6 +105,72 @@ async def analyze_wordplay_with_mistral(lyrics: str) -> tuple[float | None, str 
         logger.error("Mistral wordplay analysis failed: %s", exc)
         return None, None
 
+
+async def analyze_all_metrics_with_mistral(lyrics: str) -> dict | None:
+    """
+    Calls Mistral to score Syllable, Rhyme, Alliteration, Vocab, Wordplay, Lang, and Total
+    metrics in a single consolidated request.
+    """
+    api_key = os.getenv("MISTRAL_API_KEY")
+    if not api_key:
+        logger.warning("MISTRAL_API_KEY environment variable is not set. Skipping LLM scoring.")
+        return None
+        
+    try:
+        client = Mistral(api_key=api_key)
+        prompt = (
+            "You are an expert rap literary analyst. Analyze the following rap lyrics across these dimensions:\n"
+            "1. Rhyme Score (density of end rhymes, multi-syllabic rhymes, internal rhymes, slant rhymes, phonetic similarities in Hindi/Hinglish/English).\n"
+            "2. Syllable Score (rhythmic syllable density, flow pacing, word syllable complexity, natural cadence).\n"
+            "3. Alliteration Score (sound clustering, consonant play, repetition of sounds across words).\n"
+            "4. Vocab Score (uniqueness of words, vocabulary richness, creative code-switching between Hindi, English, and Hinglish).\n"
+            "5. Wordplay Score (metaphors, puns, double meanings, similes).\n"
+            "6. Lang (language classification: 'en', 'hi', or 'mixed').\n"
+            "7. Total Score (overall lyricism, complexity, structure, and technical execution out of 100).\n\n"
+            "Provide your response strictly in the following JSON format. Do not output any intro, outro, or markdown code block formatting—just raw JSON:\n"
+            "{\n"
+            "  \"scores\": {\n"
+            "    \"rhyme\": <float_value_0_to_100>,\n"
+            "    \"syllable\": <float_value_0_to_100>,\n"
+            "    \"alliteration\": <float_value_0_to_100>,\n"
+            "    \"vocabulary\": <float_value_0_to_100>,\n"
+            "    \"wordplay\": <float_value_0_to_100>,\n"
+            "    \"total\": <float_value_0_to_100>\n"
+            "  },\n"
+            "  \"lang\": \"<'en'|'hi'|'mixed'>\",\n"
+            "  \"explanations\": {\n"
+            "    \"rhyme\": \"<brief_explanation>\",\n"
+            "    \"syllable\": \"<brief_explanation>\",\n"
+            "    \"alliteration\": \"<brief_explanation>\",\n"
+            "    \"vocabulary\": \"<brief_explanation>\",\n"
+            "    \"wordplay\": \"<brief_explanation>\",\n"
+            "    \"total\": \"<brief_explanation>\"\n"
+            "  }\n"
+            "}\n\n"
+            f"LYRICS TO ANALYZE:\n{lyrics}"
+        )
+        
+        response = await client.chat.complete_async(
+            model="open-mistral-nemo",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        content = response.choices[0].message.content.strip()
+        
+        # Clean markdown code block wrapper if returned
+        if content.startswith("```json"):
+            content = content[7:]
+        if content.startswith("```"):
+            content = content[3:]
+        if content.endswith("```"):
+            content = content[:-3]
+        content = content.strip()
+        
+        return json.loads(content)
+    except Exception as exc:
+        logger.exception("Mistral all-metrics analysis failed: %s", exc)
+        return None
+
+
 from models.schemas import (
     AnalyzeRequest,
     FlowMetadata,
@@ -149,11 +216,126 @@ async def health() -> dict:
     return {"status": "ok", "service": "raprank-nlp"}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# POST /analyze
-# Accepts pre-transcribed lyrics + optional word timestamps.
-# When `words` are provided, flow/beat-sync is attempted.
-# ─────────────────────────────────────────────────────────────────────────────
+async def compute_scores_and_breakdown(
+    lyrics: str,
+    lang: str,
+    flow_score: float | None = None,
+    flow_meta: FlowMetadata | None = None,
+    generated_lyrics: str | None = None,
+    track_id: int | None = None,
+) -> ScoreBreakdown:
+    if track_id is not None:
+        await update_status(track_id, "ANALYZING_TEXT")
+        
+    syllable_score, avg_syl, syllable_weight_score, weight_ratio = syllable_service.calculate(lyrics)
+    rhyme_score, rhyme_pairs, multisyl_count, internal_score, chain_score = rhyme_service.calculate(lyrics)
+    allit_score, allit_pairs = alliteration_service.calculate(lyrics)
+    vocab_score, ttr = vocabulary_service.calculate(lyrics)
+    wordplay_score, wordplay_meta = wordplay_service.calculate(lyrics)
+    
+    # Call Mistral to analyze all metrics
+    llm_res = await analyze_all_metrics_with_mistral(lyrics)
+    nlp_explanations = None
+    wordplay_explanation = None
+    
+    if llm_res and "scores" in llm_res:
+        llm_scores = llm_res["scores"]
+        nlp_explanations = llm_res.get("explanations")
+        wordplay_explanation = nlp_explanations.get("wordplay") if nlp_explanations else None
+        
+        # Update language if detected by LLM
+        if "lang" in llm_res and llm_res["lang"]:
+            lang = llm_res["lang"]
+            
+        # Combine local and LLM scores using config weights
+        h_weights = scoring_config.HYBRID_COMBINATION_WEIGHTS
+        
+        rhyme_score = (
+            h_weights["rhyme"]["local"] * rhyme_score
+            + h_weights["rhyme"]["llm"] * llm_scores.get("rhyme", rhyme_score)
+        )
+        syllable_score = (
+            h_weights["syllable"]["local"] * syllable_score
+            + h_weights["syllable"]["llm"] * llm_scores.get("syllable", syllable_score)
+        )
+        allit_score = (
+            h_weights["alliteration"]["local"] * allit_score
+            + h_weights["alliteration"]["llm"] * llm_scores.get("alliteration", allit_score)
+        )
+        vocab_score = (
+            h_weights["vocabulary"]["local"] * vocab_score
+            + h_weights["vocabulary"]["llm"] * llm_scores.get("vocabulary", vocab_score)
+        )
+        wordplay_score = (
+            h_weights["wordplay"]["local"] * wordplay_score
+            + h_weights["wordplay"]["llm"] * llm_scores.get("wordplay", wordplay_score)
+        )
+
+    # ── Weighted total ────────────────────────────────────────────────────
+    if flow_score is not None:
+        w = scoring_config.MAIN_WEIGHTS["WITH_FLOW"]
+        calculated_total = (
+            rhyme_score * w["rhyme"]
+            + syllable_score * w["syllable"]
+            + allit_score * w["alliteration"]
+            + vocab_score * w["vocabulary"]
+            + wordplay_score * w["wordplay"]
+            + syllable_weight_score * w["syllable_weight"]
+            + flow_score * w["flow"]
+        )
+    else:
+        w = scoring_config.MAIN_WEIGHTS["TEXT_ONLY"]
+        calculated_total = (
+            rhyme_score * w["rhyme"]
+            + syllable_score * w["syllable"]
+            + allit_score * w["alliteration"]
+            + vocab_score * w["vocabulary"]
+            + wordplay_score * w["wordplay"]
+            + syllable_weight_score * w["syllable_weight"]
+        )
+
+    if llm_res and "scores" in llm_res and "total" in llm_res["scores"]:
+        h_weights = scoring_config.HYBRID_COMBINATION_WEIGHTS
+        total = (
+            h_weights["total"]["local"] * calculated_total
+            + h_weights["total"]["llm"] * llm_res["scores"]["total"]
+        )
+    else:
+        total = calculated_total
+
+    line_count = sum(
+        1
+        for l in lyrics.split("\n")
+        if l.strip() and not (l.strip().startswith("[") and l.strip().endswith("]"))
+    )
+
+    return ScoreBreakdown(
+        syllable_score=round(syllable_score, 2),
+        rhyme_score=round(rhyme_score, 2),
+        alliteration_score=round(allit_score, 2),
+        vocabulary_score=round(vocab_score, 2),
+        flow_score=flow_score,
+        total_score=round(total, 2),
+        wordplay_score=round(wordplay_score, 2),
+        syllable_weight=round(syllable_weight_score, 2),
+        word_count=len(lyrics.split()),
+        line_count=line_count,
+        avg_syllables_per_word=round(avg_syl, 2),
+        vocabulary_uniqueness=ttr,
+        detected_language=lang,
+        double_entendres_count=wordplay_meta["double_entendres_count"],
+        puns_count=wordplay_meta["puns_count"],
+        similes_count=wordplay_meta["simile_count"],
+        metaphors_count=wordplay_meta["metaphor_count"],
+        alliteration_pairs=allit_pairs,
+        rhyme_pairs=rhyme_pairs,
+        multisyllabic_rhyme_count=multisyl_count,
+        flow_metadata=flow_meta,
+        generated_lyrics=generated_lyrics,
+        wordplay_explanation=wordplay_explanation,
+        nlp_explanations=nlp_explanations,
+    )
+
 
 @app.post("/analyze", response_model=ScoreBreakdown)
 async def analyze(request: AnalyzeRequest) -> ScoreBreakdown:
@@ -240,75 +422,14 @@ async def analyze(request: AnalyzeRequest) -> ScoreBreakdown:
         except Exception as exc:
             logger.exception("Flow analysis from audio_url failed: %s", exc)
 
-    # ── Run all text-based scoring services ───────────────────────────────
-    await update_status(request.track_id, "ANALYZING_TEXT")
-    syllable_score, avg_syl, syllable_weight_score, weight_ratio = syllable_service.calculate(lyrics)
-    rhyme_score, rhyme_pairs, multisyl_count, internal_score, chain_score = rhyme_service.calculate(lyrics)
-    allit_score, allit_pairs = alliteration_service.calculate(lyrics)
-    vocab_score, ttr = vocabulary_service.calculate(lyrics)
-    wordplay_score, wordplay_meta = wordplay_service.calculate(lyrics)
-    wordplay_explanation = None
-
-    # Call Mistral for deep wordplay analysis
-    llm_wordplay_score, explanation = await analyze_wordplay_with_mistral(lyrics)
-    if llm_wordplay_score is not None:
-        # Hybrid wordplay scoring: 30% static, 70% LLM
-        wordplay_score = 0.3 * wordplay_score + 0.7 * llm_wordplay_score
-        wordplay_explanation = explanation
-
-    # ── Weighted total from Config ─────────────────────────────────────────
-    if flow_score is not None:
-        w = scoring_config.MAIN_WEIGHTS["WITH_FLOW"]
-        total = (
-            rhyme_score * w["rhyme"]
-            + syllable_score * w["syllable"]
-            + allit_score * w["alliteration"]
-            + vocab_score * w["vocabulary"]
-            + wordplay_score * w["wordplay"]
-            + syllable_weight_score * w["syllable_weight"]
-            + flow_score * w["flow"]
-        )
-    else:
-        w = scoring_config.MAIN_WEIGHTS["TEXT_ONLY"]
-        total = (
-            rhyme_score * w["rhyme"]
-            + syllable_score * w["syllable"]
-            + allit_score * w["alliteration"]
-            + vocab_score * w["vocabulary"]
-            + wordplay_score * w["wordplay"]
-            + syllable_weight_score * w["syllable_weight"]
-        )
-
-    line_count = sum(
-        1
-        for l in lyrics.split("\n")
-        if l.strip() and not (l.strip().startswith("[") and l.strip().endswith("]"))
-    )
-
-    return ScoreBreakdown(
-        syllable_score=round(syllable_score, 2),
-        rhyme_score=round(rhyme_score, 2),
-        alliteration_score=round(allit_score, 2),
-        vocabulary_score=round(vocab_score, 2),
+    # ── Run all text-based scoring and hybrid LLM evaluation ──────────────
+    return await compute_scores_and_breakdown(
+        lyrics=lyrics,
+        lang=lang,
         flow_score=flow_score,
-        total_score=round(total, 2),
-        wordplay_score=round(wordplay_score, 2),
-        syllable_weight=round(syllable_weight_score, 2),
-        word_count=len(lyrics.split()),
-        line_count=line_count,
-        avg_syllables_per_word=round(avg_syl, 2),
-        vocabulary_uniqueness=ttr,
-        detected_language=lang,
-        double_entendres_count=wordplay_meta["double_entendres_count"],
-        puns_count=wordplay_meta["puns_count"],
-        similes_count=wordplay_meta["simile_count"],
-        metaphors_count=wordplay_meta["metaphor_count"],
-        alliteration_pairs=allit_pairs,
-        rhyme_pairs=rhyme_pairs,
-        multisyllabic_rhyme_count=multisyl_count,
-        flow_metadata=flow_meta,
+        flow_meta=flow_meta,
         generated_lyrics=generated_lyrics,
-        wordplay_explanation=wordplay_explanation,
+        track_id=request.track_id,
     )
 
 
@@ -369,22 +490,7 @@ async def transcribe_and_analyze(file: UploadFile = File(...)) -> JSONResponse:
     lang = transcription.get("detected_language", "auto")
     words_raw: list[dict] = transcription.get("words", [])
 
-    # ── Step 2: Text-based scoring ────────────────────────────────────────
-    syllable_score, avg_syl, syllable_weight_score, weight_ratio = syllable_service.calculate(lyrics)
-    rhyme_score, rhyme_pairs, multisyl_count, internal_score, chain_score = rhyme_service.calculate(lyrics)
-    allit_score, allit_pairs = alliteration_service.calculate(lyrics)
-    vocab_score, ttr = vocabulary_service.calculate(lyrics)
-    wordplay_score, wordplay_meta = wordplay_service.calculate(lyrics)
-    wordplay_explanation = None
-
-    # Call Mistral for deep wordplay analysis
-    llm_wordplay_score, explanation = await analyze_wordplay_with_mistral(lyrics)
-    if llm_wordplay_score is not None:
-        # Hybrid wordplay scoring: 30% static, 70% LLM
-        wordplay_score = 0.3 * wordplay_score + 0.7 * llm_wordplay_score
-        wordplay_explanation = explanation
-
-    # ── Step 3: Beat-sync flow scoring ───────────────────────────────────
+    # ── Step 2: Beat-sync flow scoring ───────────────────────────────────
     flow_score: float | None = None
     flow_meta: FlowMetadata | None = None
 
@@ -402,56 +508,13 @@ async def transcribe_and_analyze(file: UploadFile = File(...)) -> JSONResponse:
             logger.exception("Beat sync failed: %s", exc)
             # Non-fatal — continue without flow score
 
-    # ── Step 4: Weighted total ────────────────────────────────────────────
-    if flow_score is not None:
-        total = (
-            rhyme_score * 0.20
-            + syllable_score * 0.15
-            + allit_score * 0.10
-            + vocab_score * 0.10
-            + wordplay_score * 0.15
-            + syllable_weight_score * 0.10
-            + flow_score * 0.20
-        )
-    else:
-        total = (
-            rhyme_score * 0.25
-            + syllable_score * 0.20
-            + allit_score * 0.15
-            + vocab_score * 0.15
-            + wordplay_score * 0.15
-            + syllable_weight_score * 0.10
-        )
-
-    line_count = sum(
-        1
-        for l in lyrics.split("\n")
-        if l.strip() and not (l.strip().startswith("[") and l.strip().endswith("]"))
-    )
-
-    analysis = ScoreBreakdown(
-        syllable_score=round(syllable_score, 2),
-        rhyme_score=round(rhyme_score, 2),
-        alliteration_score=round(allit_score, 2),
-        vocabulary_score=round(vocab_score, 2),
+    # ── Step 3: Run all text-based scoring and hybrid LLM evaluation ──────
+    analysis = await compute_scores_and_breakdown(
+        lyrics=lyrics,
+        lang=lang,
         flow_score=flow_score,
-        total_score=round(total, 2),
-        wordplay_score=round(wordplay_score, 2),
-        syllable_weight=round(syllable_weight_score, 2),
-        word_count=len(lyrics.split()),
-        line_count=line_count,
-        avg_syllables_per_word=round(avg_syl, 2),
-        vocabulary_uniqueness=ttr,
-        detected_language=lang,
-        double_entendres_count=wordplay_meta["double_entendres_count"],
-        puns_count=wordplay_meta["puns_count"],
-        similes_count=wordplay_meta["simile_count"],
-        metaphors_count=wordplay_meta["metaphor_count"],
-        alliteration_pairs=allit_pairs,
-        rhyme_pairs=rhyme_pairs,
-        multisyllabic_rhyme_count=multisyl_count,
-        flow_metadata=flow_meta,
-        wordplay_explanation=wordplay_explanation,
+        flow_meta=flow_meta,
+        generated_lyrics=None,
     )
 
     return JSONResponse(

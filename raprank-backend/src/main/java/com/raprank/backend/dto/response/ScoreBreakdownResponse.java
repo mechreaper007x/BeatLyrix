@@ -56,4 +56,7 @@ public class ScoreBreakdownResponse {
 
     @JsonAlias("wordplay_explanation")
     private String wordplayExplanation;
+
+    @JsonAlias("nlp_explanations")
+    private java.util.Map<String, String> nlpExplanations;
 }

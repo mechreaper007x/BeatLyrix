@@ -122,5 +122,6 @@ public class ScoringOrchestrationService {
         private Integer metaphors_count;
         private String generated_lyrics;
         private String wordplay_explanation;
+        private java.util.Map<String, String> nlp_explanations;
     }
 }

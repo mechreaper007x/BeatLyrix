@@ -57,6 +57,15 @@ def refine_word_onsets(
         spectral_onsets = get_fallback_spectral_onsets(vocals_bytes, filename)
         return [(t, 1.0) for t in spectral_onsets]
 
+    # Fallback if track is too long / has too many words to prevent event-loop freezing on CPU
+    if len(rough_words) > 150:
+        logger.warning(
+            "Track has %d words (threshold: 150). Skipping CPU-heavy Wav2Vec2 forced alignment. Falling back to spectral onset detection.",
+            len(rough_words),
+        )
+        spectral_onsets = get_fallback_spectral_onsets(vocals_bytes, filename)
+        return [(t, 1.0) for t in spectral_onsets]
+
     suffix = os.path.splitext(filename)[1].lower() or ".mp3"
     tmp_dir = tempfile.mkdtemp(prefix="align_temp_")
     audio_path = os.path.join(tmp_dir, f"vocals{suffix}")
@@ -201,11 +210,12 @@ def align_structured_lyrics_to_whisper(
     """
     Performs dynamic programming global sequence alignment to map Whisper's
     word timestamps onto the user's ground-truth structured lyrics.
+    Optimised using band DP (Sakoe-Chiba band), precomputed phonetic keys, and similarity caching.
     """
     from services.language_utils import clean_word, devanagari_to_roman, is_hindi_word
     import difflib
 
-    # 1. Parse structured lyrics into words
+    # 1. Parse structured lyrics into words and precompute normalized comparison keys
     structured_words = []
     lines = lyrics.strip().split("\n")
     word_id = 0
@@ -216,10 +226,14 @@ def align_structured_lyrics_to_whisper(
         for word in line.split():
             cleaned = clean_word(word)
             if cleaned:
+                # Precompute romanized and normalized form for comparison
+                rom = devanagari_to_roman(cleaned) if is_hindi_word(cleaned) else cleaned
+                rom_norm = rom.lower().replace("aa", "a").replace("ee", "i").replace("oo", "u")
                 structured_words.append({
                     "id": word_id,
                     "word": word,
                     "cleaned": cleaned.lower(),
+                    "rom_norm": rom_norm,
                     "line_idx": line_idx,
                     "start": None,
                     "end": None,
@@ -230,37 +244,44 @@ def align_structured_lyrics_to_whisper(
     if not structured_words or not whisper_words:
         return []
 
-    # 2. Parse whisper words
+    # 2. Parse whisper words and precompute comparison keys
     cleaned_whisper = []
     for idx, w in enumerate(whisper_words):
         word_text = w.get("word", "").strip()
         cleaned = clean_word(word_text)
+        rom = devanagari_to_roman(cleaned) if is_hindi_word(cleaned) else cleaned
+        rom_norm = rom.lower().replace("aa", "a").replace("ee", "i").replace("oo", "u")
         cleaned_whisper.append({
             "id": idx,
             "word": word_text,
             "cleaned": cleaned.lower(),
+            "rom_norm": rom_norm,
             "start": w.get("start"),
             "end": w.get("end"),
             "probability": w.get("probability", 1.0)
         })
 
-    # Phonetic similarity helper
-    def word_similarity(w1: str, w2: str) -> float:
-        r1 = devanagari_to_roman(w1) if is_hindi_word(w1) else w1
-        r2 = devanagari_to_roman(w2) if is_hindi_word(w2) else w2
-        r1 = r1.replace("aa", "a").replace("ee", "i").replace("oo", "u")
-        r2 = r2.replace("aa", "a").replace("ee", "i").replace("oo", "u")
+    # Similarity helper with caching
+    similarity_cache = {}
+    def word_similarity(idx1: int, idx2: int) -> float:
+        r1 = structured_words[idx1]["rom_norm"]
+        r2 = cleaned_whisper[idx2]["rom_norm"]
         if r1 == r2:
             return 1.0
-        return difflib.SequenceMatcher(None, r1, r2).ratio()
+        pair = (r1, r2)
+        if pair not in similarity_cache:
+            similarity_cache[pair] = difflib.SequenceMatcher(None, r1, r2).ratio()
+        return similarity_cache[pair]
 
-    # 3. Dynamic Programming Alignment
+    # 3. Band Dynamic Programming Alignment (Sakoe-Chiba band)
     n = len(structured_words)
     m = len(cleaned_whisper)
     
-    dp = np.zeros((n + 1, m + 1))
+    # Initialize DP table with very low value for out-of-band cells
+    dp = np.full((n + 1, m + 1), -1e9)
     tb = np.zeros((n + 1, m + 1), dtype=int)  # 0: Match, 1: Skip S, 2: Skip W
     
+    dp[0][0] = 0.0
     for i in range(1, n + 1):
         dp[i][0] = -i * 0.5
         tb[i][0] = 1
@@ -268,9 +289,17 @@ def align_structured_lyrics_to_whisper(
         dp[0][j] = -j * 0.5
         tb[0][j] = 2
 
+    # Band size (how far search can wander from expected diagonal)
+    band_size = 100
+    ratio = m / n if n > 0 else 1.0
+
     for i in range(1, n + 1):
-        for j in range(1, m + 1):
-            sim = word_similarity(structured_words[i-1]["cleaned"], cleaned_whisper[j-1]["cleaned"])
+        center = int(i * ratio)
+        start_j = max(1, center - band_size)
+        end_j = min(m, center + band_size)
+        
+        for j in range(start_j, end_j + 1):
+            sim = word_similarity(i - 1, j - 1)
             match_score = dp[i-1][j-1] + (1.5 * sim - 0.2)
             skip_s = dp[i-1][j] - 0.5
             skip_w = dp[i][j-1] - 0.5

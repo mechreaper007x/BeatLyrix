@@ -32,6 +32,21 @@ def separate_vocals(audio_bytes: bytes, filename: str) -> tuple[bytes, bytes] | 
         with open(input_path, "wb") as f:
             f.write(audio_bytes)
 
+        # Check audio duration to avoid OOM/timeout on CPU
+        try:
+            import librosa
+            duration = librosa.get_duration(path=input_path)
+            logger.info("Audio duration: %.2f seconds", duration)
+            if duration > 90.0:
+                logger.warning("Audio duration (%.2f seconds) exceeds 90s threshold. Skipping Demucs separation on CPU to prevent OOM/timeouts.", duration)
+                return None
+        except Exception as dur_err:
+            logger.warning("Could not determine audio duration: %s. Using size-based fallback.", dur_err)
+            # Fallback size check: if file is larger than 10MB, skip
+            if len(audio_bytes) > 10 * 1024 * 1024:
+                logger.warning("Audio file size (%.2f MB) is too large. Skipping Demucs separation.", len(audio_bytes) / 1024 / 1024)
+                return None
+
         logger.info("Starting audio source separation using Demucs...")
         
         # We run demucs programmatically.

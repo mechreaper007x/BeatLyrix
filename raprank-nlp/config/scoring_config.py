@@ -125,6 +125,17 @@ MAIN_WEIGHTS = {
     }
 }
 
+# ── Hybrid LLM & Local Scoring Weights ────────────────────────────────────────
+HYBRID_COMBINATION_WEIGHTS = {
+    "rhyme": {"local": 0.30, "llm": 0.70},
+    "syllable": {"local": 0.30, "llm": 0.70},
+    "alliteration": {"local": 0.30, "llm": 0.70},
+    "vocabulary": {"local": 0.30, "llm": 0.70},
+    "wordplay": {"local": 0.30, "llm": 0.70},
+    "total": {"local": 0.30, "llm": 0.70},
+}
+
+
 
 def evaluate_piecewise_curve(
     value: float,
