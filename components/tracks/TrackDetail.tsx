@@ -268,22 +268,31 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
         </section>
 
         {/* SECTION 2 — Audio player */}
-        <section className="w-full bg-[#111111] border border-[#2a2a2a] border-l-4 border-l-[#a8ff3e] rounded-2xl p-5 shadow-lg">
-          <audio
-            controls
-            src={track.audioUrl}
-            className="w-full focus:outline-none"
-            style={{ accentColor: "#a8ff3e" }}
-          >
-            Your browser does not support the audio element.
-          </audio>
-          
-          <div className="flex gap-2 mt-3.5">
-            <span className="text-[10px] font-bold text-[#888888] bg-[#1a1a1a] border border-[#2a2a2a] px-3 py-1 rounded-full uppercase tracking-wider">
-              AUDIO STREAM
+        {track.audioUrl ? (
+          <section className="w-full bg-[#111111] border border-[#2a2a2a] border-l-4 border-l-[#a8ff3e] rounded-2xl p-5 shadow-lg">
+            <audio
+              controls
+              src={track.audioUrl}
+              className="w-full focus:outline-none"
+              style={{ accentColor: "#a8ff3e" }}
+            >
+              Your browser does not support the audio element.
+            </audio>
+            
+            <div className="flex gap-2 mt-3.5">
+              <span className="text-[10px] font-bold text-[#888888] bg-[#1a1a1a] border border-[#2a2a2a] px-3 py-1 rounded-full uppercase tracking-wider">
+                AUDIO STREAM
+              </span>
+            </div>
+          </section>
+        ) : (
+          <section className="w-full bg-[#111111]/40 border border-[#2a2a2a] border-l-4 border-l-gray-600 rounded-2xl p-5 shadow-lg flex items-center justify-between">
+            <span className="text-sm font-sans text-[#888888]">No audio track uploaded. Lyrical scoring was calculated in Text-Only mode.</span>
+            <span className="text-[10px] font-bold text-gray-400 bg-[#1a1a1a] border border-[#2a2a2a] px-3 py-1 rounded-full uppercase tracking-wider">
+              TEXT ONLY
             </span>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* SECTION 3 — Two column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -356,20 +365,24 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center text-xs font-bold text-white uppercase tracking-wider">
                   <span>Flow Complexity</span>
-                  <span className="text-[#a8ff3e] font-sans">{flowScore}%</span>
+                  <span className="text-[#a8ff3e] font-sans">
+                    {track.audioUrl ? `${flowScore}%` : "N/A (Text-Only)"}
+                  </span>
                 </div>
-                <div 
-                  role="progressbar"
-                  aria-valuenow={flowScore}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  className="w-full bg-[#2a1518] rounded-full h-2.5 overflow-hidden border border-[#2a1518]/60"
-                >
-                  <div
-                    className="bg-[#a8ff3e] h-full rounded-full shadow-[0_0_8px_#a8ff3e] transition-all duration-300"
-                    style={{ width: `${flowScore}%` }}
-                  />
-                </div>
+                {track.audioUrl && (
+                  <div 
+                    role="progressbar"
+                    aria-valuenow={flowScore}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    className="w-full bg-[#2a1518] rounded-full h-2.5 overflow-hidden border border-[#2a1518]/60"
+                  >
+                    <div
+                      className="bg-[#a8ff3e] h-full rounded-full shadow-[0_0_8px_#a8ff3e] transition-all duration-300"
+                      style={{ width: `${flowScore}%` }}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Rhyme Complexity */}
