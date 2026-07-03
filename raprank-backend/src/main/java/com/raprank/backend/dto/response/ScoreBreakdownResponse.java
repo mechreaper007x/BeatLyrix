@@ -36,6 +36,9 @@ public class ScoreBreakdownResponse {
     @JsonAlias("syllable_weight")
     private Double syllableWeight;
 
+    @JsonAlias("vocabulary_score")
+    private Double vocabularyScore;
+
     @JsonAlias("vocabulary_uniqueness")
     private Double vocabularyUniqueness;
 

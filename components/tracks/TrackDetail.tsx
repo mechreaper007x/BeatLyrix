@@ -182,6 +182,7 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
   const rhymeScore = track.scoreBreakdown?.rhymeScore ?? track.scoreBreakdown?.rhyme_score ?? 0;
   const wordplayScore = track.scoreBreakdown?.wordplayScore ?? track.scoreBreakdown?.wordplay_score ?? 0;
   const syllableWeight = track.scoreBreakdown?.syllableWeight ?? track.scoreBreakdown?.syllable_weight ?? 0;
+  const vocabularyScore = track.scoreBreakdown?.vocabularyScore ?? track.scoreBreakdown?.vocabulary_score ?? 0;
   const vocabularyUniqueness = track.scoreBreakdown?.vocabularyUniqueness ?? track.scoreBreakdown?.vocabulary_uniqueness ?? 0;
 
   const doubleEntendresCount = track.scoreBreakdown?.doubleEntendresCount ?? track.scoreBreakdown?.double_entendres_count ?? 0;
@@ -426,22 +427,22 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
                 </div>
               </div>
 
-              {/* Syllable Weight (Vocabulary) */}
+              {/* Vocabulary Richness */}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center text-xs font-bold text-white uppercase tracking-wider">
-                  <span>Syllable Weight (Vocabulary)</span>
-                  <span className="text-[#a8ff3e] font-sans">{syllableWeight}%</span>
+                  <span>Vocabulary Richness</span>
+                  <span className="text-[#a8ff3e] font-sans">{vocabularyScore}%</span>
                 </div>
                 <div 
                   role="progressbar"
-                  aria-valuenow={syllableWeight}
+                  aria-valuenow={vocabularyScore}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   className="w-full bg-[#2a1518] rounded-full h-2.5 overflow-hidden border border-[#2a1518]/60"
                 >
                   <div
                     className="bg-[#a8ff3e] h-full rounded-full shadow-[0_0_8px_#a8ff3e] transition-all duration-300"
-                    style={{ width: `${syllableWeight}%` }}
+                    style={{ width: `${vocabularyScore}%` }}
                   />
                 </div>
               </div>
