@@ -78,10 +78,14 @@ def _multi_rhyme_key_hi(word: str) -> Optional[str]:
 # ── Hinglish helpers ──────────────────────────────────────────────────────────
 
 def normalize_hinglish(word: str) -> str:
-    word = word.lower()
-    word = word.replace("aa", "a")
-    word = word.replace("ee", "i")
-    word = word.replace("oo", "u")
+    word = word.lower().strip()
+    
+    # 1. Replace consonants & glide vowels
+    word = word.replace("y", "i")
+    word = word.replace("w", "v")
+    word = word.replace("z", "j")
+    
+    # 2. Collapse aspirated consonants
     word = word.replace("bh", "b")
     word = word.replace("dh", "d")
     word = word.replace("kh", "k")
@@ -90,8 +94,29 @@ def normalize_hinglish(word: str) -> str:
     word = word.replace("th", "t")
     word = word.replace("ch", "c")
     word = word.replace("sh", "s")
-    # De-duplicate repeated consonants (e.g., ll -> l, tt -> t, dd -> d)
-    word = re.sub(r"([bcdfghjklmnpqrstvwxyz])\1+", r"\1", word)
+    word = word.replace("jh", "j")
+    
+    # 3. Strip trailing 'h' for length > 2
+    if word.endswith("h") and len(word) > 2:
+        word = word[:-1]
+        
+    # 4. De-duplicate consecutive identical characters (e.g. aa -> a, ii -> i, ll -> l)
+    word = re.sub(r"(.)\1+", r"\1", word)
+    
+    # 5. Vocalic r mapping (ri -> r, ru -> r)
+    word = word.replace("ri", "r")
+    word = word.replace("ru", "r")
+    
+    # 6. Map vowel pairs to single representations
+    word = word.replace("ai", "e")
+    
+    # 7. Word-final o -> u mapping
+    if word.endswith("o"):
+        word = word[:-1] + "u"
+        
+    # 8. De-duplicate one final time
+    word = re.sub(r"(.)\1+", r"\1", word)
+    
     return word
 
 
@@ -336,6 +361,16 @@ def calculate(lyrics: str) -> tuple[float, list[RhymeMatch], int, float, float]:
         chain_score         0-100 sub-score
     """
     lines = content_lines(lyrics)
+    # De-duplicate identical lines to prevent repeated hooks/choruses from inflating the rhyme score
+    unique_lines = []
+    seen_lines = set()
+    for line in lines:
+        normalized_line = re.sub(r"[^\w\u0900-\u097F]", "", line).strip().lower()
+        if normalized_line not in seen_lines:
+            seen_lines.add(normalized_line)
+            unique_lines.append(line)
+    lines = unique_lines
+
     if len(lines) < 2:
         return 0.0, [], 0, 0.0, 0.0
 
