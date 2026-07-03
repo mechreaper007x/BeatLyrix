@@ -90,6 +90,8 @@ def normalize_hinglish(word: str) -> str:
     word = word.replace("th", "t")
     word = word.replace("ch", "c")
     word = word.replace("sh", "s")
+    # De-duplicate repeated consonants (e.g., ll -> l, tt -> t, dd -> d)
+    word = re.sub(r"([bcdfghjklmnpqrstvwxyz])\1+", r"\1", word)
     return word
 
 

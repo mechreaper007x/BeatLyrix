@@ -37,13 +37,25 @@ def _count_hindi(word: str) -> int:
     Each vowel nucleus = 1 syllable.
     Independent vowel OR matra    → +1
     Consonant NOT followed by halant or matra → +1 (inherent 'a' is present)
+    Implements Hindi schwa deletion: final consonants do not count as a new syllable if the word has other syllables.
     """
     chars = list(word)
+    
+    # Find the index of the last Devanagari character that is a consonant
+    last_consonant_idx = -1
+    for idx, ch in enumerate(chars):
+        if "\u0900" <= ch <= "\u0939" or "\u0958" <= ch <= "\u095F":
+            last_consonant_idx = idx
+
     count = 0
     for i, ch in enumerate(chars):
         if ch in _DEVA_VOWELS or ch in _DEVA_MATRAS:
             count += 1
         elif "\u0900" <= ch <= "\u0939" or "\u0958" <= ch <= "\u095F":
+            # Schwa deletion on final consonant of a word of length > 1
+            if i == last_consonant_idx and len(word) > 1:
+                continue
+                
             nxt = chars[i + 1] if i + 1 < len(chars) else ""
             if nxt != _HALANT and nxt not in _DEVA_MATRAS:
                 count += 1
