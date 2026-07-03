@@ -129,7 +129,7 @@ MAIN_WEIGHTS = {
 HYBRID_COMBINATION_WEIGHTS = {
     "rhyme": {"local": 0.30, "llm": 0.70},
     "syllable": {"local": 0.30, "llm": 0.70},
-    "alliteration": {"local": 0.30, "llm": 0.70},
+    "alliteration": {"local": 1.0, "llm": 0.0},
     "vocabulary": {"local": 0.30, "llm": 0.70},
     "wordplay": {"local": 0.30, "llm": 0.70},
     "total": {"local": 0.30, "llm": 0.70},
