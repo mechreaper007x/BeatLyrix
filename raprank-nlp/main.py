@@ -150,14 +150,14 @@ async def analyze_all_metrics_with_mistral(lyrics: str) -> dict | None:
     try:
         client = Mistral(api_key=api_key)
         prompt = (
-            "You are an expert rap literary analyst. Analyze the following rap lyrics across these dimensions:\n"
+            "You are an expert rap literary critic and analyst. Analyze the following rap lyrics across these dimensions:\n"
             "1. Rhyme Score (density of end rhymes, multi-syllabic rhymes, internal rhymes, slant rhymes, phonetic similarities in Hindi/Hinglish/English).\n"
             "2. Syllable Score (rhythmic syllable density, flow pacing, word syllable complexity, natural cadence).\n"
             "3. Alliteration Score (sound clustering, consonant play, repetition of sounds across words).\n"
             "4. Vocab Score (uniqueness of words, vocabulary richness, creative code-switching between Hindi, English, and Hinglish).\n"
-            "5. Wordplay Score (metaphors, puns, double meanings, similes).\n"
+            "5. Wordplay Score (metaphors, puns, double meanings, similes). BE EXTREMELY CRITICAL AND STRICT. Only award high scores (70+) to lyrics that demonstrate advanced, multi-layered wordplay, clever double entendres (such as schemes referencing history, pop culture, or billingual wordplay), and non-obvious puns. Award low scores (10-40) to basic storytelling, simple angry threats, surface-level clichés, and simple metaphors (e.g., standard disses like 'Yalgaar').\n"
             "6. Lang (language classification: 'en', 'hi', or 'mixed').\n"
-            "7. Total Score (overall lyricism, complexity, structure, and technical execution out of 100).\n\n"
+            "7. Total Score (overall lyricism, complexity, structure, and technical execution out of 100). This must reflect true lyrical caliber. A track with basic end-rhymes and repetitive diss structures (like 'Yalgaar') should be penalized for clichéd writing and must not exceed 45. A track with intricate multi-syllabic rhyme schemes, deep metaphors, and high-level wordplay (like Kr$na's verses) should score high (75+).\n\n"
             "Provide your response strictly in the following JSON format. Do not output any intro, outro, or markdown code block formatting—just raw JSON:\n"
             "{\n"
             "  \"scores\": {\n"
