@@ -127,12 +127,12 @@ MAIN_WEIGHTS = {
 
 # ── Hybrid LLM & Local Scoring Weights ────────────────────────────────────────
 HYBRID_COMBINATION_WEIGHTS = {
-    "rhyme": {"local": 0.30, "llm": 0.70},
-    "syllable": {"local": 0.30, "llm": 0.70},
+    "rhyme": {"local": 1.0, "llm": 0.0},
+    "syllable": {"local": 1.0, "llm": 0.0},
     "alliteration": {"local": 1.0, "llm": 0.0},
-    "vocabulary": {"local": 0.30, "llm": 0.70},
+    "vocabulary": {"local": 1.0, "llm": 0.0},
     "wordplay": {"local": 0.30, "llm": 0.70},
-    "total": {"local": 0.30, "llm": 0.70},
+    "total": {"local": 0.70, "llm": 0.30},
 }
 
 
