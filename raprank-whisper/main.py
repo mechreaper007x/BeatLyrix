@@ -5,6 +5,7 @@ Supports Hindi, English, and code-switched (Hinglish) audio.
 Hosted as a Hugging Face Docker Space on port 7860.
 """
 
+import asyncio
 import os
 import tempfile
 import logging
@@ -42,6 +43,20 @@ except Exception as exc:
     lid_pipeline = None
 
 # ─────────────────────────────────────────────────────────────
+# Single-flight concurrency guard.
+# faster-whisper's `model.transcribe()` is synchronous, CPU-bound, and this
+# Space runs a single Uvicorn worker (see Dockerfile) with no GPU. Running it
+# directly inside an `async def` endpoint blocks the *entire* event loop for
+# the whole duration of inference -- including `/health` and any other
+# concurrent request. `_transcription_lock` ensures at most one transcription
+# runs at a time (queuing the rest with a clear 429 rather than silently
+# piling up CPU contention that makes every request slower and more
+# failure-prone); `asyncio.to_thread` in the endpoint itself moves the actual
+# blocking call off the event loop so /health stays responsive meanwhile.
+# ─────────────────────────────────────────────────────────────
+_transcription_lock = asyncio.Semaphore(1)
+
+# ─────────────────────────────────────────────────────────────
 # FastAPI application
 # ─────────────────────────────────────────────────────────────
 app = FastAPI(
@@ -59,6 +74,42 @@ app = FastAPI(
 @app.get("/health")
 async def health() -> dict:
     return {"status": "ok", "service": "raprank-whisper"}
+
+
+def _run_transcription(tmp_path: str, whisper_lang: str | None, initial_prompt: str | None):
+    """
+    Synchronous, CPU-bound transcription work: the actual model call plus
+    forcing faster-whisper's lazy `segments` generator by iterating it. Must
+    be called via `asyncio.to_thread` from the endpoint, never awaited
+    directly -- this is what keeps the event loop (and /health) responsive
+    while a transcription is running.
+    """
+    segments, info = model.transcribe(
+        tmp_path,
+        language=whisper_lang,
+        task="transcribe",
+        word_timestamps=True,
+        beam_size=1,
+        initial_prompt=initial_prompt,
+    )
+
+    full_text_parts: list[str] = []
+    words_data: list[dict] = []
+    for segment in segments:
+        full_text_parts.append(segment.text)
+        if segment.words:
+            for word in segment.words:
+                words_data.append(
+                    {
+                        "word": word.word,
+                        "start": round(word.start, 3),
+                        "end": round(word.end, 3),
+                        "probability": round(word.probability, 4),
+                    }
+                )
+
+    full_text = "".join(full_text_parts).strip()
+    return full_text, info, words_data
 
 
 # ─────────────────────────────────────────────────────────────
@@ -146,47 +197,46 @@ async def transcribe(
                 logger.warning("LID classification failed: %s", exc)
 
         logger.info(
-            "Transcribing '%s' (%d bytes) → %s (language hint: %s, prompt: %s)", 
+            "Transcribing '%s' (%d bytes) → %s (language hint: %s, prompt: %s)",
             file.filename, len(audio_bytes), tmp_path, whisper_lang, "Yes" if initial_prompt else "No"
         )
 
         # ── Transcription ────────────────────────────────────
         # task="transcribe" → do not translate, return original language
         # word_timestamps=True → required for future beat-sync features
-        try:
-            segments, info = model.transcribe(
-                tmp_path,
-                language=whisper_lang,
-                task="transcribe",
-                word_timestamps=True,
-                beam_size=1,
-                initial_prompt=initial_prompt,
+        #
+        # `model.transcribe()` only returns a lazy generator -- the actual
+        # CPU-bound decoding happens while iterating `segments`, so both the
+        # call AND the collection loop must run inside the same
+        # `asyncio.to_thread` to actually get off the event loop (offloading
+        # only the call and then iterating the generator back on the loop
+        # would silently undo the fix). `_transcription_lock` caps this
+        # Space to one transcription at a time so concurrent uploads queue
+        # with a clear 429 instead of thrashing the single CPU worker.
+        if _transcription_lock.locked():
+            raise HTTPException(
+                status_code=429,
+                detail={"error": "Another transcription is already in progress on this instance. Please retry shortly."},
             )
-        except Exception as exc:
-            logger.exception("Transcription failed for '%s': %s", file.filename, exc)
-            return JSONResponse(
-                status_code=500,
-                content={"error": "Transcription failed. Check server logs for details."},
-            )
 
-        # ── Collect results ──────────────────────────────────
-        full_text_parts: list[str] = []
-        words_data: list[dict] = []
+        async with _transcription_lock:
+            try:
+                full_text, info, words_data = await asyncio.to_thread(
+                    _run_transcription, tmp_path, whisper_lang, initial_prompt
+                )
+            except TimeoutError as exc:
+                logger.exception("Transcription timed out for '%s': %s", file.filename, exc)
+                return JSONResponse(
+                    status_code=504,
+                    content={"error": "Transcription timed out. Try a shorter clip or retry."},
+                )
+            except Exception as exc:
+                logger.exception("Transcription failed for '%s': %s", file.filename, exc)
+                return JSONResponse(
+                    status_code=500,
+                    content={"error": f"Transcription failed: {exc}"},
+                )
 
-        for segment in segments:
-            full_text_parts.append(segment.text)
-            if segment.words:
-                for word in segment.words:
-                    words_data.append(
-                        {
-                            "word": word.word,
-                            "start": round(word.start, 3),
-                            "end": round(word.end, 3),
-                            "probability": round(word.probability, 4)
-                        }
-                    )
-
-        full_text = "".join(full_text_parts).strip()
         logger.info(
             "Done. lang=%s (p=%.2f), words=%d",
             info.language,
