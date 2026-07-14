@@ -176,10 +176,28 @@ def content_lines(lyrics: str) -> list[str]:
     return result
 
 
+# Devanagari nukta consonants (क़ख़ग़ज़ड़ढ़फ़य़) are frequently stored DECOMPOSED
+# as base-consonant + combining nukta U+093C rather than as the single
+# precomposed codepoint. Unicode NFC normalization does NOT recompose them
+# (they are in Unicode's composition-exclusion list), so the decomposed nukta
+# would otherwise fall through untranslated and corrupt the romanization (and
+# thus the rhyme key) of extremely common Hindi-rap words: ख़ौफ़ (khauf),
+# ज़िंदगी (zindagi), ग़म (gham), राज़ (raaz), फ़र्ज़ (farz). Map each
+# decomposed base+nukta sequence straight to its Roman form up front (avoiding
+# any precomposed-vs-decomposed codepoint-matching fragility against the
+# transliteration table), then strip any residual bare nukta so it can't leak.
+_NUKTA = "़"
+_NUKTA_TO_ROMAN = {
+    "क": "q", "ख": "kh", "ग": "g", "ज": "z",
+    "ड": "d", "ढ": "dh", "फ": "f", "य": "y",
+}
+
+
 def devanagari_to_roman(word: str) -> str:
     """
     Transliterate Devanagari (Hindi) words to consistent Romanized Latin text.
-    Handles vowels, consonants, dependent vowel matras, and half-letters (virama).
+    Handles vowels, consonants, dependent vowel matras, half-letters (virama),
+    and decomposed nukta consonants (base + U+093C).
     """
     consonants = {
         'क': 'k', 'ख': 'kh', 'ग': 'g', 'घ': 'gh', 'ङ': 'ng',
@@ -206,20 +224,26 @@ def devanagari_to_roman(word: str) -> str:
         char = word[i]
         if char in consonants:
             base = consonants[char]
-            if i + 1 < n and word[i+1] == '्': # virama (half letter)
+            j = i + 1
+            # Decomposed nukta consonant: base + U+093C. Resolve to the nukta
+            # variant and step past the nukta so the following virama/matra/
+            # schwa logic below still binds to it correctly.
+            if j < n and word[j] == _NUKTA:
+                base = _NUKTA_TO_ROMAN.get(char, base)
+                j += 1
+            if j < n and word[j] == '्':  # virama (half letter)
                 res.append(base)
-                i += 2
-            elif i + 1 < n and word[i+1] in matras:
-                matra = matras[word[i+1]]
-                res.append(base + matra)
-                i += 2
+                i = j + 1
+            elif j < n and word[j] in matras:
+                res.append(base + matras[word[j]])
+                i = j + 1
             else:
                 # Schwa deletion for final consonants
-                if i + 1 == n:
+                if j == n:
                     res.append(base)
                 else:
                     res.append(base + 'a')
-                i += 1
+                i = j
         elif char in vowels:
             res.append(vowels[char])
             i += 1

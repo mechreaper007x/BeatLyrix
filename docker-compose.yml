@@ -60,12 +60,34 @@ services:
       - "8000:8000"
     environment:
       WHISPER_API_URL: ${WHISPER_API_URL:-https://mechreaper007x-raprank-whisper.hf.space}
+      # Internal semantic (Hindi BERT / MuRIL) service — Docker service name.
+      SEMANTIC_API_URL: ${SEMANTIC_API_URL:-http://semantic:7860}
+    depends_on:
+      # service_started (not healthy): nlp must still boot and score even if the
+      # semantic model is slow to load -- semantic axes just come back null.
+      semantic:
+        condition: service_started
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 20s
+
+  # ── Semantic Scoring Service (Hindi BERT / MuRIL) ─────────────────────────
+  semantic:
+    build:
+      context: ./raprank-semantic
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "7860:7860"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:7860/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   # ── Audio Upload Service (Go) ─────────────────────────────────────────────
   upload:

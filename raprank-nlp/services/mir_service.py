@@ -31,9 +31,20 @@ except ImportError:
     logger.warning("Librosa is not available. Rhythmic tracking is limited.")
 
 
-def detect_beats_and_tempo(accompaniment_bytes: bytes, filename: str) -> tuple[float, list[float]]:
+def detect_beats_and_tempo(
+    accompaniment_bytes: bytes,
+    filename: str,
+    decoded: "tuple[np.ndarray, int] | None" = None,
+) -> tuple[float, list[float]]:
     """
     Given accompaniment audio bytes and filename, returns (tempo_bpm, beat_times_seconds).
+
+    `decoded`, if provided (see services/audio_utils.py), is the
+    already-decoded (waveform, sample_rate) for `accompaniment_bytes` --
+    used by the Librosa fallback path below to skip re-decoding bytes a
+    caller (e.g. flow_service) already decoded once. Essentia's path still
+    needs its own file-based decode regardless (its own audio loader, not
+    interchangeable with a librosa-decoded array).
     """
     if not accompaniment_bytes:
         logger.warning("Empty accompaniment bytes passed to MIR.")
@@ -44,7 +55,7 @@ def detect_beats_and_tempo(accompaniment_bytes: bytes, filename: str) -> tuple[f
     audio_path = os.path.join(tmp_dir, f"accompaniment{suffix}")
 
     try:
-        # Write bytes to temp file
+        # Write bytes to temp file (still needed for the Essentia path)
         with open(audio_path, "wb") as f:
             f.write(accompaniment_bytes)
 
@@ -68,8 +79,8 @@ def detect_beats_and_tempo(accompaniment_bytes: bytes, filename: str) -> tuple[f
 
         if _LIBROSA_AVAILABLE:
             logger.info("Using Librosa beat_track for beat detection...")
-            y, sr = librosa.load(audio_path, sr=None, mono=True)
-            
+            y, sr = decoded if decoded is not None else librosa.load(audio_path, sr=None, mono=True)
+
             # Run beat track
             tempo_arr, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
             tempo = float(np.atleast_1d(tempo_arr)[0])

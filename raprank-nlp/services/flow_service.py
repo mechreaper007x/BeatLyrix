@@ -10,6 +10,7 @@ import numpy as np
 from services.language_utils import clean_word
 from services.mir_service import detect_beats_and_tempo
 from services.alignment_service import refine_word_onsets
+from services.audio_utils import decode_audio_bytes
 from config import scoring_config
 
 logger = logging.getLogger(__name__)
@@ -29,14 +30,25 @@ def calculate_beat_sync(
         return 0.0, {"error": "no words provided"}
 
     try:
+        # Decode each byte-stream once and reuse across MIR + alignment,
+        # instead of each independently writing a temp file and re-decoding.
+        # When separation was skipped/unavailable, vocals_bytes and
+        # accompaniment_bytes are literally the same bytes -- decode once
+        # total rather than twice for identical audio (see audio_utils.py).
+        decoded_accompaniment = decode_audio_bytes(accompaniment_bytes, filename)
+        decoded_vocals = (
+            decoded_accompaniment if vocals_bytes == accompaniment_bytes
+            else decode_audio_bytes(vocals_bytes, filename)
+        )
+
         # 1. Beat and Tempo Tracking via MIR service
-        tempo, beat_times = detect_beats_and_tempo(accompaniment_bytes, filename)
+        tempo, beat_times = detect_beats_and_tempo(accompaniment_bytes, filename, decoded=decoded_accompaniment)
         if not beat_times:
             return 0.0, {"error": "no beats detected in audio"}
 
         # 2. Vocal Onset Detection / Refinement via Wav2Vec2
-        refined_onsets = refine_word_onsets(vocals_bytes, filename, words)
-        
+        refined_onsets = refine_word_onsets(vocals_bytes, filename, words, decoded=decoded_vocals)
+
         # Fallback to Whisper rough timestamps if Wav2Vec2 fails/returns empty
         if not refined_onsets:
             logger.info("Forced alignment returned no onsets. Falling back to Whisper rough timestamps.")

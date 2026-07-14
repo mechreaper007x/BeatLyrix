@@ -1,0 +1,11 @@
+# Local calibration build artifacts (build_calibration.py) -- NOT deployed.
+# calibration.json (the aggregated float arrays) IS committed & baked into the
+# image; these two are the raw resume-log + run log used only to produce it.
+calibration_raw.jsonl
+calibration_raw_precallback.jsonl.bak
+calibration_run.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/

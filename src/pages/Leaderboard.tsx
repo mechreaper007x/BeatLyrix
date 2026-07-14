@@ -215,7 +215,7 @@ export default function LeaderboardPage() {
                       <th className="pb-4 pl-4 w-20">RANK</th>
                       <th className="pb-4">SPITTER</th>
                       <th className="pb-4 w-32">TRACKS</th>
-                      <th className="pb-4 w-32">AVG SCORE</th>
+                      <th className="pb-4 w-32">AVG LQI SCORE</th>
                       <th className="pb-4 w-24">GRADE</th>
                       <th className="pb-4 pr-4 text-right w-36">ACTION</th>
                     </tr>

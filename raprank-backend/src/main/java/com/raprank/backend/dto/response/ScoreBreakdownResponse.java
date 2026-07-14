@@ -16,9 +16,6 @@ public class ScoreBreakdownResponse {
     @JsonAlias("syllable_score")
     private Double syllableScore;
 
-    @JsonAlias("alliteration_score")
-    private Double alliterationScore;
-
     @JsonAlias("flow_score")
     private Double flowScore;
 
@@ -54,6 +51,39 @@ public class ScoreBreakdownResponse {
     @JsonAlias("metaphors_count")
     private Integer metaphorsCount;
 
+    @JsonAlias("assonance_score")
+    private Double assonanceScore;
+
+    @JsonAlias("consonance_score")
+    private Double consonanceScore;
+
+    @JsonAlias("onomatopoeia_score")
+    private Double onomatopoeiaScore;
+
+    @JsonAlias("codeswitch_score")
+    private Double codeswitchScore;
+
+    @JsonAlias("repetition_score")
+    private Double repetitionScore;
+
+    @JsonAlias("cadence_text_score")
+    private Double cadenceTextScore;
+
+    @JsonAlias("callback_score")
+    private Double callbackScore;
+
+    @JsonAlias("punchline_count")
+    private Integer punchlineCount;
+
+    @JsonAlias("extended_metaphor_count")
+    private Integer extendedMetaphorCount;
+
+    @JsonAlias("allusions_count")
+    private Integer allusionsCount;
+
+    @JsonAlias("multisyllabic_rhyme_count")
+    private Integer multisyllabicRhymeCount;
+
     @JsonAlias("generated_lyrics")
     private String generatedLyrics;
 
@@ -62,4 +92,25 @@ public class ScoreBreakdownResponse {
 
     @JsonAlias("nlp_explanations")
     private java.util.Map<String, String> nlpExplanations;
+
+    @JsonAlias("style_cluster")
+    private String styleCluster;
+
+    @JsonAlias("style_cluster_confidence")
+    private Double styleClusterConfidence;
+
+    @JsonAlias("style_membership")
+    private java.util.Map<String, Double> styleMembership;
+
+    @JsonAlias("element_clusters")
+    private java.util.Map<String, Object> elementClusters;
+
+    @JsonAlias("predicted_tier")
+    private String predictedTier;
+
+    @JsonAlias("tier_confidence")
+    private Double tierConfidence;
+
+    @JsonAlias("tier_probabilities")
+    private java.util.Map<String, Double> tierProbabilities;
 }

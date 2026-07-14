@@ -98,35 +98,39 @@ export default function UploadForm() {
   const characterCount = lyrics.length;
   const wordCount = lyrics.trim() === "" ? 0 : lyrics.trim().split(/\s+/).length;
 
-  const isFormValid = title.trim() !== "" && file !== null && lyrics.trim() !== "";
+  const isFormValid = title.trim() !== "" && lyrics.trim() !== "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid || !file) return;
+    if (!isFormValid) return;
 
     setStage("uploading");
     setUploadProgress(10);
     setErrorMessage(null);
 
     try {
-      // 1. Upload to Go Service (port 9090)
-      const goFormData = new FormData();
-      goFormData.append("audio", file);
-      goFormData.append("lyrics", lyrics);
+      let uploadedAudioUrl = null;
 
-      setUploadProgress(30);
-      const goResponse = await fetch("http://localhost:9090/upload-pipeline", {
-        method: "POST",
-        body: goFormData,
-      });
+      if (file) {
+        // 1. Upload to Go Service (port 9090)
+        const goFormData = new FormData();
+        goFormData.append("audio", file);
+        goFormData.append("lyrics", lyrics);
 
-      if (!goResponse.ok) {
-        throw new Error("Failed to upload audio to file storage service.");
+        setUploadProgress(30);
+        const goResponse = await fetch("http://localhost:9090/upload-pipeline", {
+          method: "POST",
+          body: goFormData,
+        });
+
+        if (!goResponse.ok) {
+          throw new Error("Failed to upload audio to file storage service.");
+        }
+
+        setUploadProgress(70);
+        const goData = await goResponse.json();
+        uploadedAudioUrl = goData.audio_url;
       }
-
-      setUploadProgress(70);
-      const goData = await goResponse.json();
-      const uploadedAudioUrl = goData.audio_url;
 
       setUploadProgress(100);
       
@@ -174,12 +178,7 @@ export default function UploadForm() {
     setEstimatedTime("Calculating...");
     
     // Variables to track simulated progress increments per status
-    let separatingProgress = 15;
-    let transcribingProgress = 35;
-    let analyzingFlowProgress = 75;
-    let analyzingTextProgress = 88;
-    let secondsInTranscribing = 0;
-    let secondsInSeparating = 0;
+    let analyzingTextProgress = 30;
 
     const interval = setInterval(async () => {
       attempts++;
@@ -213,62 +212,19 @@ export default function UploadForm() {
             // Dynamically set progress and time estimation based on backend status
             if (data.status === "PENDING") {
               setAnalysisText("Registering track metadata...");
-              setAnalysisProgress(5);
-              setEstimatedTime("~3 minutes remaining");
-            } else if (data.status === "DOWNLOADING_AUDIO") {
-              setAnalysisText("Downloading audio file for scoring...");
-              setAnalysisProgress(12);
-              setEstimatedTime("~2m 50s remaining");
-            } else if (data.status === "SEPARATING_AUDIO") {
-              setAnalysisText("Isolating vocals from backing beat...");
-              secondsInSeparating += 1.5;
-              
-              // Smoothly increment separating progress from 15% to 35%
-              // Assume 60 seconds baseline. 60s / 1.5s = 40 steps.
-              // (35 - 15) / 40 = 0.5% per step.
-              if (separatingProgress < 35) {
-                separatingProgress += 0.5;
-              }
-              setAnalysisProgress(Math.min(Math.round(separatingProgress), 35));
-              
-              const remaining = Math.max(160 - Math.round(secondsInSeparating), 90);
-              const mins = Math.floor(remaining / 60);
-              const secs = remaining % 60;
-              setEstimatedTime(`~${mins > 0 ? `${mins}m ` : ""}${secs}s remaining`);
-            } else if (data.status === "TRANSCRIBING") {
-              setAnalysisText("Transcribing audio via Whisper AI (this may take a few minutes)...");
-              secondsInTranscribing += 1.5;
-              
-              // Smoothly increment transcribing progress from 35% to 75%
-              // Assume 120 seconds baseline. 120s / 1.5s = 80 steps.
-              // (75 - 35) / 80 = 0.5% per step.
-              if (transcribingProgress < 75) {
-                transcribingProgress += 0.5;
-              }
-              setAnalysisProgress(Math.min(Math.round(transcribingProgress), 75));
-              
-              const remaining = Math.max(100 - Math.round(secondsInTranscribing), 5);
-              if (remaining > 5) {
-                const mins = Math.floor(remaining / 60);
-                const secs = remaining % 60;
-                setEstimatedTime(`~${mins > 0 ? `${mins}m ` : ""}${secs}s remaining`);
-              } else {
-                setEstimatedTime("Finishing transcription...");
-              }
-            } else if (data.status === "ANALYZING_FLOW") {
-              setAnalysisText("Aligning vocals with beat-sync grid...");
-              if (analyzingFlowProgress < 88) {
-                analyzingFlowProgress += 1.5;
-              }
-              setAnalysisProgress(Math.min(Math.round(analyzingFlowProgress), 88));
-              setEstimatedTime("~15s remaining");
+              setAnalysisProgress(15);
+              setEstimatedTime("~5 seconds remaining");
             } else if (data.status === "ANALYZING_TEXT") {
-              setAnalysisText("Calculating rhymes, alliteration, and cadence...");
+              setAnalysisText("Compiling lyrics: lexing syllables and calculating transition entropy...");
               if (analyzingTextProgress < 98) {
-                analyzingTextProgress += 1.0;
+                analyzingTextProgress += 4.0;
               }
               setAnalysisProgress(Math.min(Math.round(analyzingTextProgress), 98));
-              setEstimatedTime("~5s remaining");
+              setEstimatedTime("~2s remaining");
+            } else {
+              setAnalysisText("Compiling lyrical quality metrics...");
+              setAnalysisProgress(50);
+              setEstimatedTime("Processing...");
             }
           }
         } else {
@@ -315,125 +271,7 @@ export default function UploadForm() {
             />
           </div>
 
-          {/* Audio Upload Dropzone */}
-          <div>
-            <span className="block font-graffiti text-xl tracking-wider text-raprank-neon mb-2 uppercase">
-              Audio File
-            </span>
-            
-            {!file ? (
-              <div
-                onDragEnter={handleDrag}
-                onDragOver={handleDrag}
-                onDragLeave={handleDrag}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={`w-full min-h-[160px] border-3 border-dashed rounded-2xl flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-all duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-raprank-neon/50 ${
-                  isDragActive
-                    ? "border-raprank-neon bg-raprank-neon/10 scale-[0.99]"
-                    : "border-raprank-cream/30 bg-raprank-maroon/20 hover:border-raprank-neon/60 hover:bg-raprank-maroon/30"
-                }`}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    fileInputRef.current?.click();
-                  }
-                }}
-                aria-label="Upload audio track dropzone"
-              >
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept=".mp3,.wav,audio/mpeg,audio/wav"
-                  className="hidden"
-                  id="audio-file-input"
-                />
-                
-                {/* Upload SVG Icon */}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-10 w-10 text-raprank-neon mb-3 animate-pulse"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                  />
-                </svg>
-
-                <p className="text-sm font-semibold text-white/90">
-                  Drag your audio file here or <span className="text-raprank-neon underline">click to browse</span>
-                </p>
-                <p className="text-xs font-semibold text-raprank-skin/50 mt-1">
-                  MP3, WAV — Max 15MB
-                </p>
-              </div>
-            ) : (
-              /* File Loaded State */
-              <div className="w-full bg-raprank-maroon/40 border border-raprank-maroon/50 rounded-2xl p-4 flex flex-col space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3 overflow-hidden">
-                    {/* Music SVG Icon */}
-                    <div className="bg-raprank-neon/10 p-2.5 rounded-lg shrink-0">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6 text-raprank-neon"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-                        />
-                      </svg>
-                    </div>
-                    <div className="overflow-hidden">
-                      <p className="text-sm font-bold text-white truncate">{file.name}</p>
-                      <p className="text-xs font-semibold text-raprank-skin/60">
-                        {(file.size / (1024 * 1024)).toFixed(2)} MB
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={removeFile}
-                    className="p-1 rounded-full text-rose-400 hover:bg-rose-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
-                    aria-label="Remove audio file"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-6 w-6"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                
-                {/* Audio preview controls */}
-                {audioUrl && (
-                  <div className="pt-2 border-t border-raprank-maroon/20">
-                    <span className="block text-xs font-bold text-raprank-neon uppercase mb-1.5">
-                      Preview Player
-                    </span>
-                    <audio src={audioUrl} controls className="w-full h-8" />
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          {/* Audio Upload Dropzone Removed for LQI Lyrical Decoupling */}
 
           {/* Lyrics Textarea */}
           <div>
@@ -571,7 +409,7 @@ export default function UploadForm() {
             </div>
 
             <p className="text-xs font-semibold text-raprank-skin/50 max-w-sm mx-auto pt-4">
-              Our AI engine is measuring rhyme scheme density, syllable placement, syllable flow, and cadence structure.
+              Our lexical compiler is tokenizing bars, scanning syllables with schwa-deletion, and calculating rhyme state transition entropy.
             </p>
           </div>
         </div>

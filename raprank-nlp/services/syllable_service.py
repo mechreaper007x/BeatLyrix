@@ -8,6 +8,7 @@ Mixed    → per-word dispatch
 from __future__ import annotations
 
 import pyphen
+import pronouncing
 
 from services.language_utils import is_hindi_word, clean_word, content_lines, get_multilingual_stopwords
 from config import scoring_config
@@ -32,14 +33,25 @@ _DEVA_MATRAS = set(
 _HALANT = "\u094D"  # virama — cancels inherent vowel of preceding consonant
 
 
+# Combining signs that modify a sound but do NOT add a vowel nucleus. Previously
+# mis-counted as consonants (each adding a phantom syllable):
+#   U+0901 chandrabindu, U+0902 anusvara, U+0903 visarga (nasalisation/aspiration),
+#   U+093C nukta (consonant variant marker), U+093D avagraha.
+_DEVA_NON_SYLLABIC = {"ँ", "ं", "ः", "़", "ऽ"}
+
+
 def _count_hindi(word: str) -> int:
     """
     Each vowel nucleus = 1 syllable.
     Independent vowel OR matra    → +1
     Consonant NOT followed by halant or matra → +1 (inherent 'a' is present)
     Implements Hindi schwa deletion: final consonants do not count as a new syllable if the word has other syllables.
+
+    Combining signs (nukta, anusvara, chandrabindu, visarga, avagraha) are
+    stripped first: they never introduce a new vowel nucleus, and treating them
+    as consonants inflated counts (e.g. zindagi 5->3, zameen 4->2).
     """
-    chars = list(word)
+    chars = [c for c in word if c not in _DEVA_NON_SYLLABIC]
     
     # Find the index of the last Devanagari character that is a consonant
     last_consonant_idx = -1
@@ -62,9 +74,52 @@ def _count_hindi(word: str) -> int:
     return max(count, 1)
 
 
+def _count_vowel_groups(w_lower: str) -> int:
+    """Count vowel-nucleus groups, treating intervocalic/consonant-context 'y'
+    as a vowel and deducting a silent trailing 'e'."""
+    vowels = set("aeiou")
+    vowel_groups = 0
+    in_vowel = False
+    for idx, char in enumerate(w_lower):
+        is_y_vowel = False
+        if char == "y":
+            prev_is_vowel = (idx > 0 and w_lower[idx - 1] in vowels)
+            next_is_vowel = (idx + 1 < len(w_lower) and w_lower[idx + 1] in vowels)
+            if not prev_is_vowel and not next_is_vowel:
+                is_y_vowel = True
+        if char in vowels or is_y_vowel:
+            if not in_vowel:
+                vowel_groups += 1
+                in_vowel = True
+        else:
+            in_vowel = False
+    # Deduct 1 for silent trailing 'e' (but not 'le' endings like 'table')
+    if w_lower.endswith("e") and len(w_lower) > 3 and w_lower[-2] not in vowels:
+        if not w_lower.endswith("le"):
+            vowel_groups = max(vowel_groups - 1, 1)
+    return vowel_groups
+
+
 def _count_english(word: str) -> int:
-    hyphenated = _dic_en.inserted(word)
-    return max(hyphenated.count("-") + 1, 1)
+    """Syllable count for a Latin-script word.
+
+    Real English words: trust the CMU pronouncing dictionary (counts vowel
+    phonemes), which correctly models elision — 'every'->2, 'business'->2 — that
+    letter-based methods miss.
+
+    Words absent from CMU are almost always Romanized Hinglish/slang. There,
+    pyphen (en_US hyphenation) silently UNDER-counts (e.g. 'zindagi'->2, should
+    be 3), so we take the max of pyphen and vowel-group counting, which rarely
+    over-counts transliterated Hindi.
+    """
+    w_lower = word.lower()
+    phones = pronouncing.phones_for_word(w_lower)
+    if phones:
+        return max(pronouncing.syllable_count(phones[0]), 1)
+
+    pyphen_count = _dic_en.inserted(w_lower).count("-") + 1
+    vowel_groups = _count_vowel_groups(w_lower)
+    return max(pyphen_count, vowel_groups, 1)
 
 
 def count_syllables(word: str) -> int:

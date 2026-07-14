@@ -6,20 +6,26 @@ FastAPI application exposing two endpoints:
   POST /analyze                  — score pre-transcribed lyrics (text-only)
   POST /transcribe-and-analyze   — score an audio file end-to-end
 
-Scoring weights:
-  With flow  → rhyme 30 | syllable 20 | alliteration 15 | vocabulary 15 | flow 20
-  Text-only  → rhyme 35 | syllable 25 | alliteration 20 | vocabulary 20
+total_score is the decoupled LQI score from lyrical_compiler.compile_lyrics()
+(density + entropy of syllables/rhyme). Assonance, consonance, onomatopoeia,
+vocabulary, and wordplay are rule-based sub-scores reported alongside it for
+display only -- none of them feed total_score. Alliteration was removed from
+this service entirely (not just decoupled) -- the rule-based detector was
+found to score incidental phonetic overlap too highly to be trustworthy.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import re
 import json
 import httpx
-from mistralai.client.sdk import Mistral
+from mistralai import Mistral
 from dotenv import load_dotenv
 import config.ffmpeg_patch
+
+from services.lyrical_compiler import compile_lyrics
 
 load_dotenv()
 
@@ -56,7 +62,7 @@ async def format_lyrics_with_mistral(pasted_lyrics: str, whisper_transcript: str
         )
         
         response = await client.chat.complete_async(
-            model="open-mistral-nemo",
+            model="mistral-medium-latest",
             messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content.strip()
@@ -86,7 +92,7 @@ async def transliterate_devanagari_to_hinglish(whisper_transcript: str) -> str:
         )
         
         response = await client.chat.complete_async(
-            model="open-mistral-nemo",
+            model="mistral-medium-latest",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.2
         )
@@ -96,107 +102,54 @@ async def transliterate_devanagari_to_hinglish(whisper_transcript: str) -> str:
         return whisper_transcript
 
 
-async def analyze_wordplay_with_mistral(lyrics: str) -> tuple[float | None, str | None]:
-    api_key = os.getenv("MISTRAL_API_KEY")
-    if not api_key:
-        return None, None
-        
-    try:
-        client = Mistral(api_key=api_key)
-        prompt = (
-            "You are an expert rap literary critic and analyst. Analyze the following rap lyrics for deep wordplay, "
-            "conceptual metaphors, double meanings (double entendres), puns, sarcasm, and cultural/bilingual references "
-            "(specifically looking for Devanagari/Hindi/Hinglish wordplay if present, e.g. the 'Aadhaar Card' or 'pupils/motiyabind' references).\n\n"
-            "Provide two things in your response:\n"
-            "1. A corrected semantic wordplay score from 0.0 to 100.0, representing the true density and intelligence of the literary devices. "
-            "Start your response with 'SCORE: <value>' where <value> is a number between 0 and 100.\n"
-            "2. A detailed, bulleted explanation of the specific metaphors, puns, and double meanings you found in the lyrics.\n\n"
-            f"LYRICS TO ANALYZE:\n{lyrics}"
-        )
-        
-        response = await client.chat.complete_async(
-            model="open-mistral-nemo",
-            messages=[{"role": "user", "content": prompt}]
-        )
-        content = response.choices[0].message.content.strip()
-        
-        # Parse the score
-        score = None
-        score_match = re.search(r"SCORE:\s*([\d\.]+)", content, re.IGNORECASE)
-        if score_match:
-            try:
-                score = float(score_match.group(1))
-            except ValueError:
-                pass
-                
-        # Clean the explanation (remove the SCORE line from the start if present)
-        explanation = re.sub(r"^SCORE:\s*[\d\.]+\s*", "", content, flags=re.IGNORECASE).strip()
-        return score, explanation
-    except Exception as exc:
-        logger.error("Mistral wordplay analysis failed: %s", exc)
-        return None, None
-
-
-async def analyze_all_metrics_with_mistral(lyrics: str) -> dict | None:
+async def analyze_story_and_structure_with_mistral(lyrics: str) -> dict | None:
     """
-    Calls Mistral to score Syllable, Rhyme, Alliteration, Vocab, Wordplay, Lang, and Total
-    metrics in a single consolidated request.
+    Calls Mistral for a QUALITATIVE description of the song's story, theme,
+    and structure -- NOT for any numeric scores. All scoring is done locally
+    by the rule-based services; Mistral here only narrates what the song is
+    about and how it is built, which is surfaced alongside the local scores.
     """
     api_key = os.getenv("MISTRAL_API_KEY")
     if not api_key:
-        logger.warning("MISTRAL_API_KEY environment variable is not set. Skipping LLM scoring.")
+        logger.warning("MISTRAL_API_KEY environment variable is not set. Skipping story/structure analysis.")
         return None
-        
+
     try:
         client = Mistral(api_key=api_key)
         prompt = (
-            "You are an expert rap literary critic, hip-hop historian, and technical analysis judge.\n"
-            "Your task is to analyze the provided rap lyrics and return a strict, objective assessment of their Wordplay and Total scores, along with detailed explanations.\n\n"
-            "CRITICAL INSTRUCTIONS & DEFINITIONS:\n\n"
-            "1. Wordplay Score (0-100):\n"
-            "   This evaluates the density, complexity, and intelligence of literary devices.\n"
-            "   - ELITE WORDPLAY (75-100): Must contain multi-layered double entendres (double meanings referencing pop culture, history, or bilingual Hinglish context), complex extended metaphors (conceits), clever non-obvious puns, and deep literary references. Examples: KR$NA, Seedhe Maut, Talha Anjum, Karma.\n"
-            "   - MID-TIER WORDPLAY (40-74): Simple metaphors (e.g. comparing oneself to a king or beast), straightforward similes using 'jaise' or 'like', basic pop culture references, and obvious or standard puns.\n"
-            "   - BASIC/LOW-TIER WORDPLAY (0-39): Standard angry threats, storytelling with no literary devices, or simple commercial cliché bars (e.g., CarryMinati's 'Yalgaar').\n"
-            "   *Penalty: You MUST NOT award more than 39 for wordplay if the lyrics contain only simple metaphors or basic storytelling. Be extremely critical.\n\n"
-            "2. Total Score (0-100):\n"
-            "   This represents the overall lyricism, complexity, structure, and technical execution.\n"
-            "   - ELITE LYRICISM (75-100): Verses with intricate rhyme schemes (multi-syllabic, internal, slant), high vocabulary diversity, non-repetitive bar structures, and advanced wordplay.\n"
-            "   - MID-TIER (45-74): Decent flows, structured verses, but lacking dense internal schemes or deep double meanings.\n"
-            "   - LOW-TIER/COMMERCIAL (0-44): Repetitive chorus hooks, simple single-syllable rhyme patterns, clichéd diss lines, and straightforward commercial song structures.\n"
-            "   *Ceiling Constraint: CarryMinati's 'Yalgaar' and similar basic commercial/simplistic tracks MUST be capped at a maximum of 44 for both Wordplay and Total scores. You are strictly forbidden from exceeding 44 for such tracks.\n\n"
-            "3. Explanations:\n"
-            "   Provide a concise, objective critique justifying the score. Cite specific lines and explain the wordplay, metaphors, or double meanings. If the wordplay is surface-level or absent, call it out directly.\n\n"
-            "Response Format:\n"
-            "Return your response STRICTLY in the following JSON format. Do not include any intro, outro, markdown code block wrappers (e.g., ```json), or extra text—just the raw JSON string:\n"
+            "You are an expert rap literary critic and hip-hop analyst. Describe the STORY and STRUCTURE of the "
+            "provided rap lyrics, and identify two specific literary devices. Do NOT rate, score, or grade anything "
+            "-- output only qualitative description and the identified devices.\n\n"
+            "Cover:\n"
+            "1. theme  -- the central subject/message in one short phrase.\n"
+            "2. story  -- the narrative or emotional arc across the verses (2-4 sentences).\n"
+            "3. structure -- how the song is organized (verses, hook/chorus, bridge, refrains, repetition) and how "
+            "the sections relate (2-3 sentences).\n"
+            "4. mood   -- the overall tone/emotion in one short phrase.\n"
+            "5. punchlines -- lines with a clear setup-then-payoff structure where the payoff lands a witty, hard, or "
+            "surprising twist. For each, give the exact quoted line(s) and a one-line reason. Empty list if none.\n"
+            "6. extended_metaphors -- a single metaphor/conceit SUSTAINED across two or more lines (not a one-line "
+            "simile). For each, give the quoted lines and a one-line explanation of the sustained image. Empty list if none.\n\n"
+            "Only include GENUINE instances -- an empty list is correct and expected when a device is absent. Do not "
+            "invent devices to fill the lists.\n\n"
+            "Return your response STRICTLY as raw JSON (no intro, outro, or markdown code fences):\n"
             "{\n"
-            "  \"scores\": {\n"
-            "    \"rhyme\": <local_score_override_fallback_value_0_to_100>,\n"
-            "    \"syllable\": <local_score_override_fallback_value_0_to_100>,\n"
-            "    \"alliteration\": <local_score_override_fallback_value_0_to_100>,\n"
-            "    \"vocabulary\": <local_score_override_fallback_value_0_to_100>,\n"
-            "    \"wordplay\": <float_value_0_to_100>,\n"
-            "    \"total\": <float_value_0_to_100>\n"
-            "  },\n"
-            "  \"lang\": \"<'en'|'hi'|'mixed'>\",\n"
-            "  \"explanations\": {\n"
-            "    \"rhyme\": \"<critique>\",\n"
-            "    \"syllable\": \"<critique>\",\n"
-            "    \"alliteration\": \"<critique>\",\n"
-            "    \"vocabulary\": \"<critique>\",\n"
-            "    \"wordplay\": \"<detailed_wordplay_critique_citing_lines_and_devices>\",\n"
-            "    \"total\": \"<overall_critique>\"\n"
-            "  }\n"
+            "  \"theme\": \"<short phrase>\",\n"
+            "  \"story\": \"<2-4 sentences>\",\n"
+            "  \"structure\": \"<2-3 sentences>\",\n"
+            "  \"mood\": \"<short phrase>\",\n"
+            "  \"punchlines\": [{\"quote\": \"<line>\", \"why\": \"<short reason>\"}],\n"
+            "  \"extended_metaphors\": [{\"quote\": \"<lines>\", \"why\": \"<short reason>\"}]\n"
             "}\n\n"
             f"LYRICS TO ANALYZE:\n{lyrics}"
         )
-        
+
         response = await client.chat.complete_async(
-            model="open-mistral-nemo",
+            model="mistral-medium-latest",
             messages=[{"role": "user", "content": prompt}]
         )
         content = response.choices[0].message.content.strip()
-        
+
         # Clean markdown code block wrapper if returned
         if content.startswith("```json"):
             content = content[7:]
@@ -205,10 +158,10 @@ async def analyze_all_metrics_with_mistral(lyrics: str) -> dict | None:
         if content.endswith("```"):
             content = content[:-3]
         content = content.strip()
-        
+
         return json.loads(content)
     except Exception as exc:
-        logger.exception("Mistral all-metrics analysis failed: %s", exc)
+        logger.exception("Mistral story/structure analysis failed: %s", exc)
         return None
 
 
@@ -218,7 +171,9 @@ from models.schemas import (
     ScoreBreakdown,
 )
 from services import (
-    alliteration_service,
+    assonance_service,
+    consonance_service,
+    onomatopoeia_service,
     rhyme_service,
     syllable_service,
     vocabulary_service,
@@ -227,6 +182,11 @@ from services import (
 from services.flow_service import calculate_beat_sync
 from services.alignment_service import align_structured_lyrics_to_whisper
 from services.language_utils import detect_language
+from services.semantic_service import analyze_semantics
+from services import gmm_style_service
+from services import rf_quality_service
+from services import prosody_service
+from services import element_cluster_service
 from services.transcription_service import transcribe_audio
 from services.separation_service import separate_vocals
 from config import scoring_config
@@ -237,11 +197,40 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# GMM style-clustering model: load the pickled bundle once at startup (like
+# alignment_service caches its model). None if untrained/absent -- score_style
+# then simply returns None and the style fields stay null. Never fatal.
+_GMM_STYLE_BUNDLE = None
+try:
+    _GMM_STYLE_BUNDLE = gmm_style_service.load()
+    logger.info("Loaded GMM style model (k=%s).", _GMM_STYLE_BUNDLE.get("k"))
+except Exception as _exc:
+    logger.warning("GMM style model unavailable (%s) -- style fields will be null.", _exc)
+
+# RF quality-tier classifier: same load-once-at-startup, never-fatal pattern.
+_RF_QUALITY_BUNDLE = None
+try:
+    _RF_QUALITY_BUNDLE = rf_quality_service.load()
+    logger.info("Loaded RF quality-tier model (classes=%s).", _RF_QUALITY_BUNDLE.get("classes"))
+except Exception as _exc:
+    logger.warning("RF quality-tier model unavailable (%s) -- tier fields will be null.", _exc)
+
+# Per-element cluster bundles (rhyme/wordplay/texture/rare): same load-once
+# pattern, but one independent try/except per family so a single missing
+# pickle doesn't block the others from loading.
+_ELEMENT_CLUSTER_BUNDLES: dict = {}
+for _family in element_cluster_service.FAMILIES:
+    try:
+        _ELEMENT_CLUSTER_BUNDLES[_family] = element_cluster_service.load(_family)
+        logger.info("Loaded element-cluster model '%s'.", _family)
+    except Exception as _exc:
+        logger.warning("Element-cluster model '%s' unavailable (%s).", _family, _exc)
+
 app = FastAPI(
     title="RapRank NLP Service",
     description=(
         "Multilingual (Hindi / English / Hinglish) rap lyric scoring. "
-        "Scores syllable density, end rhyme, alliteration, vocabulary uniqueness, "
+        "Scores syllable density, end rhyme, vocabulary uniqueness, "
         "and beat-sync flow."
     ),
     version="2.0.0",
@@ -268,81 +257,118 @@ async def compute_scores_and_breakdown(
     if track_id is not None:
         await update_status(track_id, "ANALYZING_TEXT")
         
-    syllable_score, avg_syl, syllable_weight_score, weight_ratio = syllable_service.calculate(lyrics)
-    rhyme_score, rhyme_pairs, multisyl_count, internal_score, chain_score = rhyme_service.calculate(lyrics)
-    allit_score, allit_pairs = alliteration_service.calculate(lyrics)
+    # 1. Compile lyrics using the new unsupervised Lyrical Lexer & Parser Compiler (LLPC)
+    compiled = compile_lyrics(lyrics)
+    
+    # 2. Map all scores to the compiled LQI metrics directly, bypassing the rule-based NLP services entirely
+    syllable_score = compiled["syllable_density"]
+    rhyme_score = compiled["rhyme_complexity"]
+    
+    # Calculate specialized lexical metrics using rule/regex-based services
+    assonance_score, assonance_pairs = assonance_service.calculate(lyrics)
+    consonance_score, consonance_pairs = consonance_service.calculate(lyrics)
+    onomatopoeia_score, onomatopoeia_hits = onomatopoeia_service.calculate(lyrics)
+    
     vocab_score, ttr = vocabulary_service.calculate(lyrics)
+    
     wordplay_score, wordplay_meta = wordplay_service.calculate(lyrics)
+    double_entendres_count = wordplay_meta["double_entendres_count"]
+    puns_count = wordplay_meta["puns_count"]
+    similes_count = wordplay_meta["simile_count"]
+    metaphors_count = wordplay_meta["metaphor_count"]
+    allusions_count = wordplay_meta["allusions_count"]
     
-    # Call Mistral to analyze all metrics
-    llm_res = await analyze_all_metrics_with_mistral(lyrics)
-    nlp_explanations = None
-    wordplay_explanation = None
+    syllable_weight_score = compiled["lexical_information_density"]
+
+    # Supervised RF quality-tier classification -- a comparison head alongside
+    # the Bayesian/SVM scorers. Depends only on lyrics text (no semantics),
+    # so it runs early. Guarded: None if the model is absent, request never fails.
+    predicted_tier = tier_confidence = tier_probabilities = None
+    if _RF_QUALITY_BUNDLE is not None:
+        try:
+            rf_result = await asyncio.to_thread(
+                rf_quality_service.predict_tier,
+                _RF_QUALITY_BUNDLE,
+                lyrics,
+            )
+            if rf_result:
+                predicted_tier = rf_result["tier"]
+                tier_confidence = rf_result["confidence"]
+                tier_probabilities = rf_result["probabilities"]
+        except Exception as exc:
+            logger.warning("RF quality-tier scoring failed: %s", exc)
+
+    # Map track metadata metrics
+    avg_syl = compiled["avg_syllables_per_line"]
+    multisyl_count = compiled["detected_rhyme_count"]
+    rhyme_pairs = []
     
-    if llm_res and "scores" in llm_res:
-        llm_scores = llm_res["scores"]
-        nlp_explanations = llm_res.get("explanations")
-        wordplay_explanation = nlp_explanations.get("wordplay") if nlp_explanations else None
-        
-        # Update language if detected by LLM
-        if "lang" in llm_res and llm_res["lang"]:
-            lang = llm_res["lang"]
-            
-        # Combine local and LLM scores using config weights
-        h_weights = scoring_config.HYBRID_COMBINATION_WEIGHTS
-        
-        rhyme_score = (
-            h_weights["rhyme"]["local"] * rhyme_score
-            + h_weights["rhyme"]["llm"] * llm_scores.get("rhyme", rhyme_score)
-        )
-        syllable_score = (
-            h_weights["syllable"]["local"] * syllable_score
-            + h_weights["syllable"]["llm"] * llm_scores.get("syllable", syllable_score)
-        )
-        allit_score = (
-            h_weights["alliteration"]["local"] * allit_score
-            + h_weights["alliteration"]["llm"] * llm_scores.get("alliteration", allit_score)
-        )
-        vocab_score = (
-            h_weights["vocabulary"]["local"] * vocab_score
-            + h_weights["vocabulary"]["llm"] * llm_scores.get("vocabulary", vocab_score)
-        )
-        wordplay_score = (
-            h_weights["wordplay"]["local"] * wordplay_score
-            + h_weights["wordplay"]["llm"] * llm_scores.get("wordplay", wordplay_score)
-        )
+    # Qualitative story/structure description from Mistral
+    story_structure = await analyze_story_and_structure_with_mistral(lyrics)
 
-    # ── Weighted total ────────────────────────────────────────────────────
-    if flow_score is not None:
-        w = scoring_config.MAIN_WEIGHTS["WITH_FLOW"]
-        calculated_total = (
-            rhyme_score * w["rhyme"]
-            + syllable_score * w["syllable"]
-            + allit_score * w["alliteration"]
-            + vocab_score * w["vocabulary"]
-            + wordplay_score * w["wordplay"]
-            + syllable_weight_score * w["syllable_weight"]
-            + flow_score * w["flow"]
-        )
-    else:
-        w = scoring_config.MAIN_WEIGHTS["TEXT_ONLY"]
-        calculated_total = (
-            rhyme_score * w["rhyme"]
-            + syllable_score * w["syllable"]
-            + allit_score * w["alliteration"]
-            + vocab_score * w["vocabulary"]
-            + wordplay_score * w["wordplay"]
-            + syllable_weight_score * w["syllable_weight"]
-        )
+    # Semantic (meaning-based) axes from the Hindi BERT / MuRIL service.
+    # Additive enrichment: None if the service is unavailable -- must not break
+    # scoring, and does NOT feed total_score this iteration.
+    semantics = await analyze_semantics(lyrics)
+    coherence_score = semantics.get("coherence_score") if semantics else None
+    semantic_surprisal_score = semantics.get("semantic_surprisal_score") if semantics else None
+    lexical_sophistication_score = semantics.get("lexical_sophistication_score") if semantics else None
+    theme_consistency_score = semantics.get("theme_consistency_score") if semantics else None
+    callback_score = semantics.get("callback_score") if semantics else None
 
-    if llm_res and "scores" in llm_res and "total" in llm_res["scores"]:
-        h_weights = scoring_config.HYBRID_COMBINATION_WEIGHTS
-        total = (
-            h_weights["total"]["local"] * calculated_total
-            + h_weights["total"]["llm"] * llm_res["scores"]["total"]
-        )
-    else:
-        total = calculated_total
+    # Literary-device counts from the Mistral story/structure result (Part A):
+    # same single call, richer JSON. Defaults to 0 when absent/failed.
+    punchline_count = len(story_structure.get("punchlines", [])) if story_structure else 0
+    extended_metaphor_count = len(story_structure.get("extended_metaphors", [])) if story_structure else 0
+
+    # Prosody / structural axes (local, no network): code-switching, anaphora,
+    # text cadence variance. Guarded so a failure never breaks scoring.
+    codeswitch_score = repetition_score = cadence_text_score = None
+    try:
+        prosody = prosody_service.calculate(lyrics)
+        codeswitch_score = prosody["codeswitch_score"]
+        repetition_score = prosody["repetition_score"]
+        cadence_text_score = prosody["cadence_text_score"]
+    except Exception as exc:
+        logger.warning("Prosody scoring failed: %s", exc)
+
+    # Descriptive GMM style fingerprint. Reuses the semantic raw `metrics` already
+    # fetched above (no extra Space call). Guarded: None if the model is absent or
+    # semantics degraded -- style fields simply stay null, request never fails.
+    style_cluster = style_cluster_confidence = style_membership = None
+    if _GMM_STYLE_BUNDLE is not None:
+        try:
+            style = await asyncio.to_thread(
+                gmm_style_service.score_style,
+                lyrics,
+                semantics.get("metrics") if semantics else None,
+                _GMM_STYLE_BUNDLE,
+            )
+            if style:
+                style_cluster = style["cluster"]
+                style_cluster_confidence = style["confidence"]
+                style_membership = style["membership"]
+        except Exception as exc:
+            logger.warning("GMM style scoring failed: %s", exc)
+
+    # Descriptive per-element cluster fingerprints (rhyme/wordplay/texture/rare).
+    # Guarded the same way as the GMM style block above: None if no bundles
+    # loaded, request never fails on a scoring error.
+    element_clusters = None
+    if _ELEMENT_CLUSTER_BUNDLES:
+        try:
+            element_clusters = await asyncio.to_thread(
+                element_cluster_service.score_all_families,
+                lyrics,
+                _ELEMENT_CLUSTER_BUNDLES,
+            )
+            if not element_clusters:
+                element_clusters = None
+        except Exception as exc:
+            logger.warning("Element-cluster scoring failed: %s", exc)
+
+    # ── Decoupled LQI Score ───────────────────────────────────────────────
+    total = compiled["lyrical_score"]
 
     line_count = sum(
         1
@@ -353,28 +379,49 @@ async def compute_scores_and_breakdown(
     return ScoreBreakdown(
         syllable_score=round(syllable_score, 2),
         rhyme_score=round(rhyme_score, 2),
-        alliteration_score=round(allit_score, 2),
         vocabulary_score=round(vocab_score, 2),
         flow_score=flow_score,
         total_score=round(total, 2),
         wordplay_score=round(wordplay_score, 2),
         syllable_weight=round(syllable_weight_score, 2),
+        coherence_score=coherence_score,
+        semantic_surprisal_score=semantic_surprisal_score,
+        lexical_sophistication_score=lexical_sophistication_score,
+        theme_consistency_score=theme_consistency_score,
+        callback_score=callback_score,
+        punchline_count=punchline_count,
+        extended_metaphor_count=extended_metaphor_count,
+        codeswitch_score=codeswitch_score,
+        repetition_score=repetition_score,
+        cadence_text_score=cadence_text_score,
+        style_cluster=style_cluster,
+        style_cluster_confidence=style_cluster_confidence,
+        style_membership=style_membership,
+        element_clusters=element_clusters,
+        predicted_tier=predicted_tier,
+        tier_confidence=tier_confidence,
+        tier_probabilities=tier_probabilities,
+        assonance_score=round(assonance_score, 2),
+        consonance_score=round(consonance_score, 2),
+        onomatopoeia_score=round(onomatopoeia_score, 2),
         word_count=len(lyrics.split()),
         line_count=line_count,
         avg_syllables_per_word=round(avg_syl, 2),
         vocabulary_uniqueness=ttr,
         detected_language=lang,
-        double_entendres_count=wordplay_meta["double_entendres_count"],
-        puns_count=wordplay_meta["puns_count"],
-        similes_count=wordplay_meta["simile_count"],
-        metaphors_count=wordplay_meta["metaphor_count"],
-        alliteration_pairs=allit_pairs,
+        double_entendres_count=double_entendres_count,
+        puns_count=puns_count,
+        similes_count=similes_count,
+        metaphors_count=metaphors_count,
+        allusions_count=allusions_count,
+        assonance_pairs=assonance_pairs,
+        consonance_pairs=consonance_pairs,
+        onomatopoeia_hits=onomatopoeia_hits,
         rhyme_pairs=rhyme_pairs,
         multisyllabic_rhyme_count=multisyl_count,
         flow_metadata=flow_meta,
         generated_lyrics=generated_lyrics,
-        wordplay_explanation=wordplay_explanation,
-        nlp_explanations=nlp_explanations,
+        story_structure=story_structure,
     )
 
 
@@ -398,86 +445,13 @@ async def analyze(request: AnalyzeRequest) -> ScoreBreakdown:
         flow_score: float | None = None
         flow_meta: FlowMetadata | None = None
 
-        # ── Flow scoring (only when word timestamps or audio_url is provided) ─────────
-        if request.words:
-            words_dicts = [w.model_dump() for w in request.words]
-            # No audio bytes in text-only mode — skip beat detection
-            # (beat detection needs audio; timestamps alone are insufficient)
-            logger.info(
-                "/analyze received %d word timestamps but no audio — flow skipped",
-                len(words_dicts),
-            )
-        elif request.audio_url:
-            try:
-                await update_status(request.track_id, "DOWNLOADING_AUDIO")
-                logger.info("Downloading audio from %s for flow scoring...", request.audio_url)
-                filename = request.audio_url.split("/")[-1] or "audio.mp3"
-                async with httpx.AsyncClient(timeout=60.0) as client:
-                    audio_res = await client.get(request.audio_url)
-                    audio_res.raise_for_status()
-                    audio_bytes = audio_res.content
-
-                # ── Separation ──────────────────────────────────────────
-                await update_status(request.track_id, "SEPARATING_AUDIO")
-                logger.info("Running audio source separation...")
-                separated = separate_vocals(audio_bytes, filename)
-                if separated:
-                    vocals_bytes, accompaniment_bytes = separated
-                    transcribe_bytes = vocals_bytes
-                    flow_bytes = accompaniment_bytes
-                    logger.info("Source separation successful. Vocals and accompaniment isolated.")
-                else:
-                    transcribe_bytes = audio_bytes
-                    flow_bytes = audio_bytes
-                    logger.info("Source separation skipped/failed. Using mixed audio.")
-
-                await update_status(request.track_id, "TRANSCRIBING")
-                logger.info("Transcribing audio for flow alignment (hint lang: %s)...", lang)
-                transcription = await transcribe_audio(transcribe_bytes, filename, lang, lyrics)
-                words_raw = transcription.get("words", [])
-                whisper_text = transcription.get("text", "")
-                
-                print("\n" + "=" * 50)
-                print("RAW WHISPER TRANSCRIPTION:")
-                print(whisper_text)
-                print("=" * 50 + "\n")
-                
-                if whisper_text:
-                    logger.info("Using Mistral to format lyrics based on Whisper transcription...")
-                    formatted = await format_lyrics_with_mistral(lyrics, whisper_text)
-                    if formatted and formatted != lyrics:
-                        logger.info("Lyrics successfully formatted by Mistral.")
-                        generated_lyrics = formatted
-                        lyrics = generated_lyrics
-
-                print("\n" + "=" * 50)
-                print("FINAL FORMATTED LYRICS:")
-                print(lyrics)
-                print("=" * 50 + "\n")
-
-                if words_raw:
-                    await update_status(request.track_id, "ANALYZING_FLOW")
-                    # Map raw Whisper ASR word timestamps to the user's structured lyrics
-                    words_aligned = align_structured_lyrics_to_whisper(lyrics, words_raw)
-                    
-                    raw_score, meta_dict = calculate_beat_sync(
-                        transcribe_bytes, flow_bytes, filename, words_aligned
-                    )
-                    if "error" not in meta_dict:
-                        flow_score = raw_score
-                        flow_meta = FlowMetadata(**meta_dict)
-                    else:
-                        logger.warning("Beat sync returned error: %s", meta_dict["error"])
-            except Exception as exc:
-                logger.exception("Flow analysis from audio_url failed: %s", exc)
-
-        # ── Run all text-based scoring and hybrid LLM evaluation ──────────────
+        # ── Pure Lyrical scoring (Audio/ASR transcription is completely removed) ──────
         return await compute_scores_and_breakdown(
             lyrics=lyrics,
             lang=lang,
-            flow_score=flow_score,
-            flow_meta=flow_meta,
-            generated_lyrics=generated_lyrics,
+            flow_score=None,
+            flow_meta=None,
+            generated_lyrics=None,
             track_id=request.track_id,
         )
     finally:
@@ -555,16 +529,19 @@ async def transcribe_and_analyze(
         words_raw: list[dict] = transcription.get("words", [])
 
         # If user passed ground-truth lyrics, format them with Mistral using Whisper transcript
+        # for *alignment* purposes only -- scoring must always use the user's
+        # original submission (lyrics_input) so this pipeline's scores match
+        # what /analyze (text-only) produces for the same lyrics. Mistral's
+        # output is still generated and returned for display/alignment.
         generated_lyrics = None
-        lyrics_to_score = whisper_text
+        lyrics_to_score = lyrics_input if lyrics_input else whisper_text
         if lyrics_input:
             logger.info("Using Mistral to format lyrics based on Whisper transcription...")
             formatted = await format_lyrics_with_mistral(lyrics_input, whisper_text)
             if formatted and formatted != lyrics_input:
                 logger.info("Lyrics successfully formatted by Mistral.")
                 generated_lyrics = formatted
-                lyrics_to_score = generated_lyrics
-                
+
                 print("\n" + "=" * 50)
                 print("MISTRAL FORMATTED LYRICS:")
                 print(generated_lyrics)
@@ -593,10 +570,14 @@ async def transcribe_and_analyze(
             try:
                 words_aligned = words_raw
                 if generated_lyrics:
-                    words_aligned = align_structured_lyrics_to_whisper(lyrics_to_score, words_raw)
+                    # Alignment-only use of Mistral's formatted/transliterated
+                    # output (better line-break match against the ASR
+                    # transcript) -- lyrics_to_score (what actually gets
+                    # scored below) is unaffected by this.
+                    words_aligned = align_structured_lyrics_to_whisper(generated_lyrics, words_raw)
                 
-                raw_score, meta_dict = calculate_beat_sync(
-                    audio_bytes, audio_bytes, file.filename, words_aligned
+                raw_score, meta_dict = await asyncio.to_thread(
+                    calculate_beat_sync, audio_bytes, audio_bytes, file.filename, words_aligned
                 )
                 if "error" not in meta_dict:
                     flow_score = raw_score

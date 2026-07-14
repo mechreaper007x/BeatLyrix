@@ -70,3 +70,20 @@ ENV/
 /raprank-upload/uploads/audio/*.mp3
 raprank-nlp/*.txt
 raprank-nlp/*.log
+raprank-nlp/test_out.html
+
+# Ad-hoc scratch/debug files at repo root -- may contain scraped/copyrighted
+# lyric text pasted in during manual testing, never for commit.
+/lyrics_temp.txt
+/payload_temp.json
+
+# Local-only real-corpus reference model (trained on scraped corpus/data/
+# lyric text) -- deliberately kept outside raprank-nlp/ and out of the repo
+# entirely, since a trained artifact derived from scraped copyrighted lyrics
+# should never be committed.
+/local_real_model/*.pkl
+
+# Kaggle English-rap lyrics dataset (Genius-scraped, copyrighted) -- same
+# treatment as local_real_model/: raw lyric text and anything derived from
+# it stays local-only, never committed.
+/kaggle_rap_data/

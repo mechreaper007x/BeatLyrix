@@ -63,7 +63,6 @@ public class ScoringOrchestrationService {
                         Score score = Score.builder()
                                 .track(currentTrack)
                                 .syllableScore(finalResponse.getSyllable_score())
-                                .alliterationScore(finalResponse.getAlliteration_score())
                                 .flowScore(finalResponse.getFlow_score())
                                 .totalScore(finalResponse.getTotal_score())
                                 .breakdownJson(jsonBreakdown)
@@ -104,24 +103,46 @@ public class ScoringOrchestrationService {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PyAnalysisResponse {
         private Double syllable_score;
-        private Double alliteration_score;
         private Double flow_score;
         private Double total_score;
         private Integer word_count;
         private Integer line_count;
         private Double avg_syllables_per_word;
-        private Object alliteration_pairs;
 
         private Double rhyme_score;
         private Double wordplay_score;
         private Double syllable_weight;
+        private Double vocabulary_score;
         private Double vocabulary_uniqueness;
         private Integer double_entendres_count;
         private Integer puns_count;
         private Integer similes_count;
         private Integer metaphors_count;
+
+        private Double assonance_score;
+        private Double consonance_score;
+        private Double onomatopoeia_score;
+        private Double codeswitch_score;
+        private Double repetition_score;
+        private Double cadence_text_score;
+        private Double callback_score;
+        private Integer punchline_count;
+        private Integer extended_metaphor_count;
+        private Integer allusions_count;
+        private Integer multisyllabic_rhyme_count;
+
         private String generated_lyrics;
         private String wordplay_explanation;
         private java.util.Map<String, String> nlp_explanations;
+
+        private String style_cluster;
+        private Double style_cluster_confidence;
+        private java.util.Map<String, Double> style_membership;
+
+        private java.util.Map<String, Object> element_clusters;
+
+        private String predicted_tier;
+        private Double tier_confidence;
+        private java.util.Map<String, Double> tier_probabilities;
     }
 }

@@ -1,0 +1,33 @@
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Local corpus-building tooling and scraped/generated lyric data — the raw
+# lyric TEXT stays out of the repo (scraped = copyrighted third-party
+# material; consented seeds = private, only "using" them was consented to,
+# not redistribution; synthetic samples embed AI-generated verse text). The
+# generation/scoring CODE and trained model artifacts (no lyric text inside a
+# .pkl) are tracked normally.
+corpus/data/
+corpus/data.7z
+corpus/real_corpus/data/
+corpus/consented_seeds/
+corpus/synthetic_data/commercial/
+corpus/synthetic_data/elite/
+corpus/synthetic_data/mid/
+# Same treatment for the clustering-experiment corpus — these JSON records also
+# embed generated verse text in a "lyrics" field (different dir name, so the
+# rules above don't catch it).
+corpus/synthetic_data_clustering/
+
+# Redis snapshot — may cache analyzed lyric text; never for commit.
+dump.rdb
+
+# Scratch/debug dumps — data outputs (pasted lyrics, per-track result
+# JSON/JSONL, score CSV/TSV) stay local; the analysis .py scripts in scratch/
+# are still tracked normally.
+scratch/*.txt
+scratch/*.json
+scratch/*.jsonl
+scratch/*.csv
+scratch/*.tsv

@@ -1,0 +1,303 @@
+artist,title,rhyme,wordplay,texture,rare,internal,chain,multi_dens,compound_dens,holorime_dens,simile,metaphor,pun,entendre,alliteration,assonance,consonance,onomatopoeia
+Brodha V,Aigiri Nandini,43.14,0.0,Assonant · Alliterative,Baseline,100.0,30.48,40.0,0.0,0.0,0.0,0.0,0.0,0.0,100.0,86.38,100.0,0.0
+Brodha V,Flex,49.44,66.07,Baseline,Baseline,78.43,0.0,14.29,0.0,0.0,0.0,0.0,9.52,4.76,0.0,88.46,90.36,0.0
+Brodha V,Forever,19.01,83.94,Alliterative · Consonant-Rich,Baseline,50.93,0.0,5.41,0.0,0.0,13.51,1.35,2.7,8.11,46.1,60.36,88.67,10.81
+Brodha V,Ready Steady Po,11.25,12.43,Alliterative · Consonant-Rich,noise,23.26,0.0,3.39,0.0,0.0,3.39,0.0,0.0,0.0,80.71,44.27,58.26,78.26
+Brodha V,Vainko,12.97,59.66,Baseline,Baseline,22.6,0.0,4.71,0.0,0.0,8.24,3.53,0.0,5.88,0.0,53.55,59.24,0.0
+Calm,Bam Bam,27.84,11.27,Alliterative · Consonant-Rich,noise,86.42,0.0,7.41,0.0,0.0,0.0,0.0,0.0,3.7,100.0,54.41,78.21,100.0
+Calm,Ringtone,14.34,23.33,Alliterative · Consonant-Rich,Baseline,20.41,0.0,4.65,0.0,0.0,0.0,0.0,3.49,0.0,53.53,80.71,82.62,0.0
+CarryMinati,Date Kar Le,20.48,14.84,Alliterative,Baseline,24.69,31.75,2.08,0.0,0.0,0.0,0.0,2.08,2.08,39.09,34.55,58.81,0.0
+CarryMinati,Jalwa,48.31,59.17,Baseline,Baseline,24.39,27.87,45.83,0.0,0.0,8.33,4.17,4.17,0.0,0.0,58.11,36.79,0.0
+CarryMinati,Trigger,52.88,23.28,Baseline,Baseline,32.79,42.15,28.57,0.0,0.0,3.17,0.0,1.59,1.59,0.0,65.83,72.04,0.0
+CarryMinati,Vardaan,22.59,4.97,Alliterative · Consonant-Rich,Baseline,59.26,0.0,5.26,0.0,0.0,1.75,0.0,0.0,0.0,31.79,74.95,52.36,0.0
+CarryMinati,Warrior,34.39,42.31,Alliterative,Baseline,33.82,28.99,10.26,0.0,0.0,0.0,0.0,5.13,0.0,29.04,52.73,51.54,0.0
+CarryMinati,Yalgaar,48.74,25.62,Alliterative · Consonant-Rich,Baseline,8.33,50.0,15.0,0.0,0.0,0.0,0.0,3.33,1.67,66.23,30.0,78.65,0.0
+CarryMinati,Zindagi,46.63,0.0,Baseline,Baseline,26.67,34.29,20.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,49.7,0.0,0.0
+Emiway Bantai,Checkmate,16.81,29.51,Baseline,Baseline,14.49,18.63,4.92,0.0,0.0,0.0,3.28,1.64,1.64,0.0,50.66,15.15,6.56
+Emiway Bantai,Chusamba,21.9,69.06,Alliterative · Consonant-Rich,noise,35.29,0.0,7.92,0.99,0.0,0.0,3.96,6.93,1.98,65.2,64.52,64.96,26.76
+Emiway Bantai,Company,29.56,0.0,Assonant · Alliterative,Baseline,47.62,0.0,9.8,0.0,0.0,0.0,0.0,0.0,0.0,65.41,88.7,82.62,0.0
+Emiway Bantai,Dhyan De,28.48,53.95,Baseline,noise,17.54,11.28,15.79,0.0,0.0,1.32,0.0,5.26,3.95,0.0,43.43,34.85,20.92
+Emiway Bantai,Firse Machayenge,38.51,32.03,Alliterative · Consonant-Rich,Baseline,53.03,0.0,15.62,0.0,0.0,3.12,0.0,3.12,0.0,71.32,54.66,49.7,0.0
+Emiway Bantai,Freeverse Feast 2,16.02,62.6,Alliterative · Consonant-Rich,Baseline,35.4,0.0,4.88,0.0,0.0,0.0,7.32,0.81,4.88,33.6,57.24,62.49,3.25
+Emiway Bantai,Giraftaar,37.27,25.19,Alliterative · Consonant-Rich,Baseline,50.67,25.14,32.31,0.0,0.0,0.0,0.0,2.31,3.08,17.39,75.6,67.57,3.08
+Emiway Bantai,GUESS,15.19,43.64,Alliterative,Baseline,20.08,0.0,6.36,0.0,0.0,5.45,2.73,1.82,2.73,35.0,29.47,60.19,0.0
+Emiway Bantai,HEAL,11.08,0.0,Baseline,Baseline,24.88,0.0,3.33,0.0,0.0,0.0,0.0,0.0,0.0,0.0,30.84,29.94,0.0
+Emiway Bantai,Jallad,24.07,30.8,Alliterative,Baseline,44.09,21.16,13.64,0.0,0.0,0.0,1.82,3.18,0.45,43.51,54.76,43.16,3.48
+Emiway Bantai,Khatam Hue Waande,13.4,24.73,Baseline,Baseline,14.93,0.0,5.38,0.0,0.0,0.0,3.23,1.08,0.0,0.0,61.6,37.35,0.0
+Emiway Bantai,Khatam,30.36,26.28,Assonant · Alliterative,noise,34.78,9.94,13.68,0.0,0.0,0.85,0.85,2.56,0.85,58.57,84.58,72.04,35.41
+Emiway Bantai,King Of Indian Hip Hop,36.21,81.92,Alliterative · Consonant-Rich,Baseline,37.23,9.12,17.31,0.0,0.0,3.85,0.48,9.13,3.85,62.27,71.84,86.07,1.91
+Emiway Bantai,MACHAYENGE 4,24.8,61.48,Alliterative · Consonant-Rich,Baseline,30.14,4.56,13.27,0.0,0.0,5.1,0.51,5.1,4.08,56.32,59.35,67.92,4.08
+Emiway Bantai,No Brands,31.26,26.19,Assonant · Alliterative,Baseline,35.84,0.0,28.57,0.0,0.0,0.0,0.0,3.17,0.0,76.78,86.24,55.83,0.0
+Emiway Bantai,Round One,22.55,20.64,Alliterative · Consonant-Rich,Baseline,30.77,0.0,7.34,0.0,0.0,0.0,1.83,0.0,2.75,19.05,65.11,76.06,3.67
+EPR,ADR / ABR,48.91,34.38,Assonant · Alliterative,Baseline,79.17,10.71,20.83,0.0,0.0,0.0,0.0,4.17,0.0,92.58,85.58,85.71,8.33
+EPR,Badluram ka badan,11.71,3.58,Baseline,Baseline,12.35,0.0,4.71,0.0,0.0,0.0,0.0,0.0,1.18,0.0,64.85,57.88,0.0
+EPR,Ekla Cholo Re,7.83,0.0,Alliterative · Consonant-Rich,Baseline,23.81,0.0,2.0,0.0,0.0,0.0,0.0,0.0,0.0,35.61,61.85,74.86,0.0
+EPR,Fibonacci,13.77,23.79,Alliterative,Baseline,8.85,0.0,7.97,0.0,0.0,0.0,0.0,0.72,3.62,85.0,7.58,72.88,0.0
+EPR,Koi Gham Nahi,25.31,22.28,Alliterative · Consonant-Rich,Baseline,34.48,0.0,8.7,0.0,0.0,0.0,0.0,4.35,0.0,68.26,49.14,85.34,0.0
+EPR,Q,17.22,6.25,Baseline,Baseline,66.67,0.0,1.92,0.0,0.0,0.0,1.92,0.0,0.0,0.0,60.62,91.96,0.0
+EPR,Raastamahn,22.67,0.0,Alliterative · Consonant-Rich,Onomatopoeic,57.14,0.0,5.88,0.0,0.0,0.0,0.0,0.0,0.0,70.0,59.17,87.14,15.69
+EPR,Srini Bana EPR,28.12,55.41,Assonant · Alliterative,noise,64.52,0.0,10.81,0.0,0.0,0.0,0.0,2.7,8.11,100.0,85.16,92.35,30.88
+Hanumankind,Big Dawgs,25.46,58.11,Alliterative · Consonant-Rich,noise,43.01,0.0,12.16,0.0,0.0,1.35,6.76,0.0,4.05,76.75,34.7,85.59,54.53
+Hanumankind,Holiday,30.71,37.85,Baseline,Baseline,0.0,0.0,20.75,0.0,0.0,0.0,0.0,5.66,0.0,0.0,61.35,30.77,0.0
+Hanumankind,Run It Up,8.66,14.36,Alliterative,Baseline,6.94,0.0,5.47,0.0,0.0,1.17,0.0,1.17,1.17,31.93,37.74,24.88,3.12
+Hanumankind,Taste the Thunder,14.24,43.51,Baseline,Baseline,17.78,0.0,5.77,0.0,0.0,0.0,0.0,4.81,1.92,0.0,12.5,22.92,0.0
+JTrix,Banger Pro Max,18.2,31.25,Alliterative,noise,24.69,0.0,9.38,0.0,0.0,4.69,1.56,0.0,1.56,28.44,39.63,54.47,23.71
+JTrix,Blow Up,19.4,21.49,Alliterative · Consonant-Rich,Baseline,36.04,0.0,5.26,0.0,0.0,0.0,0.0,1.75,3.51,32.27,69.29,72.74,7.02
+JTrix,Bohot Sahi,43.54,61.84,Alliterative,Baseline,38.65,0.0,36.84,0.0,0.0,2.63,0.0,5.26,6.58,29.67,68.32,37.35,5.26
+JTrix,Ek Tarfa,12.36,9.9,Baseline,Baseline,27.78,0.0,2.78,0.0,0.0,0.0,0.0,2.78,0.0,0.0,42.63,72.04,0.0
+JTrix,Jazbaat,10.74,5.94,Baseline,Baseline,18.52,0.0,3.33,0.0,0.0,0.0,0.0,1.67,0.0,0.0,64.64,15.87,0.0
+JTrix,Kaala,41.7,58.16,Assonant · Alliterative,Baseline,56.74,0.0,25.53,0.0,0.0,8.51,0.0,4.26,2.13,68.26,83.72,71.59,0.0
+JTrix,Kalaakaar,41.02,46.13,Alliterative · Consonant-Rich,Baseline,29.85,0.0,45.07,0.0,0.0,2.82,0.0,4.23,2.82,71.21,70.8,74.01,0.0
+JTrix,Khayaal,38.67,0.0,Baseline,Baseline,15.87,0.0,13.89,0.0,0.0,0.0,0.0,0.0,0.0,0.0,29.22,35.15,0.0
+JTrix,Kya Scene,34.52,69.67,Alliterative · Consonant-Rich,noise,49.02,0.0,14.0,0.0,0.0,4.0,0.0,0.0,10.0,94.0,75.36,58.81,37.5
+JTrix,Mast,27.82,64.65,Assonant · Alliterative,Onomatopoeic,20.2,12.99,14.47,0.0,0.0,5.26,0.0,5.26,6.58,77.09,82.5,71.23,15.79
+JTrix,Masti Nahi,12.31,80.53,Assonant · Alliterative,Baseline,34.19,0.0,2.56,0.0,0.0,2.56,0.0,7.69,7.69,91.68,86.03,74.47,0.0
+JTrix,Mera Naam,23.99,9.13,Baseline,Baseline,0.0,0.0,7.69,0.0,0.0,0.0,0.0,2.56,0.0,0.0,67.79,84.02,0.0
+JTrix,Muskura,46.43,17.25,Baseline,noise,61.22,0.0,22.54,0.0,0.0,0.0,0.0,1.41,2.82,0.0,74.3,70.52,11.27
+JTrix,One and Only,35.35,95.33,Alliterative · Consonant-Rich,Baseline,24.69,37.04,8.97,0.0,0.0,47.44,0.0,2.56,6.41,87.25,55.94,81.88,5.13
+JTrix,Pehchaan,28.57,18.33,Baseline,Baseline,36.23,0.0,13.33,0.0,0.0,3.33,0.0,1.67,0.0,0.0,84.42,53.21,0.0
+JTrix,Sharaab,22.77,32.36,Baseline,Baseline,8.55,0.0,11.29,0.0,0.0,0.0,0.0,4.84,0.0,0.0,92.15,47.22,0.0
+JTrix,Sort Hai,36.83,44.37,Alliterative,Baseline,21.51,0.0,24.32,0.0,0.0,0.0,0.0,1.35,6.76,65.27,22.42,33.02,5.41
+JTrix,Streets,43.15,53.0,Assonant · Alliterative,Baseline,80.0,0.0,20.0,0.0,0.0,6.0,0.0,2.0,6.0,68.44,87.23,85.87,0.0
+JTrix,Tehelka,20.99,43.54,Alliterative · Consonant-Rich,Baseline,38.46,0.0,10.0,0.0,0.0,0.0,0.0,2.5,6.25,57.88,56.31,79.97,4.94
+JTrix,Zindagi,46.63,0.0,Baseline,Baseline,26.67,34.29,20.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,49.7,0.0,0.0
+Karma,Airplane Mode,7.56,57.88,Alliterative,Baseline,27.49,0.0,1.03,0.0,0.0,6.19,2.06,4.12,5.15,41.29,19.74,49.27,0.0
+Karma,Baba Yaga,22.05,58.78,Baseline,Baseline,44.44,14.29,3.19,0.0,0.0,4.26,0.0,5.32,3.19,0.0,0.0,11.49,4.26
+Karma,Basic Bars 2,23.05,53.0,Baseline,Baseline,60.0,0.0,8.0,0.0,0.0,4.0,0.0,4.0,6.0,0.0,58.11,46.27,0.0
+Karma,Basic Bars,23.05,53.0,Baseline,Baseline,60.0,0.0,8.0,0.0,0.0,4.0,0.0,4.0,6.0,0.0,58.11,46.27,0.0
+Karma,Beat Do,17.44,40.95,Alliterative,Baseline,53.5,0.0,3.81,0.0,0.0,0.95,0.0,3.81,3.81,40.9,61.6,9.95,0.0
+Karma,Best Nai,37.27,56.16,Alliterative,Baseline,37.63,13.82,19.18,0.0,0.0,0.0,4.11,5.48,1.37,31.04,58.36,41.86,0.0
+Karma,Catchy Hook,17.62,26.74,Alliterative,Baseline,18.73,9.63,6.09,0.0,0.0,0.0,0.0,2.61,2.61,34.13,39.49,28.02,3.48
+Karma,COMPLICATED,28.21,16.27,Alliterative · Consonant-Rich,Baseline,38.76,19.93,4.76,0.0,0.0,0.0,0.0,3.17,0.0,35.74,40.19,78.1,0.0
+Karma,Fate,26.92,9.13,Alliterative,Baseline,22.99,0.0,12.82,0.0,0.0,0.0,0.0,1.28,1.28,79.72,59.29,11.9,0.0
+Karma,Fearless,65.77,8.95,Baseline,Baseline,92.59,47.62,11.76,0.0,0.0,0.0,0.0,0.0,2.94,0.0,35.35,69.31,0.0
+Karma,Gangster,21.13,65.89,Baseline,Baseline,48.61,17.86,3.23,0.0,0.0,6.45,0.0,3.23,8.06,0.0,77.09,57.52,0.0
+Karma,Godzilla,26.01,78.57,Alliterative · Consonant-Rich,Baseline,43.01,0.0,9.52,0.0,0.0,2.86,0.0,8.57,2.86,20.31,46.16,73.89,0.0
+Karma,Google Pay,17.62,74.43,Alliterative · Consonant-Rich,Baseline,61.22,0.0,2.97,0.0,0.0,8.91,2.97,5.94,5.94,20.46,45.15,62.78,3.92
+Karma,I GET IT,7.99,57.53,Alliterative,Baseline,13.75,0.0,2.94,0.0,0.0,7.84,0.0,3.92,4.9,49.64,28.48,25.62,0.0
+Karma,Lena Mera Naam,17.8,13.7,Baseline,Baseline,35.09,0.0,3.85,0.0,0.0,0.0,0.0,3.85,0.0,0.0,0.0,55.83,0.0
+Karma,Lessons,14.46,45.9,Baseline,Baseline,44.87,0.0,1.49,0.0,0.0,0.0,2.99,4.48,1.49,0.0,34.35,84.65,0.0
+Karma,Mere Bhai Log,35.24,46.12,Assonant · Alliterative,Baseline,100.0,0.0,10.34,0.0,0.0,0.0,0.0,5.17,1.72,39.09,87.54,86.29,0.0
+Karma,No Bro,15.28,24.4,Baseline,Baseline,0.0,25.97,3.17,0.0,0.0,1.59,0.0,3.17,0.0,0.0,30.0,11.9,0.0
+Karma,Online,45.47,86.37,Assonant · Alliterative,Baseline,100.0,54.71,22.64,0.0,0.0,0.0,0.0,20.75,1.89,97.5,91.73,97.17,0.0
+Karma,Pomfret Fry,8.75,24.02,Alliterative,Baseline,14.34,0.0,3.92,0.0,0.0,1.96,0.98,1.96,0.98,24.95,8.62,35.15,3.92
+Karma,SAARI SAARI RAAT,27.12,0.0,Assonant · Alliterative,noise,22.22,0.0,18.75,0.0,0.0,0.0,0.0,0.0,0.0,96.75,90.77,57.22,60.62
+Karma,SUCCESS,20.5,55.51,Alliterative · Consonant-Rich,Baseline,30.3,0.0,8.47,0.0,0.0,0.0,0.0,5.08,6.78,66.19,44.71,54.08,6.78
+Karma,Take Diss,34.68,42.73,Alliterative,Baseline,27.45,16.81,19.77,0.0,0.0,0.0,2.33,3.49,4.65,51.88,40.77,35.62,0.0
+Karma,Tera Hua,28.98,0.0,Baseline,Baseline,100.0,0.0,4.76,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Karma,The Game Is On,10.79,11.13,Baseline,Baseline,28.74,0.0,3.12,0.0,0.0,0.0,1.56,1.56,0.0,0.0,52.73,55.41,0.0
+Karma,Tony Montana,15.39,59.49,Alliterative,Onomatopoeic,27.32,0.0,5.06,0.0,0.0,1.27,2.53,2.53,7.59,29.67,18.18,62.27,15.0
+Karma,Zaruri Nahi,35.8,60.9,Alliterative · Consonant-Rich,Baseline,39.01,0.0,22.92,0.0,0.0,8.33,2.08,3.12,5.21,20.96,85.1,58.21,0.0
+King,90s,29.49,32.62,Alliterative,Baseline,15.15,0.0,10.98,0.0,0.0,0.0,0.0,3.66,1.22,26.13,85.49,30.56,0.0
+King,Baazi,21.79,21.58,Alliterative · Consonant-Rich,Baseline,53.57,0.0,11.58,0.0,0.0,0.0,1.05,2.11,1.05,71.32,41.36,88.01,4.21
+King,Desi Dan Bilzerian,30.01,48.94,Assonant · Alliterative,Baseline,47.62,0.0,14.08,0.0,0.0,7.04,0.0,4.23,0.0,86.07,88.13,86.22,0.0
+King,Dracula,34.08,82.81,Baseline,Baseline,52.08,0.0,12.24,0.0,0.0,8.16,0.0,10.2,0.0,0.0,86.73,47.22,0.0
+King,EKTARFA,41.43,60.34,Baseline,Baseline,63.22,0.0,55.17,0.0,0.0,0.0,1.72,6.9,0.0,0.0,78.04,36.11,0.0
+King,GOAT SHIT,20.79,68.47,Alliterative · Consonant-Rich,Baseline,28.19,4.26,9.71,0.0,0.0,6.8,0.49,5.83,4.37,52.83,68.0,49.75,5.83
+King,IICONIC,7.43,14.94,Alliterative · Consonant-Rich,Baseline,31.53,0.0,0.0,0.0,0.0,0.0,0.0,1.22,2.44,30.34,52.73,61.79,0.0
+King,KODAK,29.39,36.12,Alliterative · Consonant-Rich,Baseline,35.54,0.0,21.32,0.0,0.0,1.84,0.0,3.31,2.57,18.8,66.79,68.33,11.76
+King,Let The Eyes Talk,14.89,6.85,Baseline,Baseline,10.75,0.0,5.77,0.0,0.0,0.0,0.0,1.92,0.0,0.0,35.35,19.61,0.0
+King,Maan Meri Jaan,27.65,0.0,Alliterative,Baseline,16.67,0.0,10.0,0.0,0.0,0.0,0.0,0.0,0.0,55.0,19.23,79.87,0.0
+King,No Loss,37.02,12.04,Assonant · Alliterative,Baseline,30.3,0.0,27.78,0.0,0.0,0.0,1.85,0.0,1.85,61.6,87.33,84.02,0.0
+King,OOPS,21.16,4.88,Baseline,Baseline,19.61,0.0,9.59,0.0,0.0,0.0,0.0,1.37,0.0,0.0,29.6,28.8,0.0
+King,Pablo,33.01,9.38,Alliterative · Consonant-Rich,Baseline,14.49,0.0,18.42,0.0,0.0,0.0,0.0,2.63,0.0,71.32,77.09,87.84,0.0
+King,Picasso,9.95,40.53,Baseline,Baseline,29.63,0.0,1.52,0.0,0.0,0.0,0.0,4.55,1.52,0.0,47.05,71.46,0.0
+King,Sinner,21.57,9.9,Baseline,Baseline,21.74,0.0,8.33,0.0,0.0,0.0,1.39,1.39,0.0,0.0,61.85,25.24,0.0
+King,TERE HO KE,28.26,75.42,Alliterative · Consonant-Rich,Baseline,31.91,9.12,14.41,0.0,0.0,3.39,0.0,9.32,0.0,31.09,85.66,62.51,0.0
+King,Tu Aake Dekhle,20.87,4.17,Baseline,Baseline,8.13,0.0,8.22,0.0,0.0,0.0,0.0,0.0,1.37,0.0,65.83,0.0,0.0
+King,WARCRY,42.69,57.45,Alliterative · Consonant-Rich,Baseline,53.33,8.57,23.08,0.0,0.0,0.96,0.0,6.73,0.0,19.61,71.26,64.96,0.0
+KR$NA,Been A While,15.05,65.12,Alliterative · Consonant-Rich,Onomatopoeic,34.83,0.0,5.19,0.0,0.0,5.19,0.0,5.19,7.79,50.0,62.5,58.81,14.29
+KR$NA,Blowing Up,42.21,87.92,Alliterative · Consonant-Rich,Baseline,89.74,21.98,11.76,0.0,0.0,3.92,7.84,8.82,3.92,96.48,57.24,44.42,7.84
+KR$NA,Hello,18.18,65.12,Baseline,Baseline,52.63,0.0,4.29,0.0,0.0,7.14,2.86,4.29,7.14,0.0,25.28,37.68,5.71
+KR$NA,Hola Amigo,43.46,53.36,Alliterative · Consonant-Rich,noise,48.02,21.79,20.15,0.0,0.0,4.48,0.0,4.48,3.73,69.04,60.71,62.07,39.07
+KR$NA,I Guess,46.57,79.21,Alliterative,noise,27.78,19.84,24.75,0.99,0.0,1.98,1.98,7.92,2.97,22.44,28.21,44.15,0.0
+KR$NA,Joota Japani,42.01,60.32,Baseline,Baseline,64.33,15.04,13.89,0.0,0.0,8.33,0.0,4.17,5.56,0.0,40.19,63.74,5.56
+KR$NA,Kaha Tak,8.67,25.52,Baseline,Baseline,30.3,0.0,0.0,0.0,0.0,0.0,2.08,2.08,2.08,0.0,29.22,69.48,0.0
+KR$NA,Khatta Flow,42.98,89.19,Assonant · Alliterative,Baseline,100.0,34.48,6.85,0.0,0.0,5.48,5.48,12.33,2.74,86.1,89.1,89.88,0.0
+KR$NA,Knock Knock,51.17,24.4,Baseline,Baseline,76.92,32.97,9.52,0.0,0.0,0.0,0.0,3.17,1.59,0.0,41.36,58.81,0.0
+KR$NA,Lil Bunty,26.43,85.57,Alliterative · Consonant-Rich,Onomatopoeic,52.21,20.65,6.02,0.0,0.0,3.61,2.41,10.84,4.82,51.3,82.5,61.67,14.46
+KR$NA,Machayenge 4,24.8,61.48,Alliterative · Consonant-Rich,Baseline,30.14,4.56,13.27,0.0,0.0,5.1,0.51,5.1,4.08,56.32,59.35,67.92,4.08
+KR$NA,MAHARANI,16.18,23.33,Baseline,Baseline,9.69,0.0,11.43,0.0,0.0,1.71,0.0,1.14,2.86,0.0,62.5,14.81,4.57
+KR$NA,Makasam,36.08,83.3,Assonant · Alliterative,Baseline,57.08,0.0,19.61,0.0,0.0,3.92,1.31,9.15,4.58,59.28,84.63,71.64,2.61
+KR$NA,Muqabla,30.02,74.36,Assonant · Alliterative,Baseline,100.0,0.0,4.71,0.0,0.0,11.76,0.0,5.88,3.53,89.12,90.05,95.2,0.0
+KR$NA,NGL,23.71,67.65,Alliterative · Consonant-Rich,Baseline,81.48,0.0,4.63,0.0,0.0,4.63,0.93,5.56,7.41,63.82,70.87,73.76,0.0
+KR$NA,No Cap,43.19,91.19,Alliterative · Consonant-Rich,Baseline,33.76,25.32,19.61,0.0,0.0,16.67,0.0,3.92,7.84,19.61,58.36,69.48,0.0
+KR$NA,OG,13.36,40.16,Alliterative,Baseline,24.69,0.0,3.61,0.0,0.0,4.82,2.41,2.41,2.41,23.52,39.63,47.88,0.0
+KR$NA,Prarthana,41.3,58.52,Alliterative · Consonant-Rich,noise,51.64,0.0,20.88,0.0,0.0,1.1,1.1,5.49,4.4,71.69,70.87,66.01,40.96
+KR$NA,Roll Up,39.65,62.1,Assonant · Alliterative,Baseline,74.07,0.0,12.68,0.0,0.0,8.45,0.0,2.82,7.04,68.71,87.08,65.0,5.56
+KR$NA,Saath Ya Khilaaf,45.24,56.19,Alliterative · Consonant-Rich,Baseline,100.0,0.0,14.29,0.0,0.0,5.95,1.19,3.57,5.95,50.61,76.47,85.59,0.0
+KR$NA,Say My Name (English Version),16.52,75.43,Baseline,Baseline,33.33,0.0,6.1,0.0,0.0,10.98,6.1,2.44,6.1,0.0,55.94,79.27,9.76
+KR$NA,Saza E Maut,46.3,84.99,Alliterative · Consonant-Rich,noise,83.33,19.05,12.35,0.0,0.0,3.7,0.0,8.64,8.64,26.43,48.33,85.14,32.75
+KR$NA,Seedha Makeover,38.13,63.68,Alliterative · Consonant-Rich,Baseline,67.51,10.85,12.05,0.0,0.0,4.82,2.41,4.82,7.23,23.99,81.75,87.53,0.0
+KR$NA,Sensitive,35.48,58.09,Alliterative · Consonant-Rich,Baseline,23.98,0.0,21.18,0.0,0.0,0.0,1.18,6.47,1.18,70.89,71.63,56.74,0.0
+KR$NA,Shut Up,47.73,88.6,Assonant · Alliterative,noise,100.0,12.24,16.46,0.0,0.0,7.59,2.53,10.13,5.06,87.72,87.04,66.96,37.94
+KR$NA,Some Of Us,57.34,56.25,Alliterative · Consonant-Rich,Baseline,98.96,31.25,25.0,0.0,0.0,1.25,2.5,5.0,3.75,80.94,72.5,87.43,0.0
+KR$NA,Still Standing,47.78,93.3,Assonant · Alliterative,noise,100.0,0.0,12.5,0.0,0.0,8.93,19.64,5.36,3.57,91.94,84.32,86.75,21.25
+KR$NA,Untitled,37.76,86.39,Alliterative,Baseline,50.23,0.0,21.33,0.0,0.0,14.67,2.67,2.67,4.0,30.68,83.99,48.96,5.33
+KR$NA,Vibrate,29.16,59.71,Alliterative,Baseline,15.29,26.21,9.2,0.0,0.0,9.82,0.0,1.84,1.84,26.09,27.44,56.13,2.45
+KR$NA,Villain,34.08,93.19,Alliterative,Baseline,58.48,0.0,10.59,0.0,0.0,18.82,5.88,9.41,2.35,58.57,30.0,56.43,0.0
+KR$NA,Vyanjan,40.76,84.74,Assonant · Alliterative,Baseline,91.95,7.39,16.38,0.0,0.0,0.0,0.0,19.83,0.86,100.0,94.23,98.03,0.0
+KR$NA,Wanna Know,55.48,93.34,Baseline,Baseline,100.0,35.09,14.86,0.0,0.0,12.16,13.51,8.11,4.05,0.0,81.72,86.27,0.0
+KR$NA,Whats Up,20.51,81.6,Alliterative,Baseline,47.62,0.0,3.08,0.0,0.0,1.54,15.38,0.0,0.0,29.59,0.0,0.0,0.0
+Lil Bhatia,Maar Kaat,52.91,87.11,Alliterative · Consonant-Rich,Baseline,68.63,25.21,32.35,0.0,0.0,0.0,2.94,20.59,0.0,80.16,60.28,86.51,0.0
+Lil Bhatia,Peace of Mind,35.2,58.33,Alliterative · Consonant-Rich,Baseline,43.48,0.0,19.61,0.0,0.0,1.96,0.0,5.88,2.94,66.04,59.77,70.35,3.92
+Lil Bhatia,Taakat,33.03,76.67,Assonant · Alliterative,Baseline,63.93,0.0,12.22,0.0,0.0,0.0,0.0,8.89,4.44,52.97,85.7,72.56,4.44
+Muhfaad,Abe Chodna,28.34,0.0,Assonant · Alliterative,Onomatopoeic,100.0,0.0,1.19,0.0,0.0,0.0,0.0,0.0,0.0,45.66,87.94,84.24,14.29
+Muhfaad,Adayein,44.44,38.79,Alliterative,Baseline,31.01,19.93,20.69,0.0,0.0,1.72,1.72,3.45,1.72,66.55,63.06,37.14,0.0
+Muhfaad,Aelaan,30.54,46.55,Baseline,Baseline,37.04,6.35,15.86,0.0,0.0,2.07,1.38,4.14,2.76,0.0,59.17,62.16,2.74
+Muhfaad,Ambaran,27.64,15.72,Alliterative · Consonant-Rich,Baseline,40.4,0.0,7.35,0.0,0.0,0.0,1.47,1.47,1.47,71.32,56.5,75.0,5.71
+Muhfaad,BackFlip,30.59,6.36,Alliterative · Consonant-Rich,Baseline,46.3,0.0,10.71,0.0,0.0,0.0,0.0,1.79,0.0,94.07,70.68,80.45,0.0
+Muhfaad,Bakri (GOAT),36.25,81.73,Assonant · Alliterative,Baseline,65.66,12.99,10.98,0.0,0.0,3.66,0.0,9.76,3.66,41.59,88.27,85.95,0.0
+Muhfaad,Bhoot Banega,19.52,46.44,Alliterative · Consonant-Rich,Baseline,26.36,0.0,9.78,0.0,0.0,0.89,1.33,4.44,2.67,18.1,52.73,61.27,1.78
+Muhfaad,Duniya Chutiya,43.92,21.35,Alliterative · Consonant-Rich,Baseline,63.06,0.0,16.67,0.0,0.0,0.0,0.0,4.17,0.0,45.76,50.27,66.53,0.0
+Muhfaad,Ego Friendly,7.99,44.09,Alliterative,Baseline,9.95,0.0,1.08,0.0,0.0,2.15,0.0,4.3,2.15,42.92,25.99,58.53,0.0
+Muhfaad,Glitch,17.8,50.59,Baseline,Baseline,17.54,0.0,7.06,0.0,0.0,0.0,4.71,4.71,1.18,0.0,61.35,60.64,0.0
+Muhfaad,Happy Diwala Ravan,42.5,23.84,Alliterative · Consonant-Rich,Baseline,48.89,0.0,26.74,0.0,0.0,0.0,0.0,2.33,2.33,47.19,37.58,64.1,4.65
+Muhfaad,Har Har Gange,45.36,0.0,Alliterative · Consonant-Rich,noise,52.29,0.0,34.67,0.0,0.0,0.0,0.0,0.0,0.0,74.51,73.18,86.92,39.83
+Muhfaad,Instagram Live,26.11,45.0,Alliterative · Consonant-Rich,Baseline,30.11,5.53,16.13,0.0,0.0,1.94,0.0,4.52,1.94,65.16,71.54,72.67,0.0
+Muhfaad,Jaldi Aao,42.51,12.63,Alliterative,Baseline,34.83,0.0,34.02,0.0,0.0,0.0,0.0,1.03,2.06,41.14,75.65,45.62,0.0
+Muhfaad,KALI ZUBAN,23.83,59.82,Alliterative · Consonant-Rich,Baseline,45.45,0.0,7.81,0.0,0.0,4.69,1.56,4.69,4.69,28.44,77.03,86.61,0.0
+Muhfaad,Maa Kasam,38.74,41.84,Assonant · Alliterative,Baseline,46.3,0.0,18.37,0.0,0.0,0.0,0.0,4.08,4.08,45.76,93.71,85.39,0.0
+Muhfaad,Moksh,34.57,18.3,Alliterative · Consonant-Rich,Baseline,24.24,15.58,17.86,0.0,0.0,0.89,0.0,1.79,0.89,36.25,66.98,53.03,7.08
+Muhfaad,Nateejay,45.84,74.81,Assonant · Alliterative,Baseline,90.44,6.64,19.38,0.0,0.0,0.78,0.78,8.53,2.33,76.75,88.99,80.87,0.0
+Muhfaad,Sach Too Much Hai,28.39,28.98,Baseline,Onomatopoeic,32.45,22.76,7.96,0.0,0.0,0.0,0.0,2.65,3.54,0.0,39.09,51.54,14.16
+Muhfaad,Sare Karo Dab,15.04,42.53,Alliterative · Consonant-Rich,Baseline,39.8,0.0,3.09,0.0,0.0,0.0,0.0,5.15,0.0,91.03,50.86,50.95,0.0
+Naam Sujal,Blind Spot,26.91,24.02,Baseline,Baseline,31.25,0.0,15.62,0.0,0.0,0.0,0.0,3.12,1.56,0.0,85.38,62.78,0.0
+Naam Sujal,Blueprint,17.93,77.09,Alliterative · Consonant-Rich,noise,21.93,0.0,8.6,0.0,0.0,2.15,0.0,7.53,5.38,70.54,63.22,83.19,28.84
+Naam Sujal,Dafli Wale,25.75,45.56,Alliterative · Consonant-Rich,noise,34.09,0.0,15.56,0.0,0.0,0.0,1.11,4.44,3.33,71.39,44.27,73.76,17.78
+Naam Sujal,Its About Time,42.24,48.3,Alliterative · Consonant-Rich,Onomatopoeic,57.69,0.0,18.18,0.0,0.0,0.76,0.0,5.3,1.52,45.84,66.03,76.18,18.18
+Naam Sujal,Protocol,34.97,72.92,Alliterative · Consonant-Rich,noise,37.74,16.17,16.98,0.0,0.0,3.77,0.94,6.6,5.66,65.05,77.95,60.25,11.21
+Naam Sujal,PYAAR?,14.55,3.46,Baseline,noise,16.46,0.0,8.54,0.0,0.0,1.22,0.0,0.0,0.0,0.0,71.14,49.58,19.51
+Naam Sujal,The Waddup,30.46,6.92,Alliterative · Consonant-Rich,noise,66.67,0.0,10.68,0.0,0.0,0.0,0.0,0.97,0.97,26.13,60.95,57.99,11.65
+Naam Sujal,Vishay Khatam,44.03,65.9,Assonant · Alliterative,Baseline,54.79,11.74,27.59,0.0,0.0,0.0,0.0,4.6,9.2,91.89,87.32,87.93,0.0
+Panther,Aisi Jagah Se,60.1,38.77,Assonant · Alliterative,Baseline,100.0,18.24,18.84,0.0,0.0,1.45,0.0,4.35,0.0,82.88,92.79,87.95,0.0
+Panther,Bemisaal,40.97,36.8,Alliterative · Consonant-Rich,noise,61.54,17.58,12.36,0.0,0.0,1.12,0.0,3.37,3.37,67.59,62.13,85.19,88.59
+Panther,Bohot Aagey,33.5,74.32,Alliterative · Consonant-Rich,Baseline,18.52,0.0,21.62,0.0,0.0,1.35,1.35,8.11,1.35,56.72,85.64,57.22,0.0
+Panther,Galat Karam,38.4,85.66,Assonant · Alliterative,Baseline,100.0,20.41,3.85,0.0,0.0,1.28,2.56,11.54,6.41,62.69,84.42,85.16,0.0
+Panther,Jaani,36.04,7.27,Alliterative · Consonant-Rich,Baseline,100.0,0.0,8.16,0.0,0.0,0.0,0.0,2.04,0.0,36.25,77.18,81.1,0.0
+Panther,Kiska Hai,54.86,72.22,Alliterative · Consonant-Rich,noise,83.33,0.0,50.62,0.0,0.0,0.0,0.0,8.64,2.47,52.62,62.01,56.86,58.43
+Panther,Non Talha,35.9,79.21,Alliterative · Consonant-Rich,Baseline,48.08,0.0,17.05,0.0,0.0,10.61,0.38,7.2,1.89,53.24,62.5,81.21,0.0
+Panther,Oh My God,36.31,73.21,Alliterative · Consonant-Rich,Baseline,14.49,37.27,11.43,0.0,0.0,1.43,0.0,7.14,5.71,32.57,49.39,59.51,5.71
+Panther,Parinda,46.45,19.71,Assonant · Alliterative,Baseline,74.07,0.0,25.0,0.0,0.0,0.0,0.0,3.85,0.0,69.04,92.46,85.99,0.0
+Panther,Parwah,9.92,51.04,Baseline,Onomatopoeic,13.89,0.0,4.17,0.0,0.0,0.0,0.0,4.17,8.33,0.0,58.59,86.02,16.67
+Panther,Rang,47.17,37.27,Baseline,Baseline,81.3,0.0,20.0,0.0,0.0,3.64,0.0,3.64,0.0,0.0,77.5,65.0,0.0
+Panther,Rangey Haath,56.74,68.88,Alliterative · Consonant-Rich,Baseline,69.7,51.95,15.79,0.0,0.0,7.52,0.75,6.02,2.26,66.48,78.37,72.19,3.01
+Panther,Rukna Nahi Tha,25.77,68.69,Baseline,Baseline,18.52,0.0,14.29,0.0,0.0,10.0,0.0,5.71,2.86,0.0,50.42,77.37,0.0
+Panther,Sajke,33.08,40.74,Alliterative · Consonant-Rich,Baseline,56.6,0.0,11.11,0.0,0.0,0.0,0.0,4.94,0.0,63.44,58.97,76.67,4.94
+Paradox,Ghatotkach,39.49,54.64,Baseline,noise,9.52,24.49,42.86,0.0,0.0,0.0,0.0,8.57,0.0,0.0,71.63,71.23,11.43
+Paradox,Glitch,4.46,87.34,Baseline,Baseline,18.52,0.0,0.0,0.0,0.0,0.0,19.05,0.0,4.76,0.0,52.73,74.68,0.0
+Paradox,Hasti Rahe Tu,38.39,44.58,Alliterative,noise,32.26,0.0,24.44,0.0,0.0,0.0,0.0,6.67,0.0,69.39,51.16,21.74,17.78
+Paradox,Jaadugar,35.47,0.0,Alliterative · Consonant-Rich,noise,45.05,23.17,6.9,0.0,0.0,0.0,0.0,0.0,0.0,36.25,80.5,55.0,50.78
+Paradox,Zimmedaar,65.24,69.51,Assonant · Alliterative,Baseline,100.0,85.71,14.63,0.0,0.0,0.0,0.0,9.76,0.0,83.46,87.53,90.73,0.0
+Raftaar,36,43.19,49.81,Alliterative · Consonant-Rich,noise,100.0,13.39,11.63,0.0,0.0,2.33,2.33,2.33,5.81,63.44,50.27,71.04,43.2
+Raftaar,Aage Chal,45.85,63.27,Alliterative · Consonant-Rich,Baseline,79.1,14.53,14.81,0.0,0.0,1.23,0.0,6.17,4.94,68.44,60.88,66.53,0.0
+Raftaar,Aisa Main Shaitaan,60.06,8.48,Alliterative · Consonant-Rich,Baseline,69.44,47.62,19.05,0.0,0.0,0.0,0.0,2.38,0.0,74.76,62.5,68.33,0.0
+Raftaar,Awein Hai,39.65,26.13,Alliterative · Consonant-Rich,Baseline,65.66,6.49,18.8,0.0,0.0,0.75,0.0,2.26,3.01,57.73,64.64,61.79,9.02
+Raftaar,BAAWE,64.0,91.87,Baseline,Baseline,100.0,23.53,51.89,0.0,0.0,15.09,0.0,11.32,2.83,0.0,89.18,88.17,3.77
+Raftaar,BANJO BOUNCE,41.45,23.94,Alliterative · Consonant-Rich,Baseline,44.12,21.01,13.83,0.0,0.0,0.0,0.0,2.13,3.19,100.0,51.33,50.21,0.0
+Raftaar,Beshaq,26.06,16.8,Baseline,Baseline,38.76,0.0,6.56,0.0,0.0,0.0,0.0,3.28,0.0,0.0,59.5,39.44,0.0
+Raftaar,Black Sheep,50.29,62.87,Alliterative · Consonant-Rich,Baseline,100.0,39.41,10.89,0.0,0.0,2.97,0.99,5.94,2.97,60.26,71.79,85.71,7.92
+Raftaar,Damn,33.6,38.19,Alliterative,noise,42.33,36.28,7.69,0.0,0.0,2.2,1.1,3.3,2.2,40.29,72.5,29.07,17.58
+Raftaar,Dhaakad,39.61,40.12,Alliterative,Baseline,53.76,0.0,18.0,0.0,0.0,0.0,0.0,6.0,0.0,90.67,55.83,34.26,0.0
+Raftaar,Dilli Waali Baatcheet,46.88,66.88,Assonant · Alliterative,Baseline,64.1,0.0,32.47,0.0,0.0,1.3,0.0,7.79,0.0,25.27,87.44,74.22,0.0
+Raftaar,Do Hazaar Solo,25.56,71.74,Alliterative · Consonant-Rich,noise,37.04,0.0,8.7,0.0,0.0,0.0,0.0,8.7,2.17,77.61,66.25,91.43,17.39
+Raftaar,Down,15.63,30.87,Alliterative · Consonant-Rich,Baseline,36.23,0.0,4.62,0.0,0.0,0.0,0.0,4.62,0.0,59.44,81.59,62.27,0.0
+Raftaar,Drama,45.93,4.29,Baseline,Baseline,25.64,51.28,10.84,0.0,0.0,0.0,0.0,1.2,0.0,0.0,18.87,30.35,0.0
+Raftaar,F16,21.17,37.37,Baseline,Baseline,27.4,23.48,4.3,0.0,0.0,1.08,0.0,3.23,4.3,0.0,5.81,35.47,4.3
+Raftaar,Feeling You,18.8,40.12,Alliterative,Baseline,78.43,0.0,0.0,0.0,0.0,0.0,0.0,6.0,0.0,45.54,63.38,42.65,0.0
+Raftaar,Gaddi,35.8,33.58,Baseline,Baseline,26.67,17.14,13.43,0.0,0.0,0.0,0.0,2.99,4.48,0.0,49.0,56.86,0.0
+Raftaar,Gall Goriye,34.65,15.77,Alliterative · Consonant-Rich,Baseline,60.0,17.14,10.77,0.0,0.0,0.0,0.0,3.08,0.0,56.72,90.77,55.83,6.15
+Raftaar,Gangnum,32.26,0.0,Baseline,noise,48.78,27.87,5.88,0.0,0.0,0.0,0.0,0.0,0.0,0.0,35.68,43.06,52.5
+Raftaar,Go Pagal,25.14,8.1,Baseline,Baseline,20.83,26.79,9.09,0.0,0.0,0.0,0.0,2.27,0.0,0.0,0.0,70.09,0.0
+Raftaar,Goat Dekho,25.79,51.19,Assonant · Alliterative,noise,51.28,30.77,0.0,0.0,0.0,2.38,0.0,4.76,3.57,69.39,85.39,89.15,19.05
+Raftaar,Haan,36.77,46.23,Baseline,Baseline,31.75,27.21,13.21,0.0,0.0,3.77,1.89,3.77,1.89,0.0,48.77,42.15,0.0
+Raftaar,Haseeno Ka Deewana,15.67,21.95,Baseline,Baseline,20.2,0.0,7.32,0.0,0.0,0.0,4.88,0.0,0.0,0.0,57.5,51.54,0.0
+Raftaar,Ice,53.25,83.87,Assonant · Alliterative,Baseline,100.0,37.27,14.29,0.0,0.0,3.57,0.0,12.5,3.57,67.73,88.03,88.1,7.14
+Raftaar,Lonely,30.58,79.03,Baseline,Baseline,0.0,0.0,11.29,0.0,0.0,0.0,14.52,0.0,0.0,0.0,61.67,0.0,6.45
+Raftaar,Main Wahi Hoon,38.28,55.28,Baseline,Baseline,17.92,24.58,16.26,0.0,0.0,0.81,0.0,6.5,0.0,0.0,71.46,53.79,0.0
+Raftaar,Mantoiyat,40.11,75.71,Baseline,Baseline,29.41,21.01,25.71,0.0,0.0,2.86,0.0,10.0,0.0,0.0,62.5,55.83,5.71
+Raftaar,Mask On,18.0,4.81,Alliterative · Consonant-Rich,Baseline,30.3,0.0,5.41,0.0,0.0,0.0,0.0,1.35,0.0,57.82,40.77,58.39,0.0
+Raftaar,Me And My Pen,46.38,60.76,Alliterative,Baseline,79.71,0.0,15.19,0.0,0.0,0.0,7.59,3.8,0.0,29.04,30.33,56.74,0.0
+Raftaar,Move,66.16,80.0,Alliterative · Consonant-Rich,Baseline,98.77,31.75,41.67,0.0,0.0,13.89,0.0,2.78,2.78,53.39,49.7,68.33,0.0
+Raftaar,Naachne Ka Shaunq,27.68,56.97,Baseline,noise,14.29,0.0,13.68,0.0,0.0,5.26,1.05,3.16,6.32,0.0,50.1,63.85,19.42
+Raftaar,Never Back Down,51.28,31.85,Assonant · Alliterative,Baseline,56.74,0.0,41.27,0.0,0.0,0.0,0.0,4.76,0.0,90.9,84.22,69.48,0.0
+Raftaar,No China,49.76,58.1,Alliterative · Consonant-Rich,noise,100.0,0.0,15.49,0.0,0.0,0.0,0.0,7.04,0.0,26.13,70.0,79.27,11.27
+Raftaar,Popular,13.2,42.42,Alliterative · Consonant-Rich,Baseline,37.04,0.0,1.82,0.0,0.0,7.27,0.0,1.82,0.0,39.09,55.0,68.33,0.0
+Raftaar,Proud,47.27,25.52,Baseline,Baseline,55.56,11.9,29.17,0.0,0.0,2.08,0.0,2.08,2.08,0.0,54.82,44.09,0.0
+Raftaar,Raashah,55.54,83.42,Assonant · Alliterative,noise,91.32,11.74,19.1,0.0,0.0,4.49,0.0,12.36,2.25,44.71,85.08,83.78,22.16
+Raftaar,Sare Karo Dab,17.97,30.6,Alliterative · Consonant-Rich,Baseline,73.45,0.0,1.49,0.0,0.0,0.0,0.0,1.49,4.48,97.05,74.95,86.66,5.97
+Raftaar,Sheikh Chilli,35.41,50.92,Assonant · Alliterative,Baseline,34.27,0.0,24.77,0.0,0.0,0.92,0.0,5.5,1.83,47.97,86.91,85.93,7.27
+Raftaar,Sick,22.5,55.21,Baseline,Baseline,46.51,0.0,8.33,0.0,0.0,6.25,0.0,2.08,6.25,0.0,38.31,27.3,0.0
+Raftaar,Superman,40.03,17.37,Baseline,Baseline,50.72,0.0,18.64,0.0,0.0,0.0,0.0,3.39,0.0,0.0,79.56,38.83,0.0
+Raftaar,Swag Mera Desi,44.44,54.22,Assonant · Alliterative,noise,82.05,13.19,15.19,0.0,0.0,3.8,0.0,3.8,6.33,93.15,86.15,68.33,29.08
+Raftaar,TRAP PRAA,55.16,40.78,Baseline,Baseline,100.0,30.3,12.62,0.0,0.0,5.83,0.0,2.91,1.94,0.0,60.8,66.45,0.0
+Raftaar,Tu Phir Se Aana,37.62,15.3,Baseline,Baseline,5.13,17.58,29.85,0.0,0.0,0.0,0.0,2.99,0.0,0.0,70.87,15.5,0.0
+Raftaar,Warna Gabbar Aa Jayega,15.88,24.44,Baseline,Baseline,34.48,0.0,4.44,0.0,0.0,4.44,0.0,0.0,2.22,0.0,84.22,57.99,0.0
+Raga,Akatsuki,55.79,81.18,Assonant · Alliterative,noise,100.0,40.1,14.93,0.0,0.0,4.48,1.49,8.96,1.49,97.05,87.27,87.81,23.4
+Raga,Badan,45.06,14.08,Alliterative,Baseline,30.3,0.0,39.08,0.0,0.0,0.0,0.0,1.15,2.3,23.07,33.79,73.89,9.2
+Raga,GTA NCR,11.29,61.4,Baseline,Baseline,7.09,0.0,5.26,0.0,0.0,0.0,1.75,7.02,0.0,0.0,0.0,28.8,0.0
+Raga,Jahannum,18.05,48.73,Alliterative,noise,29.76,0.0,6.78,0.0,0.0,1.69,0.0,5.08,1.69,65.45,34.35,33.16,26.23
+Raga,Jamnapaar,28.89,41.55,Assonant · Alliterative,Baseline,85.59,0.0,6.76,0.0,0.0,1.35,0.0,4.05,2.7,87.28,89.88,85.34,0.0
+Raga,Rap Ka Mausam,29.46,32.43,Baseline,Onomatopoeic,12.35,26.46,10.81,0.0,0.0,4.05,2.7,1.35,1.35,0.0,27.58,14.18,16.22
+Raga,Sheher,56.5,53.25,Assonant · Alliterative,Baseline,65.79,41.35,23.38,0.0,0.0,2.6,1.3,5.19,1.3,90.08,88.46,68.95,0.0
+Raga,Skills,18.37,82.05,Alliterative · Consonant-Rich,Baseline,26.46,0.0,9.52,0.0,0.0,4.76,0.0,9.52,3.17,67.92,45.45,61.67,6.35
+Seedhe Maut,101,40.56,75.19,Alliterative · Consonant-Rich,Baseline,47.62,17.49,13.85,0.0,0.0,12.31,0.0,1.54,6.15,68.44,43.2,86.18,6.15
+Seedhe Maut,11K,24.57,50.65,Alliterative,Baseline,8.66,11.13,15.58,0.0,0.0,2.6,0.0,5.19,1.3,70.68,42.07,32.64,0.0
+Seedhe Maut,Alla Freestyle,38.96,69.16,Assonant · Alliterative,Baseline,100.0,15.04,10.39,0.0,0.0,1.3,0.0,6.49,6.49,77.99,87.57,85.49,0.0
+Seedhe Maut,Batti,28.99,66.38,Assonant · Alliterative,Onomatopoeic,44.87,8.24,12.5,0.0,0.0,5.77,0.0,5.77,3.85,94.17,85.9,68.33,15.24
+Seedhe Maut,Brahamachari,69.52,75.0,Assonant · Alliterative,Onomatopoeic,100.0,43.29,57.69,0.0,0.0,3.85,0.0,7.69,1.92,98.41,89.69,88.6,15.38
+Seedhe Maut,Do Guna,18.1,59.68,Baseline,Baseline,34.48,0.0,5.38,0.0,0.0,2.15,0.0,6.45,1.08,0.0,83.64,87.34,4.3
+Seedhe Maut,Gourmet Shit,47.93,37.61,Alliterative · Consonant-Rich,Baseline,73.64,23.26,14.78,0.0,0.0,0.87,0.0,4.35,0.0,20.46,58.59,54.83,3.48
+Seedhe Maut,Khatta Flow,17.79,69.11,Alliterative · Consonant-Rich,Baseline,31.53,0.0,4.55,0.0,0.0,7.95,2.27,5.68,3.41,75.17,63.6,59.39,0.0
+Seedhe Maut,Kohra,27.24,7.83,Alliterative,Baseline,24.39,0.0,16.48,0.0,0.0,0.0,0.0,1.1,1.1,68.73,61.6,43.16,4.4
+Seedhe Maut,Maar Kaat,52.91,87.11,Alliterative · Consonant-Rich,Baseline,68.63,25.21,32.35,0.0,0.0,0.0,2.94,20.59,0.0,80.16,60.28,86.51,0.0
+Seedhe Maut,Maina,23.25,37.15,Alliterative · Consonant-Rich,Baseline,52.91,0.0,8.33,0.0,0.0,0.0,0.0,4.17,1.39,85.44,57.5,60.0,5.56
+Seedhe Maut,MMM,40.72,82.5,Assonant · Alliterative,Baseline,26.67,0.0,38.0,0.0,0.0,8.0,0.0,8.67,1.33,49.27,85.66,66.57,5.33
+Seedhe Maut,Naksha,65.52,81.39,Assonant · Alliterative,Baseline,100.0,31.17,47.22,0.0,0.0,4.17,0.0,8.33,4.17,63.1,90.62,89.62,0.0
+Seedhe Maut,Namastute,41.68,59.68,Assonant · Alliterative,Baseline,53.76,0.0,25.81,0.0,0.0,0.0,0.0,6.45,3.23,92.21,88.26,81.78,0.0
+Seedhe Maut,Nanchaku,50.76,52.92,Alliterative · Consonant-Rich,Baseline,25.0,26.19,29.17,0.0,0.0,2.5,0.0,5.0,3.33,46.67,71.63,56.74,3.33
+Seedhe Maut,Natkhat,36.17,33.79,Alliterative · Consonant-Rich,Baseline,18.52,19.05,19.27,0.0,0.0,1.83,0.0,0.92,4.59,67.73,48.33,52.24,7.34
+Seedhe Maut,Nawazuddin,45.49,85.23,Alliterative · Consonant-Rich,Baseline,53.33,11.43,25.53,0.0,0.0,9.57,1.06,8.51,2.13,89.64,75.0,85.36,0.0
+Seedhe Maut,Peace of Mind,35.2,58.33,Alliterative · Consonant-Rich,Baseline,43.48,0.0,19.61,0.0,0.0,1.96,0.0,5.88,2.94,66.04,59.77,70.35,3.92
+Seedhe Maut,Raat Ki Raani,50.59,44.82,Alliterative · Consonant-Rich,noise,76.92,26.37,18.29,0.0,0.0,2.44,2.44,3.66,2.44,55.93,69.54,65.86,67.26
+Seedhe Maut,Shakti Aur Kshama,29.48,81.24,Assonant · Alliterative,Baseline,77.24,0.0,8.79,0.0,0.0,0.0,0.0,13.19,3.3,98.74,91.84,86.93,8.79
+Seedhe Maut,Taakat,33.03,76.67,Assonant · Alliterative,Baseline,63.93,0.0,12.22,0.0,0.0,0.0,0.0,8.89,4.44,52.97,85.7,72.56,4.44
+Tsumyoki,BREAKSHIT!,17.47,39.3,Alliterative · Consonant-Rich,Baseline,28.46,0.0,7.34,0.0,0.0,3.67,0.92,0.92,4.59,70.0,59.92,65.47,0.0
+Tsumyoki,Candyland,46.64,74.12,Alliterative · Consonant-Rich,Baseline,58.2,13.61,24.36,0.0,0.0,6.41,5.13,2.56,8.97,24.74,49.39,59.51,0.0
+Tsumyoki,Dont Even Text,1.02,78.99,Baseline,noise,0.0,0.0,0.0,0.0,0.0,1.45,11.59,1.45,0.0,0.0,12.2,55.33,27.86
+Tsumyoki,Ek Do Ek,16.61,61.4,Alliterative · Consonant-Rich,noise,38.46,8.24,4.46,0.0,0.0,6.25,5.36,2.68,6.25,33.3,46.64,64.21,54.69
+Tsumyoki,Feel Okay,7.59,36.29,Alliterative,Baseline,8.13,0.0,3.23,0.0,0.0,0.0,1.61,1.61,4.84,33.3,15.62,44.79,0.0
+Tsumyoki,Headphones,12.26,22.88,Baseline,Baseline,9.8,25.21,0.0,0.0,0.0,0.0,3.39,0.0,1.69,0.0,11.63,58.26,0.0
+Tsumyoki,IDK,5.85,30.25,Baseline,noise,8.77,0.0,1.85,0.0,0.0,0.0,1.85,1.85,3.7,0.0,12.82,17.09,57.5
+Tsumyoki,Its Aight,14.22,22.5,Alliterative,Baseline,13.61,17.49,2.5,0.0,0.0,0.0,2.5,1.25,1.25,30.86,0.0,61.88,0.0
+Tsumyoki,On My Way,8.68,45.92,Baseline,Baseline,9.8,25.21,0.0,0.0,0.0,0.0,4.08,0.0,6.12,0.0,16.67,0.0,0.0
+Tsumyoki,Perfect Life,12.39,9.56,Alliterative,Baseline,12.58,16.17,2.94,0.0,0.0,0.0,1.47,0.0,1.47,77.89,11.9,0.0,0.0
+Tsumyoki,Pink Blue,25.85,31.07,Baseline,Baseline,7.25,55.9,2.91,0.0,0.0,0.97,3.88,0.97,0.0,0.0,0.0,64.41,7.77
+Tsumyoki,Sunlight,8.97,63.65,Baseline,Baseline,28.37,0.0,1.54,0.0,0.0,9.23,4.62,1.54,3.08,0.0,20.0,85.0,6.15
+Tsumyoki,The Way I Fall In Love,20.96,59.17,Alliterative,Baseline,40.4,38.96,1.09,0.0,0.0,8.7,4.35,1.09,1.09,21.85,7.69,26.28,0.0
+Tsumyoki,WANT IT ALL,11.82,28.16,Baseline,Baseline,17.54,15.04,1.15,0.0,0.0,1.15,1.15,1.15,3.45,0.0,42.63,72.04,4.4
+Tsumyoki,WHAT CAN I SAY?,23.31,77.03,Alliterative · Consonant-Rich,noise,53.57,0.0,6.76,0.0,0.0,1.35,9.46,0.0,4.05,67.06,64.41,85.87,58.85
+Vichaar,3 DRAGS,50.04,86.44,Alliterative · Consonant-Rich,noise,100.0,17.49,15.15,0.0,0.0,3.03,0.0,13.64,6.06,75.74,57.92,88.01,59.77
+Vichaar,5 Fingers of Death,34.17,63.45,Alliterative,Baseline,38.69,7.65,10.76,0.0,0.0,6.96,0.63,5.7,0.63,50.67,70.33,42.15,2.53
+Vichaar,Bhul,35.31,69.44,Alliterative,Baseline,16.95,0.0,19.44,0.0,0.0,1.39,0.0,8.33,0.0,27.06,56.61,22.22,0.0
+Vichaar,Haadse,58.34,42.46,Assonant · Alliterative,Baseline,69.77,19.93,39.68,0.0,0.0,0.0,0.0,4.76,1.59,29.19,85.14,85.47,6.35
+Vichaar,Kalakaari Vishwasniya,39.6,62.5,Assonant · Alliterative,Baseline,100.0,0.0,41.07,0.0,0.0,1.79,0.0,7.14,0.0,31.79,86.57,83.48,0.0
+Vichaar,Mehnat,35.36,69.31,Alliterative,Baseline,8.89,26.67,15.84,0.0,0.0,0.0,0.99,7.92,0.99,23.75,60.34,36.4,0.0
+Vichaar,Mudda Kya Hai,38.05,22.46,Alliterative,noise,15.87,13.61,22.03,0.0,0.0,2.54,0.0,1.69,1.69,66.4,61.85,33.7,13.56
+Vichaar,No Pockets,36.18,49.68,Alliterative · Consonant-Rich,Baseline,51.28,0.0,12.82,0.0,0.0,6.41,0.0,3.85,2.56,43.46,81.15,62.03,0.0
+Yashraj,Complicated,28.21,16.27,Alliterative · Consonant-Rich,Baseline,38.76,19.93,4.76,0.0,0.0,0.0,0.0,3.17,0.0,35.74,40.19,78.1,0.0
+Yashraj,DAF,34.75,81.1,Alliterative,Baseline,20.33,0.0,17.54,0.0,0.0,14.04,0.0,4.39,1.75,22.2,43.36,40.41,3.51
+Yashraj,Dhundhala,18.55,66.33,Baseline,Baseline,28.57,0.0,6.12,0.0,0.0,0.0,0.0,8.16,0.0,0.0,60.88,39.86,0.0
+Yashraj,GABBAR,42.55,17.89,Assonant · Alliterative,Baseline,64.52,82.95,2.94,0.0,0.0,2.94,0.0,0.0,2.94,55.0,88.86,85.22,0.0
+Yashraj,Khel,12.63,17.08,Baseline,Baseline,0.0,0.0,6.67,0.0,0.0,0.0,0.0,3.33,0.0,0.0,82.5,0.0,0.0
+Yashraj,Musafir,37.47,30.68,Baseline,Baseline,100.0,0.0,9.09,0.0,0.0,0.0,0.0,9.09,0.0,0.0,96.7,82.62,0.0
+Yashraj,Paracetamol,36.47,34.38,Baseline,Baseline,45.66,23.48,15.62,0.0,0.0,0.0,0.0,4.17,0.0,0.0,34.55,25.0,4.17
+Yungsta,Dilli,28.52,78.64,Alliterative · Consonant-Rich,Baseline,45.27,0.0,13.04,0.0,0.0,6.52,0.0,7.61,2.17,38.71,78.38,72.25,8.7
+Yungsta,Hona Hi Tha,26.29,34.38,Alliterative · Consonant-Rich,Baseline,57.74,0.0,11.03,0.0,0.0,3.68,2.21,2.21,2.21,16.26,58.71,67.36,2.94
+Yungsta,Jeena Isi Ka Naam,47.54,25.4,Assonant · Alliterative,Baseline,71.9,16.81,13.92,0.0,0.0,0.0,0.0,3.8,0.0,46.1,88.02,70.26,0.0
+Yungsta,Kaamyaabi,52.46,81.01,Assonant · Alliterative,Baseline,100.0,31.75,12.16,0.0,0.0,2.7,0.0,8.11,5.41,100.0,97.62,94.33,0.0
+Yungsta,Ruhbaru,41.92,55.76,Alliterative · Consonant-Rich,Baseline,19.61,16.81,29.09,0.0,0.0,1.82,1.82,1.82,7.27,83.64,75.36,82.62,0.0
+Yungsta,Sansani,37.32,80.41,Assonant · Alliterative,noise,32.26,0.0,25.35,0.0,0.0,0.0,0.0,12.68,2.82,49.78,89.21,85.83,11.27
+Yungsta,Savera,37.44,39.33,Baseline,Baseline,51.28,39.56,10.11,0.0,0.0,0.0,0.0,4.49,1.12,0.0,62.5,22.47,0.0
+Yungsta,Sukoon,52.26,72.22,Alliterative,Baseline,100.0,0.0,14.81,0.0,0.0,1.23,0.0,8.64,1.23,75.06,67.92,24.54,0.0
+Yungsta,Totka,35.0,42.53,Alliterative · Consonant-Rich,Baseline,78.7,0.0,11.49,0.0,0.0,0.0,0.0,4.6,2.3,42.04,73.18,68.9,0.0

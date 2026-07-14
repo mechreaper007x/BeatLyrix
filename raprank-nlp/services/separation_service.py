@@ -3,6 +3,8 @@ import os
 import shutil
 import tempfile
 
+from config import scoring_config
+
 logger = logging.getLogger(__name__)
 
 _DEMUCS_AVAILABLE = False
@@ -14,15 +16,22 @@ except ImportError:
     logger.warning("demucs not installed. Audio source separation will be skipped (falling back to mixed audio).")
 
 
-def separate_vocals(audio_bytes: bytes, filename: str) -> tuple[bytes, bytes] | None:
+def separate_vocals(audio_bytes: bytes, filename: str) -> tuple[tuple[bytes, bytes] | None, str | None]:
     """
     Separate vocals and accompaniment using Demucs.
-    Returns (vocals_bytes, accompaniment_bytes) or None on failure/unavailability.
+
+    Returns (result, skip_reason):
+      - On success: ((vocals_bytes, accompaniment_bytes), None)
+      - On skip/failure: (None, "<human-readable reason>") -- callers should
+        surface this reason (e.g. via FlowMetadata) rather than silently
+        falling back to mixed audio with no visibility into why.
     """
     if not _DEMUCS_AVAILABLE:
-        logger.info("Demucs is not available in the current environment.")
-        return None
+        reason = "demucs not installed in this environment"
+        logger.info(reason)
+        return None, reason
 
+    cfg = scoring_config.AUDIO_PIPELINE
     suffix = os.path.splitext(filename)[1].lower() or ".mp3"
     tmp_dir = tempfile.mkdtemp(prefix="demucs_sep_")
     input_path = os.path.join(tmp_dir, f"input{suffix}")
@@ -37,15 +46,22 @@ def separate_vocals(audio_bytes: bytes, filename: str) -> tuple[bytes, bytes] | 
             import librosa
             duration = librosa.get_duration(path=input_path)
             logger.info("Audio duration: %.2f seconds", duration)
-            if duration > 90.0:
-                logger.warning("Audio duration (%.2f seconds) exceeds 90s threshold. Skipping Demucs separation on CPU to prevent OOM/timeouts.", duration)
-                return None
+            max_duration = cfg["DEMUCS_MAX_DURATION_S"]
+            if duration > max_duration:
+                reason = (
+                    f"audio duration ({duration:.0f}s) exceeds the "
+                    f"{max_duration:.0f}s CPU-separation threshold"
+                )
+                logger.warning("%s. Skipping Demucs separation, falling back to mixed audio.", reason)
+                return None, reason
         except Exception as dur_err:
             logger.warning("Could not determine audio duration: %s. Using size-based fallback.", dur_err)
-            # Fallback size check: if file is larger than 10MB, skip
-            if len(audio_bytes) > 10 * 1024 * 1024:
-                logger.warning("Audio file size (%.2f MB) is too large. Skipping Demucs separation.", len(audio_bytes) / 1024 / 1024)
-                return None
+            max_mb = cfg["DEMUCS_MAX_SIZE_MB"]
+            size_mb = len(audio_bytes) / 1024 / 1024
+            if size_mb > max_mb:
+                reason = f"audio file size ({size_mb:.1f}MB) exceeds the {max_mb:.0f}MB fallback threshold"
+                logger.warning("%s. Skipping Demucs separation.", reason)
+                return None, reason
 
         logger.info("Starting audio source separation using Demucs...")
         
@@ -91,11 +107,11 @@ def separate_vocals(audio_bytes: bytes, filename: str) -> tuple[bytes, bytes] | 
             accompaniment_bytes = f.read()
 
         logger.info("Audio source separation completed successfully.")
-        return vocals_bytes, accompaniment_bytes
+        return (vocals_bytes, accompaniment_bytes), None
 
     except Exception as e:
         logger.exception("Audio source separation failed: %s", e)
-        return None
+        return None, f"separation failed: {e}"
 
     finally:
         # Cleanup temp directory

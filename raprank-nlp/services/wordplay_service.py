@@ -1,6 +1,10 @@
 import re
+import os
 import logging
+import json as _json
+import pathlib as _pathlib
 from typing import List, Tuple, Set, Dict
+
 import nltk
 from nltk.corpus import wordnet
 import pronouncing
@@ -10,10 +14,10 @@ from config import scoring_config
 
 logger = logging.getLogger(__name__)
 
-# Ensure NLTK resources are downloaded
+# Ensure NLTK resources (WordNet / stopwords only — no English NER tagger)
 try:
-    nltk.download('wordnet', quiet=True)
-    nltk.download('omw-1.4', quiet=True)
+    nltk.download('wordnet',   quiet=True)
+    nltk.download('omw-1.4',   quiet=True)
     nltk.download('stopwords', quiet=True)
 except Exception as e:
     logger.warning("Failed to download NLTK resources: %s", e)
@@ -21,6 +25,35 @@ except Exception as e:
 ALL_STOP_WORDS = get_multilingual_stopwords()
 
 RAP_DOUBLE_ENTENDRE_WORDS: Set[str] = scoring_config.WORDPLAY["RAP_DOUBLE_ENTENDRE_WORDS"]
+
+# ── HuggingFace Space NER endpoint ───────────────────────────────────────────
+# Set NER_SPACE_URL in your environment (or .env) to the deployed Space URL.
+# e.g.  NER_SPACE_URL=https://mechreaper007x-raprank-hindi-ner.hf.space
+# Leave unset to skip remote NER and fall back to closed-list regex.
+NER_SPACE_URL: str = os.environ.get("NER_SPACE_URL", "").rstrip("/")
+
+# ── Category metadata from allusion_references.json ──────────────────────────
+# Maps known reference strings -> category label (anime, mythology, etc.)
+# Used for metadata enrichment only — NOT the detection gate anymore.
+_ALLUSION_CATEGORIES: Dict[str, str] = {}
+_ALLUSION_JSON_PATH = _pathlib.Path(__file__).parent.parent / "corpus" / "allusion_references.json"
+if _ALLUSION_JSON_PATH.exists():
+    try:
+        _raw = _json.loads(_ALLUSION_JSON_PATH.read_text(encoding="utf-8"))
+        for _cat, _val in _raw.items():
+            if _cat.startswith("_"):
+                continue
+            if isinstance(_val, list):
+                for _e in _val:
+                    _ALLUSION_CATEGORIES[_e.lower()] = _cat
+            elif isinstance(_val, dict):
+                for _sublist in _val.values():
+                    if isinstance(_sublist, list):
+                        for _e in _sublist:
+                            _ALLUSION_CATEGORIES[_e.lower()] = _cat
+    except Exception as _exc:
+        logger.warning("Could not load allusion categories: %s", _exc)
+
 
 # Regex patterns for similes
 # 1. "like [noun]" (checked programmatically for preceding pronouns, allowing optional articles)
@@ -169,7 +202,13 @@ def are_near_homophones(p1: str, p2: str) -> bool:
         
     if p1_clean == p2_clean:
         return True
-        
+
+    # Near-homophones (edit distance 1) are only meaningful for longer words.
+    # Short 2-3 phoneme words trivially sit one edit apart (e.g. cap/kal,
+    # saath/se) and produced rampant false-positive "puns".
+    if min(len(p1_clean), len(p2_clean)) < 4:
+        return False
+
     dist = edit_distance(p1_clean, p2_clean)
     if dist == 1:
         # If edit distance is 1, require starting phone to match to prevent simple rhymes
@@ -235,6 +274,31 @@ def hinglish_to_phones(word: str) -> str:
     return " ".join(phones)
 
 
+def _norm_spelling(w: str) -> str:
+    w = w.lower()
+    for a, b in (("aa", "a"), ("ee", "i"), ("oo", "u"), ("ii", "i"), ("uu", "u")):
+        w = w.replace(a, b)
+    return w
+
+
+def _is_word_variant(w1: str, w2: str) -> bool:
+    """
+    True when two words are really the SAME word — a spelling variant
+    (poora/pura) or an inflection of one stem (lagta/lagte) — rather than two
+    distinct homophones. Such pairs are not puns; treating them as puns inflated
+    the wordplay score on conjugation-heavy Hindi verses.
+    """
+    n1, n2 = _norm_spelling(w1), _norm_spelling(w2)
+    if n1 == n2:
+        return True
+    import os
+    common = os.path.commonprefix([n1, n2])
+    # shared stem (>=3 chars) with only a short inflectional tail differing
+    if len(common) >= 3 and (len(n1) - len(common)) <= 2 and (len(n2) - len(common)) <= 2:
+        return True
+    return False
+
+
 def verify_pun_meanings(w1: str, w2: str) -> bool:
     """Verify using WordNet that the two homophonic words have different semantic meanings."""
     try:
@@ -293,7 +357,7 @@ def detect_homophone_puns(lyrics: str) -> Tuple[int, List[str]]:
                 p1 = word_phones.get(w1)
                 p2 = word_phones.get(w2)
                 if p1 and p2:
-                    if are_near_homophones(p1, p2):
+                    if are_near_homophones(p1, p2) and not _is_word_variant(w1, w2):
                         if verify_pun_meanings(w1, w2):
                             pair_str = " vs ".join(sorted([w1, w2]))
                             if pair_str not in puns:
@@ -340,6 +404,59 @@ def detect_double_entendres(lyrics: str) -> Tuple[int, List[str]]:
     return len(entendres), entendres
 
 
+def detect_allusions(lyrics: str) -> Tuple[int, List[str]]:
+    """
+    Detect cultural allusions via the raprank-ner HuggingFace Space
+    (ai4bharat/IndicNER) — trained on 11 Indian languages including Hindi.
+
+    POST lyrics to NER_SPACE_URL/ner → parse entities → return count + list.
+
+    If NER_SPACE_URL is unset or the Space is unreachable, returns (0, []).
+    No closed-list regex fallback — a wrong answer is worse than no answer.
+
+    Set env var to enable:
+      NER_SPACE_URL=https://mechreaper007x-raprank-hindi-ner.hf.space
+    """
+    import urllib.request
+    import urllib.error
+
+    if not NER_SPACE_URL:
+        return 0, []
+
+    clean_lyr = re.sub(r"\[.*?\]", "", lyrics)
+
+    try:
+        payload = _json.dumps({"text": clean_lyr}).encode("utf-8")
+        req = urllib.request.Request(
+            f"{NER_SPACE_URL}/ner",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = _json.loads(resp.read().decode("utf-8"))
+
+        seen: Set[str] = set()
+        found: List[str] = []
+
+        for ent in data.get("entities", []):
+            word = ent.get("entity", "").strip()
+            key  = word.lower()
+            if len(word) < 2 or key in ALL_STOP_WORDS or key in seen:
+                continue
+            seen.add(key)
+            found.append(word)
+
+        return len(found), found
+
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as exc:
+        logger.warning("NER Space unreachable (%s) — allusion score set to 0.", exc)
+        return 0, []
+    except Exception as exc:
+        logger.warning("NER Space error (%s) — allusion score set to 0.", exc)
+        return 0, []
+
+
 def calculate(lyrics: str) -> Tuple[float, Dict]:
     """
     Calculate the overall Wordplay Score (0-100) and return breakdown details.
@@ -347,38 +464,51 @@ def calculate(lyrics: str) -> Tuple[float, Dict]:
     simile_count, metaphor_count, similes, metaphors = detect_similes_and_metaphors(lyrics)
     pun_count, puns = detect_homophone_puns(lyrics)
     double_entendre_count, double_entendres = detect_double_entendres(lyrics)
-    
+    allusion_count, allusions = detect_allusions(lyrics)
+
     lines = content_lines(lyrics)
-    num_lines = max(len(lines), 1)
-    
+    # Smooth the density denominator so a couple of devices in a very short verse
+    # can't peg the score (small-sample explosion). Full songs are unaffected.
+    min_lines = scoring_config.WORDPLAY.get("MIN_LINES_FOR_DENSITY", 1)
+    density_denom = max(len(lines), min_lines)
+
     # Calculate density scores
-    simile_density = simile_count / num_lines
-    metaphor_density = metaphor_count / num_lines
-    pun_density = pun_count / num_lines
-    entendre_density = double_entendre_count / num_lines
-    
+    simile_density = simile_count / density_denom
+    metaphor_density = metaphor_count / density_denom
+    pun_density = pun_count / density_denom
+    entendre_density = double_entendre_count / density_denom
+    allusion_density = allusion_count / density_denom
+
     # Compute sub-scores (0-100 scale) dynamically from config
     targets = scoring_config.WORDPLAY["ELITE_TARGETS"]
     simile_score = min((simile_density / targets["simile"]) * 100.0, 100.0)
     metaphor_score = min((metaphor_density / targets["metaphor"]) * 100.0, 100.0)
     pun_score = min((pun_density / targets["pun"]) * 100.0, 100.0)
     entendre_score = min((entendre_density / targets["entendre"]) * 100.0, 100.0)
-    
+    allusion_score = min((allusion_density / targets["allusion"]) * 100.0, 100.0)
+
     # Dynamic wordplay logic:
     # Exceling in a single category should not be penalized by a lack of others.
     # Therefore, the score is calculated as weighted combination of overall density
     # and the maximum sub-score achieved in any single category.
-    total_elements = simile_count + metaphor_count + pun_count + double_entendre_count
-    total_density = total_elements / num_lines
-    
+    total_elements = simile_count + metaphor_count + pun_count + double_entendre_count + allusion_count
+    total_density = total_elements / density_denom
+
     overall_density_score = scoring_config.evaluate_piecewise_curve(
         total_density,
         scoring_config.WORDPLAY["CURVE_THRESHOLDS"],
         scoring_config.WORDPLAY["CURVE_SCORES"]
     )
-        
-    max_sub_score = max(simile_score, metaphor_score, pun_score, entendre_score)
-    
+
+    max_sub_score = max(simile_score, metaphor_score, pun_score, entendre_score, allusion_score)
+
+    # Evidence gate: don't credit full "elite in one category" from a single
+    # (possibly spurious) detection. Ramp the max-sub-score contribution up to
+    # full only once enough devices are present overall.
+    min_elem = scoring_config.WORDPLAY.get("MIN_ELEMENTS_FOR_ELITE", 1)
+    confidence = min(total_elements / min_elem, 1.0) if min_elem > 0 else 1.0
+    max_sub_score *= confidence
+
     w_overall = scoring_config.WORDPLAY["WEIGHT_OVERALL_DENSITY"]
     w_max = scoring_config.WORDPLAY["WEIGHT_MAX_SUB_SCORE"]
     wordplay_score = overall_density_score * w_overall + max_sub_score * w_max
@@ -389,10 +519,21 @@ def calculate(lyrics: str) -> Tuple[float, Dict]:
         "metaphor_count": metaphor_count,
         "puns_count": pun_count,
         "double_entendres_count": double_entendre_count,
+        "allusions_count": allusion_count,
         "similes": similes,
         "metaphors": metaphors,
         "puns": puns,
-        "double_entendres": double_entendres
+        "double_entendres": double_entendres,
+        "allusions": allusions,
+        # Raw pre-ELITE_TARGETS densities -- used by corpus/calibrate.py to
+        # fit ELITE_TARGETS from the corpus's actual empirical distribution
+        # instead of the already-capped 0-100 sub-scores.
+        "simile_density": simile_density,
+        "metaphor_density": metaphor_density,
+        "pun_density": pun_density,
+        "entendre_density": entendre_density,
+        "allusion_density": allusion_density,
+        "total_density": total_density,
     }
     
     return round(wordplay_score, 2), metadata

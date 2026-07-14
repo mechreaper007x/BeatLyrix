@@ -104,7 +104,6 @@ public class TrackService {
                 } catch (Exception e) {
                     breakdown = ScoreBreakdownResponse.builder()
                             .syllableScore(score.getSyllableScore())
-                            .alliterationScore(score.getAlliterationScore())
                             .flowScore(score.getFlowScore())
                             .totalScore(totalScore)
                             .grade(grade)
@@ -113,7 +112,6 @@ public class TrackService {
             } else {
                 breakdown = ScoreBreakdownResponse.builder()
                         .syllableScore(score.getSyllableScore())
-                        .alliterationScore(score.getAlliterationScore())
                         .flowScore(score.getFlowScore())
                         .totalScore(totalScore)
                         .grade(grade)

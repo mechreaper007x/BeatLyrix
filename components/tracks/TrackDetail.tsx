@@ -173,7 +173,6 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
   const wordCount = track.lyricsText.trim().split(/\s+/).filter((w: string) => w.trim() !== "").length;
 
   const syllableScore = track.scoreBreakdown?.syllableScore ?? 0;
-  const alliterationScore = track.scoreBreakdown?.alliterationScore ?? 0;
   const flowScore = track.scoreBreakdown?.flowScore ?? 0;
   const totalScore = track.totalScore || 0;
   const grade = track.grade || "PENDING";
@@ -185,11 +184,80 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
   const vocabularyScore = track.scoreBreakdown?.vocabularyScore ?? track.scoreBreakdown?.vocabulary_score ?? 0;
   const vocabularyUniqueness = track.scoreBreakdown?.vocabularyUniqueness ?? track.scoreBreakdown?.vocabulary_uniqueness ?? 0;
 
+  // Semantic (Hindi BERT / MuRIL) axes — nullable: null when the semantic
+  // service was unavailable at scoring time, so render the section only when
+  // at least one is present.
+  const coherenceScore = track.scoreBreakdown?.coherenceScore ?? track.scoreBreakdown?.coherence_score ?? null;
+  const surprisalScore = track.scoreBreakdown?.semanticSurprisalScore ?? track.scoreBreakdown?.semantic_surprisal_score ?? null;
+  const lexicalSophScore = track.scoreBreakdown?.lexicalSophisticationScore ?? track.scoreBreakdown?.lexical_sophistication_score ?? null;
+  const themeScore = track.scoreBreakdown?.themeConsistencyScore ?? track.scoreBreakdown?.theme_consistency_score ?? null;
+  const semanticAxes: { label: string; value: number }[] = [
+    { label: "Coherence", value: coherenceScore },
+    { label: "Semantic Surprisal", value: surprisalScore },
+    { label: "Lexical Sophistication", value: lexicalSophScore },
+    { label: "Theme Consistency", value: themeScore },
+  ].filter((a): a is { label: string; value: number } => a.value != null);
+
   const doubleEntendresCount = track.scoreBreakdown?.doubleEntendresCount ?? track.scoreBreakdown?.double_entendres_count ?? 0;
   const punsCount = track.scoreBreakdown?.punsCount ?? track.scoreBreakdown?.puns_count ?? 0;
   const similesCount = track.scoreBreakdown?.similesCount ?? track.scoreBreakdown?.similes_count ?? 0;
   const metaphorsCount = track.scoreBreakdown?.metaphorsCount ?? track.scoreBreakdown?.metaphors_count ?? 0;
   const wordplayExplanation = track.scoreBreakdown?.wordplayExplanation ?? track.scoreBreakdown?.wordplay_explanation;
+
+  // Sound Devices — ordered by RF's real feature importance (syllable >
+  // vocabulary > assonance > rhyme > wordplay > consonance >
+  // onomatopoeia); syllable/rhyme/wordplay/vocabulary already shown above.
+  const assonanceScore = track.scoreBreakdown?.assonanceScore ?? track.scoreBreakdown?.assonance_score ?? null;
+  const consonanceScore = track.scoreBreakdown?.consonanceScore ?? track.scoreBreakdown?.consonance_score ?? null;
+  const onomatopoeiaScore = track.scoreBreakdown?.onomatopoeiaScore ?? track.scoreBreakdown?.onomatopoeia_score ?? null;
+  const soundDeviceTiles: { label: string; value: number }[] = [
+    { label: "Vocabulary Richness", value: vocabularyScore },
+    { label: "Assonance", value: assonanceScore },
+    { label: "Consonance", value: consonanceScore },
+    { label: "Onomatopoeia", value: onomatopoeiaScore },
+  ].filter((a): a is { label: string; value: number } => a.value != null);
+
+  // Structure & Style — best-effort prosody/callback axes, all nullable.
+  const codeswitchScore = track.scoreBreakdown?.codeswitchScore ?? track.scoreBreakdown?.codeswitch_score ?? null;
+  const repetitionScore = track.scoreBreakdown?.repetitionScore ?? track.scoreBreakdown?.repetition_score ?? null;
+  const cadenceTextScore = track.scoreBreakdown?.cadenceTextScore ?? track.scoreBreakdown?.cadence_text_score ?? null;
+  const callbackScore = track.scoreBreakdown?.callbackScore ?? track.scoreBreakdown?.callback_score ?? null;
+  const structureStyleTiles: { label: string; value: number }[] = [
+    { label: "Code-Switching", value: codeswitchScore },
+    { label: "Repetition (Anaphora)", value: repetitionScore },
+    { label: "Cadence Variance", value: cadenceTextScore },
+    { label: "Callback / Motif Reuse", value: callbackScore },
+  ].filter((a): a is { label: string; value: number } => a.value != null);
+
+  // Extra literary-device counts, folded into the existing Lyrical Breakdown grid.
+  const punchlineCount = track.scoreBreakdown?.punchlineCount ?? track.scoreBreakdown?.punchline_count ?? 0;
+  const extendedMetaphorCount = track.scoreBreakdown?.extendedMetaphorCount ?? track.scoreBreakdown?.extended_metaphor_count ?? 0;
+  const allusionsCount = track.scoreBreakdown?.allusionsCount ?? track.scoreBreakdown?.allusions_count ?? 0;
+
+  // AI classification (GMM style cluster, RF quality tier) — categorical,
+  // nullable when the respective model is untrained/absent. Full soft
+  // distributions (not just the top-1 winner) are rendered below.
+  const styleCluster = track.scoreBreakdown?.styleCluster ?? track.scoreBreakdown?.style_cluster ?? null;
+  const styleClusterConfidence = track.scoreBreakdown?.styleClusterConfidence ?? track.scoreBreakdown?.style_cluster_confidence ?? null;
+  const predictedTier = track.scoreBreakdown?.predictedTier ?? track.scoreBreakdown?.predicted_tier ?? null;
+  const tierConfidence = track.scoreBreakdown?.tierConfidence ?? track.scoreBreakdown?.tier_confidence ?? null;
+  const styleMembership: Record<string, number> = track.scoreBreakdown?.styleMembership ?? track.scoreBreakdown?.style_membership ?? {};
+  const tierProbabilities: Record<string, number> = track.scoreBreakdown?.tierProbabilities ?? track.scoreBreakdown?.tier_probabilities ?? {};
+  const rankedStyleMembership = Object.entries(styleMembership).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const rankedTierProbabilities = Object.entries(tierProbabilities).sort((a, b) => b[1] - a[1]);
+
+  // Per-element cluster fingerprints (services/element_cluster_service.py) —
+  // descriptive, one entry per family ("rhyme","wordplay","texture","rare")
+  // that scored successfully; omitted entirely when no models were loaded.
+  const elementClusters: Record<string, { cluster: string; confidence?: number; membership?: Record<string, number> }> =
+    track.scoreBreakdown?.elementClusters ?? track.scoreBreakdown?.element_clusters ?? {};
+  const elementClusterEntries = Object.entries(elementClusters);
+  const elementFamilyLabels: Record<string, string> = {
+    rhyme: "Rhyme",
+    wordplay: "Wordplay",
+    texture: "Texture",
+    rare: "Rare",
+  };
 
   return (
     <div className="w-full flex flex-col bg-[#1c1410] text-[#ffffff] min-h-screen">
@@ -248,7 +316,7 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
           <div className="w-full md:w-2/5 flex items-center justify-start md:justify-end gap-6 border-t border-[#2a2a2a]/60 pt-6 md:pt-0 md:border-t-0">
             <div className="flex flex-col items-end">
               <span className="font-graffiti text-xs text-[#888888] tracking-widest uppercase">
-                SCORE
+                LQI SCORE
               </span>
               <div className="flex items-baseline leading-none mt-1">
                 <span className="font-graffiti text-8xl text-[#a8ff3e] select-text">
@@ -343,26 +411,6 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
                 </div>
               </div>
 
-              {/* Alliteration Score */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center text-xs font-bold text-white uppercase tracking-wider">
-                  <span>Alliteration Score</span>
-                  <span className="text-[#a8ff3e] font-sans">{alliterationScore}%</span>
-                </div>
-                <div 
-                  role="progressbar"
-                  aria-valuenow={alliterationScore}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  className="w-full bg-[#2a1518] rounded-full h-2.5 overflow-hidden border border-[#2a1518]/60"
-                >
-                  <div
-                    className="bg-[#a8ff3e] h-full rounded-full shadow-[0_0_8px_#a8ff3e] transition-all duration-300"
-                    style={{ width: `${alliterationScore}%` }}
-                  />
-                </div>
-              </div>
-
               {/* Flow Complexity */}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center text-xs font-bold text-white uppercase tracking-wider">
@@ -433,7 +481,7 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
                   <span>Vocabulary Richness</span>
                   <span className="text-[#a8ff3e] font-sans">{vocabularyScore}%</span>
                 </div>
-                <div 
+                <div
                   role="progressbar"
                   aria-valuenow={vocabularyScore}
                   aria-valuemin={0}
@@ -446,6 +494,147 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
                   />
                 </div>
               </div>
+
+              {/* Sound Devices — ranked by RF's real feature importance */}
+              {soundDeviceTiles.length > 0 && (
+                <div className="border-t border-[#2a2a2a]/60 pt-4 mt-1">
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-1">Sound Devices</h3>
+                  <p className="text-[10px] text-[#888888] font-sans mb-3">Ranked by what the quality-tier model actually weighs most</p>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    {soundDeviceTiles.map((tile) => (
+                      <div key={tile.label} className="flex justify-between bg-[#1a1a1a] p-2 rounded-lg border border-[#2a2a2a]">
+                        <span className="text-[#888888]">{tile.label}</span>
+                        <span className="text-[#a8ff3e] font-bold">{tile.value}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Structure & Style — best-effort prosody/callback axes */}
+              {structureStyleTiles.length > 0 && (
+                <div className="border-t border-[#2a2a2a]/60 pt-4 mt-1">
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-3">Structure & Style</h3>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    {structureStyleTiles.map((tile) => (
+                      <div key={tile.label} className="flex justify-between bg-[#1a1a1a] p-2 rounded-lg border border-[#2a2a2a]">
+                        <span className="text-[#888888]">{tile.label}</span>
+                        <span className="text-[#a8ff3e] font-bold">{tile.value}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Semantic (Hindi BERT / MuRIL) axes — only when the service ran */}
+              {semanticAxes.length > 0 && (
+                <div className="border-t border-[#2a2a2a]/60 pt-5 mt-1 flex flex-col gap-5">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xs font-bold text-[#c7a8ff] uppercase tracking-wider">Semantic Analysis</h3>
+                    <span className="text-[9px] font-bold text-[#c7a8ff] bg-[#2a1f3a] border border-[#c7a8ff]/40 rounded px-1.5 py-0.5 tracking-widest uppercase">AI · BERT</span>
+                  </div>
+                  {semanticAxes.map((axis) => (
+                    <div key={axis.label} className="space-y-1.5">
+                      <div className="flex justify-between items-center text-xs font-bold text-white uppercase tracking-wider">
+                        <span>{axis.label}</span>
+                        <span className="text-[#c7a8ff] font-sans">{axis.value}%</span>
+                      </div>
+                      <div
+                        role="progressbar"
+                        aria-valuenow={axis.value}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        className="w-full bg-[#2a1518] rounded-full h-2.5 overflow-hidden border border-[#2a1518]/60"
+                      >
+                        <div
+                          className="bg-[#c7a8ff] h-full rounded-full shadow-[0_0_8px_#c7a8ff] transition-all duration-300"
+                          style={{ width: `${axis.value}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* AI Classification — GMM style cluster / RF quality tier, both nullable.
+                  Shows the full soft distribution, not just the top-1 winner. */}
+              {(styleCluster || predictedTier || elementClusterEntries.length > 0) && (
+                <div className="border-t border-[#2a2a2a]/60 pt-5 mt-1 flex flex-col gap-4">
+                  <h3 className="text-xs font-bold text-[#c7a8ff] uppercase tracking-wider">AI Classification</h3>
+
+                  {predictedTier && (
+                    <div className="space-y-2">
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-[#2a1f3a] border border-[#c7a8ff]/40 text-[#c7a8ff] rounded-full px-3 py-1.5 w-fit">
+                        Tier: {predictedTier}
+                        {tierConfidence != null && (
+                          <span className="opacity-70">({Math.round(tierConfidence * 100)}%)</span>
+                        )}
+                      </span>
+                      {rankedTierProbabilities.length > 0 && (
+                        <div className="flex w-full h-3 rounded-full overflow-hidden border border-[#2a1518]/60">
+                          {rankedTierProbabilities.map(([tier, prob], i) => (
+                            <div
+                              key={tier}
+                              title={`${tier}: ${Math.round(prob * 100)}%`}
+                              className="h-full flex items-center justify-center text-[8px] font-bold text-black overflow-hidden"
+                              style={{
+                                width: `${prob * 100}%`,
+                                backgroundColor: ["#c7a8ff", "#8f6fd1", "#5a4180"][i % 3],
+                              }}
+                            >
+                              {prob >= 0.12 ? `${Math.round(prob * 100)}%` : ""}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {rankedTierProbabilities.length > 0 && (
+                        <div className="flex justify-between text-[9px] text-[#888888] font-sans uppercase tracking-wide">
+                          {rankedTierProbabilities.map(([tier]) => (
+                            <span key={tier}>{tier}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {styleCluster && (
+                    <div className="space-y-2">
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-[#2a1f3a] border border-[#c7a8ff]/40 text-[#c7a8ff] rounded-full px-3 py-1.5 w-fit">
+                        Style: {styleCluster}
+                        {styleClusterConfidence != null && (
+                          <span className="opacity-70">({Math.round(styleClusterConfidence * 100)}%)</span>
+                        )}
+                      </span>
+                      {rankedStyleMembership.length > 0 && (
+                        <div className="flex flex-col gap-1">
+                          {rankedStyleMembership.map(([name, prob]) => (
+                            <div key={name} className="flex justify-between text-[10px] font-sans text-[#888888]">
+                              <span>{name}</span>
+                              <span className="text-[#c7a8ff] font-bold">{Math.round(prob * 100)}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {elementClusterEntries.length > 0 && (
+                    <div className="flex flex-col gap-2">
+                      {elementClusterEntries.map(([family, data]) => (
+                        <span
+                          key={family}
+                          className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-[#2a1f3a] border border-[#c7a8ff]/40 text-[#c7a8ff] rounded-full px-3 py-1.5 w-fit"
+                        >
+                          {elementFamilyLabels[family] ?? family}: {data.cluster}
+                          {data.confidence != null && (
+                            <span className="opacity-70">({Math.round(data.confidence * 100)}%)</span>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Lyrical Statistics */}
               <div className="border-t border-[#2a2a2a]/60 pt-4 mt-2">
@@ -466,6 +655,18 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
                   <div className="flex justify-between bg-[#1a1a1a] p-2 rounded-lg border border-[#2a2a2a]">
                     <span className="text-[#888888]">Double Entendres</span>
                     <span className="text-white font-bold">{doubleEntendresCount}</span>
+                  </div>
+                  <div className="flex justify-between bg-[#1a1a1a] p-2 rounded-lg border border-[#2a2a2a]">
+                    <span className="text-[#888888]">Punchlines</span>
+                    <span className="text-white font-bold">{punchlineCount}</span>
+                  </div>
+                  <div className="flex justify-between bg-[#1a1a1a] p-2 rounded-lg border border-[#2a2a2a]">
+                    <span className="text-[#888888]">Extended Metaphors</span>
+                    <span className="text-white font-bold">{extendedMetaphorCount}</span>
+                  </div>
+                  <div className="flex justify-between bg-[#1a1a1a] p-2 rounded-lg border border-[#2a2a2a]">
+                    <span className="text-[#888888]">Allusions</span>
+                    <span className="text-white font-bold">{allusionsCount}</span>
                   </div>
                   <div className="flex justify-between bg-[#1a1a1a] p-2 rounded-lg border border-[#2a2a2a] col-span-2">
                     <span className="text-[#888888]">Lexical Diversity (TTR)</span>
