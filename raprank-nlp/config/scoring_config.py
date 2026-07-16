@@ -87,11 +87,12 @@ RHYME = {
     # average-length song already maxes the sub-score, matching their
     # extreme rarity as literary devices).
     "ELITE_TARGETS": {
-        "internal_density": 0.30,        # ECDF: corpus 90th pct = 0.297, matches prior hand-set value
-        "multisyllabic_density": 0.33,   # ECDF: corpus 90th pct = 0.333 (was 0.25, ~80th pct)
-        "chain_density": 0.14,           # ECDF: corpus 95th pct = 0.136 (was 0.35 -- corpus 99th pct
-                                          # is only 0.191, so the old target was unreachable in practice
-                                          # and chain_score could never approach 100 for any real track)
+        "internal_density": 0.21,        # ECDF (DHH phoneme keyer, 505 tracks): 90th pct = 0.208.
+                                          # Was 0.30 under the old spelling-heuristic keyer -- the
+                                          # phoneme engine is stricter (no false matches from spelled
+                                          # schwas), so the same corpus measures lower.
+        "multisyllabic_density": 0.33,   # ECDF re-run with phoneme keyer: 90th pct = 0.333 (unchanged)
+        "chain_density": 0.14,           # ECDF re-run with phoneme keyer: 95th pct = 0.130 (~unchanged)
         "compound_density": 0.05,        # unchanged -- no positive corpus signal (see note above)
         "holorime_density": 0.03,        # unchanged -- no positive corpus signal (see note above)
     },

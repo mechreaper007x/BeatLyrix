@@ -31,3 +31,7 @@ scratch/*.json
 scratch/*.jsonl
 scratch/*.csv
 scratch/*.tsv
+
+# Run logs from background generation/scrape jobs -- operational noise,
+# and belt-and-braces against any future lyric echo in a log line.
+scratch/*.log

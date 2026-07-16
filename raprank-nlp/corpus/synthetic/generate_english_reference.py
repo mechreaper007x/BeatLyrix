@@ -35,6 +35,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import random
 import re
 import sys
@@ -63,6 +64,8 @@ from corpus.synthetic.generate_with_reference import (  # noqa: E402
     REFERENCE_PROMPT_TEMPLATE,
 )
 from corpus.synthetic.tier_profiles import TIER_NAMES, build_targets  # noqa: E402
+from corpus.synthetic import refine as refine_mod  # noqa: E402
+from corpus.synthetic import rhyme_families  # noqa: E402
 from services.language_utils import content_lines  # noqa: E402
 
 from derive_english_tiers import KAGGLE_CSV_PATH, clean_kaggle_lyrics  # noqa: E402
@@ -71,6 +74,41 @@ from kaggle_artist_tiers import KAGGLE_ARTIST_TIERS  # noqa: E402
 REAL_CORPUS_DATA_DIR = Path(__file__).resolve().parents[1] / "real_corpus" / "data"
 _LANG_LABEL_EN = "English"
 _LANG_BLOCK_EN = "Write entirely in English -- no code-switching, no non-English words or script."
+
+# How many rhyme families to inject per elite/mid prompt (commercial wants
+# simple single-syllable rhymes, so no multisyllabic scaffolding there).
+_SCAFFOLD_FAMILIES = {"elite": 4, "mid": 2, "commercial": 0}
+# Revision rounds after the initial draft (see corpus.synthetic.refine).
+_REFINE_ROUNDS = 2
+
+# A/B toggles: setting BEATLYRIX_NO_SCAFFOLD/BEATLYRIX_NO_REFINE=1 reproduces the
+# old blind-rejection loop (no rhyme scaffolding, no critique-revise) through
+# this same code path, so the pilot compares only those two features. Default
+# off -> the new loop runs.
+_SCAFFOLD_ON = os.getenv("BEATLYRIX_NO_SCAFFOLD", "") not in ("1", "true", "True")
+_REFINE_ON = False  # A/B pilot showed net negative; scaffold-only is the quality lever
+
+
+def _clean_lyrics(raw: str) -> str:
+    """The generator's shared post-processing -- strip code fences, markdown
+    bold, stray wrapping quotes, and leaked meta/metrics lines. Used for both
+    the first draft and every refine revision so scoring sees the same shape."""
+    lyrics = re.sub(r"^```[a-z]*\n?|```$", "", raw, flags=re.MULTILINE).strip()
+    lyrics = re.sub(r"\*\*(.+?)\*\*", r"\1", lyrics)
+    lyrics = re.sub(r'^"|"$', "", lyrics.strip(), flags=re.MULTILINE).strip()
+    lyrics = _strip_meta_annotation_lines(lyrics)
+    lyrics = _strip_leaked_metrics_footer(lyrics)
+    return lyrics
+
+
+def _scaffold_block(tier: str, rng: random.Random) -> str:
+    """Rhyme building-block prompt fragment for this tier, or '' when the tier
+    calls for no multisyllabic scaffolding."""
+    k = _SCAFFOLD_FAMILIES.get(tier, 0)
+    if k <= 0 or not _SCAFFOLD_ON:
+        return ""
+    return rhyme_families.build_scaffold_block("en", k, rng)
+
 
 
 def load_real_corpus_pool() -> dict[str, list[tuple[str, str]]]:
@@ -121,12 +159,20 @@ def load_english_reference_pool() -> dict[str, list[tuple[str, str]]]:
     return pool
 
 
-def build_prompt(tier: str, topic_idx: int, reference_lyrics: str) -> str:
+def build_prompt(tier: str, topic_idx: int, reference_lyrics: str,
+                 scaffold_block: str = "") -> str:
     from corpus.synthetic.rap_craft import craft_block
 
     topic = _TOPICS[topic_idx % len(_TOPICS)]
+    # REFERENCE_PROMPT_TEMPLATE has no scaffold placeholder, so the rhyme
+    # building blocks ride along inside craft_block -- they sit right below the
+    # tier's craft guidance, which is where the model is already being told how
+    # densely to rhyme for this tier.
+    craft = craft_block(tier)
+    if scaffold_block:
+        craft = f"{craft}\n\n{scaffold_block}"
     return REFERENCE_PROMPT_TEMPLATE.format(
-        craft_block=craft_block(tier),
+        craft_block=craft,
         language_label=_LANG_LABEL_EN,
         lang_block=_LANG_BLOCK_EN,
         topic=topic,
@@ -140,22 +186,23 @@ async def generate_one(tier: str, reference_pool: dict, topic_idx: int = 0) -> d
         print(f"    ! no real English reference songs available for tier={tier}, skipping")
         return None
 
+    # Deterministic-per-call RNG so scaffold sampling doesn't touch the global
+    # random stream the reference/topic choices use.
+    rng = random.Random(f"{tier}:{topic_idx}")
+
     for attempt in range(1, MAX_ATTEMPTS_MIXED + 1):
         ref_artist, ref_lyrics = random.choice(candidates)
-        prompt = build_prompt(tier, topic_idx + attempt, ref_lyrics)
+        scaffold = _scaffold_block(tier, rng)
+        prompt = build_prompt(tier, topic_idx + attempt, ref_lyrics, scaffold)
         try:
-            lyrics = await _gemini_generate(prompt, temperature=0.9)
+            raw = await _gemini_generate(prompt, temperature=0.9)
         except Exception as exc:
             detail = str(exc) or repr(exc)
             print(f"    ! generation call failed (attempt {attempt}): {type(exc).__name__}: {detail}")
             await asyncio.sleep(min(5.0 * attempt, 20.0))
             continue
 
-        lyrics = re.sub(r"^```[a-z]*\n?|```$", "", lyrics, flags=re.MULTILINE).strip()
-        lyrics = re.sub(r"\*\*(.+?)\*\*", r"\1", lyrics)
-        lyrics = re.sub(r'^"|"$', "", lyrics.strip(), flags=re.MULTILINE).strip()
-        lyrics = _strip_meta_annotation_lines(lyrics)
-        lyrics = _strip_leaked_metrics_footer(lyrics)
+        lyrics = _clean_lyrics(raw)
         if len(content_lines(lyrics)) < 6:
             continue
 
@@ -163,6 +210,34 @@ async def generate_one(tier: str, reference_pool: dict, topic_idx: int = 0) -> d
         if uniq_ratio < 0.5:
             print(f"    ~ rejected (attempt {attempt}/{MAX_ATTEMPTS_MIXED}), "
                   f"line_uniqueness={uniq_ratio:.2f} < 0.5 (degenerate repetition)")
+            continue
+
+        # Critique-revise: use the per-axis gap from score_against_tier as a
+        # reward signal and nudge the weak devices instead of discarding a
+        # near-miss draft. Returns the strongest iteration seen (accepted or
+        # not) so the content gates below still get the best candidate. The
+        # _REFINE_ON toggle lets the A/B pilot run the old blind-rejection arm.
+        if _REFINE_ON:
+            lyrics, accepted, actual, expected = await refine_mod.refine(
+                tier=tier,
+                lang="en",
+                draft=lyrics,
+                gen=lambda p: _gemini_generate(p, temperature=0.9),
+                clean=_clean_lyrics,
+                lang_label=_LANG_LABEL_EN,
+                lang_block=_LANG_BLOCK_EN,
+                scaffold_fn=lambda: _scaffold_block(tier, rng),
+                max_rounds=_REFINE_ROUNDS,
+                log=print,
+            )
+
+        # Re-check the cheap shape gates on the (possibly revised) best draft.
+        if len(content_lines(lyrics)) < 6:
+            continue
+        uniq_ratio = _line_uniqueness_ratio(lyrics)
+        if uniq_ratio < 0.5:
+            print(f"    ~ rejected (attempt {attempt}/{MAX_ATTEMPTS_MIXED}), "
+                  f"line_uniqueness={uniq_ratio:.2f} < 0.5 after refine")
             continue
 
         # client=None: run_content_gates' only follow-up-edit repair path
@@ -175,6 +250,8 @@ async def generate_one(tier: str, reference_pool: dict, topic_idx: int = 0) -> d
             print(f"    ~ rejected (attempt {attempt}/{MAX_ATTEMPTS_MIXED}), {gate_reason}")
             continue
 
+        # Content gates may have edited lines; re-score so the stored actual/
+        # accept reflect exactly what we keep.
         accepted, actual, expected = score_against_tier(tier, lyrics, lang="en")
         if accepted:
             return {
@@ -185,7 +262,7 @@ async def generate_one(tier: str, reference_pool: dict, topic_idx: int = 0) -> d
                 "actual_scores": actual,
                 "expected_scores": expected,
                 "attempts": attempt,
-                "generator": "gemini-en-reference",
+                "generator": "gemini-en-reference-refine" if _REFINE_ON else "gemini-en-reference",
                 "reference_artist_tier": tier,  # which tier's reference informed style, not the text itself
                 "lyrics": lyrics,
             }

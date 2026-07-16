@@ -2,7 +2,9 @@
 End-rhyme, internal rhyme, and multi-syllabic rhyme chain detection.
 
 English  → CMU Pronouncing Dictionary (via `pronouncing`)
-Hindi    → Devanagari suffix matching (last 3 chars)
+Hindi    → DHH phoneme engine (services/dhh_phonemes) — real G2P with schwa
+           deletion; replaced the old Devanagari last-N-chars suffix keying
+Hinglish → same DHH engine's romanized pipeline; replaced spelling heuristics
 Mixed    → per-word dispatch
 
 Rhyme scheme window: checks up to 4 lines ahead (handles AABB, ABAB, ABCB, AAAA).
@@ -16,6 +18,7 @@ import re
 
 from models.schemas import RhymeMatch
 from services.language_utils import is_hindi_word, clean_word, content_lines, devanagari_to_roman
+from services import dhh_phonemes
 from config import scoring_config
 
 
@@ -65,19 +68,21 @@ def _multi_rhyme_key_en(word: str, n: int = 2) -> Optional[tuple]:
 
 
 # ── Hindi helpers ─────────────────────────────────────────────────────────────
+# Both scripts route through the DHH phoneme engine: rhyme keys come from
+# PRONUNCIATION (schwa deletion, spelling-variant collapse), not spelling.
+# घर/डर key as ('a','r'); hoon/hun key identically. The old last-N-chars and
+# normalize_hinglish heuristics remain only for callers that need a plain
+# letter-suffix (cross-script class matching below).
 
-def _rhyme_key_hi(word: str) -> Optional[str]:
-    """Last N Devanagari characters from config form the rhyme suffix."""
-    length = scoring_config.RHYME["DEVA_SUFFIX_LENGTH"]
-    if len(word) < 2:
-        return None
-    return word[-length:] if len(word) >= length else word[-2:]
+def _rhyme_key_hi(word: str) -> Optional[tuple]:
+    """Phoneme rhyme key for a Devanagari word (nucleus+coda; vowel-final
+    words extend to the previous nucleus -- see dhh_phonemes.rhyme_key)."""
+    return dhh_phonemes.rhyme_key(dhh_phonemes.deva_to_phones(word))
 
 
-def _multi_rhyme_key_hi(word: str) -> Optional[str]:
-    """Last N characters from config for multi-syllabic Hindi rhyme."""
-    length = scoring_config.RHYME["DEVA_MULTI_SUFFIX_LENGTH"]
-    return word[-length:] if len(word) >= length else None
+def _multi_rhyme_key_hi(word: str) -> Optional[tuple]:
+    """Phoneme multi-syllabic key (last two nuclei onward) for Devanagari."""
+    return dhh_phonemes.multi_rhyme_key(dhh_phonemes.deva_to_phones(word))
 
 
 # ── Hinglish helpers ──────────────────────────────────────────────────────────
@@ -100,72 +105,16 @@ def normalize_hinglish(word: str) -> str:
     return word
 
 
-def _rhyme_key_hinglish(word: str) -> Optional[str]:
-    word = normalize_hinglish(word)
-    if len(word) < 1:
-        return None
-
-    # 'y' is treated as a consonant glide here, not a vowel: otherwise an
-    # intervocalic y (e.g. "aaya"->"aya", "gaaya"->"gaya") merges a-y-a into one
-    # nucleus, so a vowel-initial word and its consonant-onset rhyme partner
-    # produce different keys ("aya" vs "gaya") and fail to match.
-    vowels = "aeiou"
-    vowel_idxs = []
-    i = 0
-    while i < len(word):
-        if word[i] in vowels:
-            vowel_idxs.append(i)
-            while i < len(word) and word[i] in vowels:
-                i += 1
-        else:
-            i += 1
-            
-    if not vowel_idxs:
-        return None
-        
-    start_idx = vowel_idxs[-1]
-    
-    # If the word ends in a vowel group (e.g. "bade", "uske"), include the preceding consonant
-    if start_idx == len(word) - 1 or (start_idx < len(word) - 1 and all(c in vowels for c in word[start_idx:])):
-        consonant_idx = start_idx - 1
-        while consonant_idx >= 0 and word[consonant_idx] in vowels:
-            consonant_idx -= 1
-        if consonant_idx >= 0:
-            return word[consonant_idx:]
-            
-    return word[start_idx:]
+def _rhyme_key_hinglish(word: str) -> Optional[tuple]:
+    """Phoneme rhyme key for romanized Hinglish (spelling variants collapse
+    inside dhh_phonemes; 'y' glide, vowel length, and schwa behaviour all
+    handled at the phoneme layer instead of by string surgery here)."""
+    return dhh_phonemes.rhyme_key(dhh_phonemes.hinglish_to_phones(word))
 
 
-def _multi_rhyme_key_hinglish(word: str) -> Optional[str]:
-    word = normalize_hinglish(word)
-    if len(word) < 2:
-        return None
-
-    vowels = "aeiou"  # 'y' as consonant glide (see _rhyme_key_hinglish)
-    vowel_idxs = []
-    i = 0
-    while i < len(word):
-        if word[i] in vowels:
-            vowel_idxs.append(i)
-            while i < len(word) and word[i] in vowels:
-                i += 1
-        else:
-            i += 1
-            
-    if len(vowel_idxs) < 2:
-        return None
-        
-    start_idx = vowel_idxs[-2]
-    
-    # If the word ends in a vowel group, include the preceding consonant
-    if vowel_idxs[-1] == len(word) - 1 or (vowel_idxs[-1] < len(word) - 1 and all(c in vowels for c in word[vowel_idxs[-1]:])):
-        consonant_idx = start_idx - 1
-        while consonant_idx >= 0 and word[consonant_idx] in vowels:
-            consonant_idx -= 1
-        if consonant_idx >= 0:
-            return word[consonant_idx:]
-            
-    return word[start_idx:]
+def _multi_rhyme_key_hinglish(word: str) -> Optional[tuple]:
+    """Phoneme multi-syllabic key (last two nuclei onward) for Hinglish."""
+    return dhh_phonemes.multi_rhyme_key(dhh_phonemes.hinglish_to_phones(word))
 
 
 def _normalize_hinglish_vowels(word: str) -> str:

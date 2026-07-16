@@ -192,6 +192,168 @@ ARTISTS: tuple[Artist, ...] = (
         primary_language="mixed",
         expected_profile={"multisyllabic": 0.55, "wordplay": 0.55, "commercial": 0.7},
     ),
+    # ── Expansion wave 2 (Jul 2026): grow the DHH pronunciation dictionary
+    # toward 30k entries. Same pipeline, same local-only lyric storage; only
+    # derived phonetic facts are ever committed.
+    Artist(
+        name="DIVINE",
+        search_terms=("DIVINE", "Divine rapper Gully Gang"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.75, "wordplay": 0.7, "commercial": 0.6},
+    ),
+    Artist(
+        name="MC Stan",
+        search_terms=("MC Stan", "MC STAN"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.5, "wordplay": 0.5, "commercial": 0.8},
+    ),
+    Artist(
+        name="Prabh Deep",
+        search_terms=("Prabh Deep",),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.8, "wordplay": 0.75, "commercial": 0.3},
+    ),
+    Artist(
+        name="Ikka",
+        search_terms=("Ikka", "Ikka Singh"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.7, "wordplay": 0.7, "commercial": 0.5},
+    ),
+    Artist(
+        name="Dino James",
+        search_terms=("Dino James",),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.45, "wordplay": 0.5, "commercial": 0.75},
+    ),
+    Artist(
+        name="Talha Anjum",
+        search_terms=("Talha Anjum", "Young Stunners Talha"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.75, "wordplay": 0.75, "commercial": 0.5},
+    ),
+    Artist(
+        name="Talhah Yunus",
+        search_terms=("Talhah Yunus", "Young Stunners Yunus"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.75, "wordplay": 0.7, "commercial": 0.45},
+    ),
+    Artist(
+        name="Kaam Bhaari",
+        search_terms=("Kaam Bhaari",),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.7, "wordplay": 0.7, "commercial": 0.45},
+    ),
+    Artist(
+        name="MC Altaf",
+        search_terms=("MC Altaf",),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.65, "wordplay": 0.6, "commercial": 0.5},
+    ),
+    Artist(
+        name="Badshah",
+        search_terms=("Badshah", "Badshah rapper"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.3, "wordplay": 0.35, "commercial": 0.95},
+    ),
+    Artist(
+        name="Yo Yo Honey Singh",
+        search_terms=("Yo Yo Honey Singh", "Honey Singh"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.3, "wordplay": 0.35, "commercial": 0.95},
+    ),
+    Artist(
+        name="Bali",
+        search_terms=("Bali rapper", "Bali (IND)"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.6, "wordplay": 0.55, "commercial": 0.55},
+    ),
+    Artist(
+        name="Fotty Seven",
+        search_terms=("Fotty Seven",),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.6, "wordplay": 0.6, "commercial": 0.6},
+    ),
+    Artist(
+        name="Shah Rule",
+        search_terms=("Shah Rule",),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.6, "wordplay": 0.6, "commercial": 0.55},
+    ),
+    # ── Expansion wave 3 (Jul 2026): lyricism-first rappers for the DHH
+    # dictionary -- dense multisyllabic Hindi vocabulary is the selection
+    # criterion, not popularity.
+    Artist(
+        name="Narci",
+        search_terms=("Narci", "Narci rapper"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.9, "wordplay": 0.85, "commercial": 0.3},
+    ),
+    Artist(
+        name="Rawal",
+        search_terms=("Rawal", "Rawal rapper"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.7, "wordplay": 0.7, "commercial": 0.45},
+    ),
+    Artist(
+        name="Sikander Kahlon",
+        search_terms=("Sikander Kahlon",),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.85, "wordplay": 0.8, "commercial": 0.35},
+    ),
+    Artist(
+        name="Smoke",
+        search_terms=("Smoke rapper India", "Smoke DHH"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.75, "wordplay": 0.7, "commercial": 0.4},
+    ),
+    Artist(
+        name="Bella",
+        search_terms=("Bella rapper", "Bella DHH"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.7, "wordplay": 0.65, "commercial": 0.5},
+    ),
+    Artist(
+        name="Kr@ntinaari",
+        search_terms=("Krantinaari", "Kr@ntinaari"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.7, "wordplay": 0.7, "commercial": 0.35},
+    ),
+    Artist(
+        name="Ab 17",
+        search_terms=("Ab 17", "AB17 rapper"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.75, "wordplay": 0.7, "commercial": 0.4},
+    ),
+    Artist(
+        name="Full Power",
+        search_terms=("Full Power rapper", "Fullpower DHH"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.7, "wordplay": 0.65, "commercial": 0.4},
+    ),
+    Artist(
+        name="Panda",
+        search_terms=("Panda rapper India", "Panda DHH"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.65, "wordplay": 0.65, "commercial": 0.45},
+    ),
+    Artist(
+        name="Shaikhspeare",
+        search_terms=("Shaikhspeare",),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.8, "wordplay": 0.85, "commercial": 0.3},
+    ),
+    Artist(
+        name="Poetik Justis",
+        search_terms=("Poetik Justis",),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.75, "wordplay": 0.75, "commercial": 0.35},
+    ),
+    Artist(
+        name="Enkore",
+        search_terms=("Enkore", "Enkore rapper"),
+        primary_language="mixed",
+        expected_profile={"multisyllabic": 0.75, "wordplay": 0.75, "commercial": 0.35},
+    ),
 )
 
 

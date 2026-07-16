@@ -32,6 +32,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import random
 import re
 import sys
@@ -55,12 +56,57 @@ from corpus.synthetic.generate import (  # noqa: E402
     score_against_tier,
 )
 from corpus.synthetic.tier_profiles import TIER_NAMES, build_targets  # noqa: E402
+from corpus.synthetic import refine as refine_mod  # noqa: E402
+from corpus.synthetic import rhyme_families  # noqa: E402
 from services.language_utils import content_lines  # noqa: E402
 
 OLLAMA_HOST = "http://localhost:11434"
-MODEL = "minimax-m3:cloud"
+# Primary LLM: Gemini (same _gemini_generate as the English generator --
+# proven fast + reliable across a 150-sample batch). Fallbacks tried and
+# rejected: NVIDIA GLM 5.2 (persistent 504/gateway congestion) and Ollama
+# cloud minimax-m3 (hard 429 rate limits on batch runs).
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "")
+NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
+NVIDIA_MODEL = "z-ai/glm-5.2"
+if GEMINI_API_KEY:
+    MODEL = "gemini-hinglish-reference"
+elif NVIDIA_API_KEY:
+    MODEL = NVIDIA_MODEL
+else:
+    MODEL = "minimax-m3:cloud"
 INDIAN_CORPUS_DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 REFERENCE_MAX_CHARS = 1200
+
+# How many rhyme families to inject per elite/mid prompt (commercial wants
+# simple single-syllable rhymes, so no multisyllabic scaffolding there). Mirrors
+# the English sibling; "mixed" pulls families from the Hindi/Hinglish corpus.
+_SCAFFOLD_FAMILIES = {"elite": 4, "mid": 2, "commercial": 0}
+# Revision rounds after the initial draft (see corpus.synthetic.refine).
+_REFINE_ROUNDS = 2
+
+# A/B toggles: BEATLYRIX_NO_SCAFFOLD/BEATLYRIX_NO_REFINE=1 reproduces the old
+# blind-rejection loop through this same path so the pilot compares only those
+# two features. Default off -> the new loop runs.
+_SCAFFOLD_ON = os.getenv("BEATLYRIX_NO_SCAFFOLD", "") not in ("1", "true", "True")
+_REFINE_ON = False  # A/B pilot showed net negative; scaffold-only is the quality lever
+
+
+def _clean_lyrics(raw: str) -> str:
+    """Post-processing shared by the first draft and every refine revision so
+    scoring sees the same shape -- just the code-fence strip this generator has
+    always used (the Hinglish path doesn't run the English footer/meta strips)."""
+    return re.sub(r"^```[a-z]*\n?|```$", "", raw, flags=re.MULTILINE).strip()
+
+
+def _scaffold_block(tier: str, rng: random.Random) -> str:
+    """Rhyme building-block prompt fragment for this tier, or '' when the tier
+    calls for no multisyllabic scaffolding. 'mixed' reads the Hindi/Hinglish
+    corpus families."""
+    k = _SCAFFOLD_FAMILIES.get(tier, 0)
+    if k <= 0 or not _SCAFFOLD_ON:
+        return ""
+    return rhyme_families.build_scaffold_block("mixed", k, rng)
 
 
 def _has_devanagari(text: str) -> bool:
@@ -201,12 +247,19 @@ _LANG_BLOCK = (
 )
 
 
-def build_reference_prompt(tier: str, topic_idx: int, reference_lyrics: str) -> str:
+def build_reference_prompt(tier: str, topic_idx: int, reference_lyrics: str,
+                           scaffold_block: str = "") -> str:
     from corpus.synthetic.rap_craft import craft_block
 
     topic = _TOPICS[topic_idx % len(_TOPICS)]
+    # REFERENCE_PROMPT_TEMPLATE has no scaffold placeholder, so the rhyme
+    # building blocks ride along inside craft_block, right below the tier's
+    # craft guidance.
+    craft = craft_block(tier)
+    if scaffold_block:
+        craft = f"{craft}\n\n{scaffold_block}"
     return REFERENCE_PROMPT_TEMPLATE.format(
-        craft_block=craft_block(tier),
+        craft_block=craft,
         language_label=_LANG_LABEL,
         lang_block=_LANG_BLOCK,
         topic=topic,
@@ -214,7 +267,57 @@ def build_reference_prompt(tier: str, topic_idx: int, reference_lyrics: str) -> 
     )
 
 
+import asyncio as _asyncio
+
+# NVIDIA free tier allows 40 requests/minute; we run sequentially and each
+# generation takes ~90s, so the floor below is belt-and-braces. On 429, back
+# off and retry inside the call rather than burning a generation attempt.
+_MIN_CALL_INTERVAL = 1.6  # seconds between request starts (<40/min)
+_last_call_at = 0.0
+
+
+async def _call_nvidia(client: httpx.AsyncClient, prompt: str) -> str:
+    global _last_call_at
+    last_exc: Exception | None = None
+    for backoff in (0, 20, 45, 90, 180):
+        if backoff:
+            await _asyncio.sleep(backoff)
+        wait = _MIN_CALL_INTERVAL - (_asyncio.get_event_loop().time() - _last_call_at)
+        if wait > 0:
+            await _asyncio.sleep(wait)
+        _last_call_at = _asyncio.get_event_loop().time()
+        try:
+            resp = await client.post(
+                f"{NVIDIA_BASE_URL}/chat/completions",
+                headers={"Authorization": f"Bearer {NVIDIA_API_KEY}"},
+                json={
+                    "model": NVIDIA_MODEL,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.9,
+                    "max_tokens": 4096,
+                },
+                timeout=600.0,
+            )
+        except (httpx.ReadError, httpx.ReadTimeout, httpx.ConnectError) as exc:
+            last_exc = exc  # transient network/gateway drop: back off, retry
+            continue
+        # 429 (rate limit) and 5xx (gateway congestion) are transient: back
+        # off and retry here rather than burning a generation attempt.
+        if resp.status_code == 429 or resp.status_code >= 500:
+            last_exc = httpx.HTTPStatusError(
+                f"{resp.status_code}", request=resp.request, response=resp)
+            continue
+        resp.raise_for_status()
+        return resp.json()["choices"][0]["message"]["content"].strip()
+    raise last_exc if last_exc else RuntimeError("NVIDIA call failed")
+
+
 async def call_ollama(client: httpx.AsyncClient, prompt: str) -> str:
+    if GEMINI_API_KEY:
+        from corpus.synthetic.generate import _gemini_generate
+        return await _gemini_generate(prompt, temperature=0.9)
+    if NVIDIA_API_KEY:
+        return await _call_nvidia(client, prompt)
     resp = await client.post(
         f"{OLLAMA_HOST}/api/chat",
         json={
@@ -224,8 +327,9 @@ async def call_ollama(client: httpx.AsyncClient, prompt: str) -> str:
             "options": {"temperature": 0.9},
         },
         # measured ~118s for a full reference+targets prompt (the "thinking"
-        # mode this cloud model uses is slow) -- comfortably above that.
-        timeout=240.0,
+        # mode this cloud model uses is slow), but the cloud endpoint sometimes
+        # runs far slower than that -- give it generous headroom.
+        timeout=600.0,
     )
     resp.raise_for_status()
     return resp.json()["message"]["content"].strip()
@@ -238,11 +342,16 @@ async def generate_one(client: httpx.AsyncClient, tier: str, reference_pool: dic
         print(f"    ! no real reference songs available for tier={tier}, skipping")
         return None
 
+    # Deterministic-per-call RNG so scaffold sampling doesn't disturb the global
+    # random stream the reference/topic choices use.
+    rng = random.Random(f"{tier}:{topic_idx}")
+
     for attempt in range(1, MAX_ATTEMPTS_MIXED + 1):
         ref_artist, ref_lyrics = _pick_reference(candidates)
-        prompt = build_reference_prompt(tier, topic_idx + attempt, ref_lyrics)
+        scaffold = _scaffold_block(tier, rng)
+        prompt = build_reference_prompt(tier, topic_idx + attempt, ref_lyrics, scaffold)
         try:
-            lyrics = await call_ollama(client, prompt)
+            raw = await call_ollama(client, prompt)
         except Exception as exc:
             detail = str(exc) or repr(exc)
             print(f"    ! generation call failed (attempt {attempt}): {type(exc).__name__}: {detail}")
@@ -252,11 +361,34 @@ async def generate_one(client: httpx.AsyncClient, tier: str, reference_pool: dic
             await asyncio.sleep(min(5.0 * attempt, 20.0))
             continue
 
-        lyrics = re.sub(r"^```[a-z]*\n?|```$", "", lyrics, flags=re.MULTILINE).strip()
+        lyrics = _clean_lyrics(raw)
         if len(content_lines(lyrics)) < 6:
             continue
 
-        accepted, actual, expected = score_against_tier(tier, lyrics)
+        # Critique-revise: reuse score_against_tier's per-axis gap as a reward
+        # signal to nudge the weak devices (esp. the internal/multisyllabic
+        # rhyme axes models undershoot) instead of discarding a near-miss draft.
+        # The _REFINE_ON toggle lets the A/B pilot run the old blind-rejection arm.
+        if _REFINE_ON:
+            lyrics, accepted, actual, expected = await refine_mod.refine(
+                tier=tier,
+                lang="mixed",
+                draft=lyrics,
+                gen=lambda p: call_ollama(client, p),
+                clean=_clean_lyrics,
+                lang_label=_LANG_LABEL,
+                lang_block=_LANG_BLOCK,
+                scaffold_fn=lambda: _scaffold_block(tier, rng),
+                max_rounds=_REFINE_ROUNDS,
+                log=print,
+            )
+        else:
+            accepted, actual, expected = score_against_tier(tier, lyrics)
+        if len(content_lines(lyrics)) < 6:
+            continue
+
+        # refine/score already returned the accept flag from score_against_tier
+        # for this best draft; trust it rather than re-scoring.
         if accepted:
             return {
                 "id": str(uuid.uuid4()),
@@ -266,7 +398,7 @@ async def generate_one(client: httpx.AsyncClient, tier: str, reference_pool: dic
                 "actual_scores": actual,
                 "expected_scores": expected,
                 "attempts": attempt,
-                "generator": MODEL,
+                "generator": f"{MODEL}-refine" if _REFINE_ON else MODEL,
                 "reference_artist_tier": tier,  # which tier's reference informed style, not the text itself
                 "lyrics": lyrics,
             }
