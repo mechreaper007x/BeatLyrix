@@ -11,9 +11,10 @@ dimensionality/distribution shape:
   rare     (3 mostly-zero axes with a rare high tail)      -> HDBSCAN
 
 All features come from corpus/analysis/signature.py::signature(), which is
-lyrics-only (no semantic Space, no audio) -- so the training pool is the
-full real corpus (tests/conftest.py::load_corpus()) PLUS the consented
-seeds (tests/conftest.py::load_consented_seeds()), with no dropout.
+lyrics-only (no semantic Space, no audio) -- so there is no dropout.
+Training pool (copyright-clean contract, Jul 2026): synthetic data +
+consented seeds; scraped real lyrics are evaluation-only (--train reports
+held-out silhouette over the real corpus).
 
 total_score is NOT affected -- like gmm_style_service.py, this is descriptive
 only. Flow/prosody (needs audio) and semantic axes (needs the semantic Space)
@@ -93,8 +94,19 @@ def _report_path(family: str) -> Path:
 
 # ── Pool + features ──────────────────────────────────────────────────────────
 def _load_pool() -> list[dict]:
-    from services.tests.conftest import load_corpus, load_consented_seeds
-    return load_corpus() + load_consented_seeds()
+    """Training pool: synthetic data + consented seeds (copyright-clean
+    contract, see bayesian_scoring_service.load_train_records). Scraped real
+    lyrics never train a shipped model; they're the held-out eval pool."""
+    from services.bayesian_scoring_service import load_train_records
+    return load_train_records()
+
+
+def _load_eval_pool() -> list[dict]:
+    """Held-out evaluation pool: the scraped real corpus. --train reports
+    silhouette over fresh assignments of these songs -- a true held-out
+    check of whether the clean-trained clusters describe real rap."""
+    from services.tests.conftest import load_corpus
+    return load_corpus()
 
 
 def _family_features(lyrics: str, axes: tuple[str, ...]) -> list[float]:
@@ -157,7 +169,7 @@ def train_family(family: str, records: list[dict] | None = None) -> dict:
         "noise_frac": noise_frac,
         "Xs": Xs,  # standardized features, kept for centroid-based labelling
         "kept_ids": [s.get("_path", "?") for s in kept],
-        "kept_artists": [s.get("artist", "?") for s in kept],
+        "kept_artists": [s.get("artist", s.get("tier", "?")) for s in kept],
     }
 
 
@@ -359,6 +371,62 @@ def _load_corpus_records() -> list[dict]:
     return _load_pool()
 
 
+def assign_records(bundle: dict, Xs) -> list[int]:
+    """Cluster label per standardized row, for points the model wasn't fit
+    on: GMM families predict directly; hierarchical/HDBSCAN fall back to
+    nearest-centroid against the persisted train centroids (HDBSCAN points
+    beyond a cluster's train max_dist become noise, -1)."""
+    import numpy as np
+
+    clusters = (bundle.get("_labels") or label_clusters(bundle))["clusters"]
+    cluster_ids = sorted(clusters, key=lambda k: int(k))
+
+    if bundle["algo"] == "gmm":
+        return bundle["model"].predict(Xs).tolist()
+
+    centroids = np.asarray([clusters[cid]["centroid"] for cid in cluster_ids], dtype=float)
+    dists = np.linalg.norm(Xs[:, None, :] - centroids[None, :, :], axis=2)
+    nearest = dists.argmin(axis=1)
+    labels = [int(cluster_ids[i]) for i in nearest]
+    if bundle["algo"] == "hdbscan":
+        for row, i in enumerate(nearest):
+            max_dist = clusters[cluster_ids[i]].get("max_dist")
+            if max_dist is not None and dists[row, i] > max_dist:
+                labels[row] = -1
+    return labels
+
+
+def evaluate_family_on_real(bundle: dict, records: list[dict] | None = None) -> dict:
+    """Fit statistics of a synthetic-trained family clusterer on the held-out
+    real pool: assign each real song a cluster (see assign_records) and
+    report the silhouette over the real points with those labels. HDBSCAN
+    noise points are excluded from the silhouette (noise fraction reported
+    separately)."""
+    from collections import Counter
+    from sklearn.metrics import silhouette_score
+
+    if records is None:
+        records = _load_eval_pool()
+    X, kept = build_feature_matrix(records, tuple(bundle["axes"]))
+    if not len(X):
+        return {"n": 0}
+    Xs = bundle["scaler"].transform(X)
+    labels = assign_records(bundle, Xs)
+
+    keep_idx = [i for i, l in enumerate(labels) if l != -1]
+    noise_frac = 1.0 - len(keep_idx) / len(labels)
+    kept_labels = [labels[i] for i in keep_idx]
+    sil = None
+    if len(set(kept_labels)) >= 2 and len(keep_idx) > len(set(kept_labels)):
+        sil = float(silhouette_score(Xs[keep_idx], kept_labels))
+    return {
+        "n": len(kept),
+        "silhouette": sil,
+        "noise_fraction": round(noise_frac, 4),
+        "cluster_counts": dict(sorted(Counter(kept_labels).items())),
+    }
+
+
 # All raw axes across the four families, in a fixed display order (dedupes
 # axes shared by multiple families, e.g. compound_dens/holorime_dens appear
 # in both "rhyme" and "rare").
@@ -371,39 +439,33 @@ _RAW_AXES: tuple[str, ...] = tuple(dict.fromkeys(
 def build_style_table(real_only: bool = True) -> list[dict]:
     """One row per song: artist/title + each family's cluster label + every
     raw axis score (from signature(), so the underlying number behind each
-    label is visible, not just the cluster name). Cluster labels are joined
-    by the song's _path against the assignments each bundle already stored
-    at train time (no recompute); raw scores are recomputed from lyrics
-    since signature() doesn't get persisted in the pickle. real_only=True
-    excludes the consented seeds (no 'title', not the corpus under test)."""
+    label is visible, not just the cluster name). The models are trained on
+    synthetic data, so real-corpus songs get assigned fresh via
+    assign_records (GMM predict / nearest-centroid); raw scores are
+    recomputed from lyrics since signature() doesn't get persisted in the
+    pickle. real_only=True excludes the consented seeds (no 'title', not the
+    corpus under test)."""
     from services.tests.conftest import load_corpus
     from corpus.analysis.signature import signature
 
     bundles = {family: load(family) for family in FAMILIES}
     labels = {family: (b.get("_labels") or label_clusters(b))["clusters"] for family, b in bundles.items()}
 
-    # _path -> {family: cluster_id}
-    by_path: dict[str, dict[str, int]] = {}
-    for family, b in bundles.items():
-        for path, c in zip(b["kept_ids"], b["assignments"]):
-            by_path.setdefault(path, {})[family] = c
+    songs = load_corpus() if real_only else _load_eval_pool()
+    songs = [s for s in songs if s.get("lyrics")]
 
-    songs = load_corpus() if real_only else _load_pool()
+    # family -> [cluster_id per song], assigned fresh through each bundle
+    assignments: dict[str, list[int]] = {}
+    for family, b in bundles.items():
+        X, _ = build_feature_matrix(songs, tuple(b["axes"]))
+        assignments[family] = assign_records(b, b["scaler"].transform(X))
+
     rows = []
-    for song in songs:
-        path = song.get("_path", "?")
-        assign = by_path.get(path)
-        if assign is None:
-            continue  # dropped from every family (missing lyrics) -- shouldn't happen for real corpus
-        row = {"artist": song.get("artist", "?"), "title": song.get("title", path)}
+    for i, song in enumerate(songs):
+        row = {"artist": song.get("artist", "?"), "title": song.get("title", song.get("_path", "?"))}
         for family in FAMILIES:
-            c = assign.get(family)
-            if c is None:
-                row[family] = "?"
-            elif c == -1:
-                row[family] = "noise"
-            else:
-                row[family] = labels[family][str(c)]["label"]
+            c = assignments[family][i]
+            row[family] = "noise" if c == -1 else labels[family][str(c)]["label"]
         sig = signature(song["lyrics"])
         for ax in _RAW_AXES:
             row[ax] = round(float(sig.get(ax, 0.0)), 2)
@@ -418,7 +480,7 @@ def build_artist_summary(axis: str = "alliteration", real_only: bool = True) -> 
     from services.tests.conftest import load_corpus
     from corpus.analysis.signature import signature
 
-    songs = load_corpus() if real_only else _load_pool()
+    songs = load_corpus() if real_only else _load_eval_pool()
     by_artist: dict[str, list[float]] = defaultdict(list)
     for song in songs:
         sig = signature(song["lyrics"])
@@ -459,7 +521,8 @@ def _write_csv(rows: list[dict], path: Path) -> None:
 # ── CLI ──────────────────────────────────────────────────────────────────────
 def main() -> int:
     ap = argparse.ArgumentParser(description="Train / report / evaluate per-element clusters")
-    ap.add_argument("--train", action="store_true", help="fit from corpus+consented pool and pickle")
+    ap.add_argument("--train", action="store_true",
+                     help="fit from synthetic data, pickle, and evaluate on the held-out real pool")
     ap.add_argument("--report", action="store_true", help="print + persist human cluster labels")
     ap.add_argument("--eval-corpus", action="store_true", help="print each song's cluster")
     ap.add_argument("--table", action="store_true",
@@ -474,12 +537,20 @@ def main() -> int:
 
     if args.train:
         pool = _load_pool()
+        eval_pool = _load_eval_pool()
         for family in families:
             bundle = train_family(family, records=pool)
             bundle["_labels"] = label_clusters(bundle)
             path = save(bundle)
             extra = f" noise={bundle['noise_frac']:.1%}" if bundle["noise_frac"] is not None else ""
-            print(f"[{family}] {bundle['algo']}: k={bundle['k']} on {len(bundle['assignments'])} songs{extra} -> {path}")
+            print(f"[{family}] {bundle['algo']}: k={bundle['k']} on {len(bundle['assignments'])} synthetic songs{extra} -> {path}")
+            ev = evaluate_family_on_real(bundle, records=eval_pool)
+            if not ev.get("n"):
+                print(f"    real eval: no held-out songs available")
+            else:
+                sil = f"{ev['silhouette']:.3f}" if ev["silhouette"] is not None else "n/a"
+                print(f"    real eval (n={ev['n']}): silhouette={sil} "
+                      f"noise={ev['noise_fraction']:.1%} counts={ev['cluster_counts']}")
         return 0
 
     if args.report:

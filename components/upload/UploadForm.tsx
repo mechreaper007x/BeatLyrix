@@ -19,6 +19,20 @@ export default function UploadForm() {
   const [newTrackId, setNewTrackId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
+  const [resultScore, setResultScore] = useState<number | null>(null);
+  const [resultRhyme, setResultRhyme] = useState<number | null>(null);
+  const [resultSyllable, setResultSyllable] = useState<number | null>(null);
+  const [resultFlow, setResultFlow] = useState<number | null>(null);
+
+  const getGrade = (score: number | null) => {
+    if (score === null) return "N/A";
+    if (score >= 90) return "S";
+    if (score >= 80) return "A";
+    if (score >= 70) return "B";
+    if (score >= 60) return "C";
+    return "D";
+  };
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Clean up audio URL on unmount
@@ -202,6 +216,11 @@ export default function UploadForm() {
             setErrorMessage("Lyric analysis failed in background. Check backend logs.");
             setStage("error");
           } else if (data.totalScore !== null && data.scoreBreakdown !== null) {
+            setResultScore(Math.round(data.totalScore));
+            setResultRhyme(data.scoreBreakdown.rhymeScore !== undefined && data.scoreBreakdown.rhymeScore !== null ? Math.round(data.scoreBreakdown.rhymeScore) : null);
+            setResultSyllable(data.scoreBreakdown.syllableScore !== undefined && data.scoreBreakdown.syllableScore !== null ? Math.round(data.scoreBreakdown.syllableScore) : null);
+            setResultFlow(data.scoreBreakdown.flowScore !== undefined && data.scoreBreakdown.flowScore !== null ? Math.round(data.scoreBreakdown.flowScore) : null);
+
             setAnalysisProgress(100);
             setEstimatedTime("Complete!");
             clearInterval(interval);
@@ -423,7 +442,7 @@ export default function UploadForm() {
             <div className="absolute inset-0 rounded-full border-4 border-raprank-neon animate-pulse shadow-[0_0_20px_#a8ff3e]" />
             <div className="flex flex-col items-center justify-center">
               <span className="font-graffiti text-6xl text-white drop-shadow-[0_4px_8px_rgba(168,255,62,0.4)]">
-                87
+                {resultScore ?? "--"}
               </span>
               <span className="text-xs font-bold text-raprank-neon tracking-widest uppercase">
                 TOTAL SCORE
@@ -443,16 +462,22 @@ export default function UploadForm() {
           {/* Quick Breakdown Summary */}
           <div className="w-full bg-raprank-maroon/30 border border-raprank-maroon/40 rounded-2xl p-6 grid grid-cols-3 gap-4">
             <div className="space-y-1">
-              <span className="block text-xs font-bold text-raprank-skin/50 uppercase">RHYME DENSITY</span>
-              <span className="font-graffiti text-2xl text-raprank-neon">A</span>
+              <span className="block text-xs font-bold text-raprank-skin/50 uppercase">RHYME COMPLEXITY</span>
+              <span className="font-graffiti text-2xl text-raprank-neon">
+                {resultRhyme !== null ? `${resultRhyme} (${getGrade(resultRhyme)})` : "N/A"}
+              </span>
             </div>
             <div className="space-y-1 border-x border-raprank-maroon/20">
-              <span className="block text-xs font-bold text-raprank-skin/50 uppercase">SYLLABLES</span>
-              <span className="font-graffiti text-2xl text-raprank-neon">B+</span>
+              <span className="block text-xs font-bold text-raprank-skin/50 uppercase">SYLLABLE DENSITY</span>
+              <span className="font-graffiti text-2xl text-raprank-neon">
+                {resultSyllable !== null ? `${resultSyllable} (${getGrade(resultSyllable)})` : "N/A"}
+              </span>
             </div>
             <div className="space-y-1">
               <span className="block text-xs font-bold text-raprank-skin/50 uppercase">FLOW STABILITY</span>
-              <span className="font-graffiti text-2xl text-raprank-neon">A-</span>
+              <span className="font-graffiti text-2xl text-raprank-neon">
+                {resultFlow !== null ? `${resultFlow} (${getGrade(resultFlow)})` : "N/A"}
+              </span>
             </div>
           </div>
 

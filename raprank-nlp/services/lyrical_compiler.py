@@ -8,6 +8,7 @@ from __future__ import annotations
 import re
 import math
 import logging
+import statistics
 from typing import TypedDict, List, Dict, Tuple, Set
 
 from config import scoring_config
@@ -352,14 +353,10 @@ class LyricalParser:
         # fractions compressed rhyme_complexity to a max of ~43/100 even for
         # the best real track. Map each through its own percentile-fit curve
         # first (config.LLPC_RHYME), then blend with the same 0.40/0.60 ratio.
-        _llpc_cfg = scoring_config.LLPC_RHYME
-        density_score = scoring_config.evaluate_piecewise_curve(
-            rhyme_density, _llpc_cfg["DENSITY_THRESHOLDS"], _llpc_cfg["DENSITY_SCORES"]
-        )
-        entropy_score = scoring_config.evaluate_piecewise_curve(
-            normalized_entropy, _llpc_cfg["ENTROPY_THRESHOLDS"], _llpc_cfg["ENTROPY_SCORES"]
-        )
-        rhyme_complexity = density_score * 0.40 + entropy_score * 0.60
+        # Use the highly detailed, multi-syllabic, compound, and diversity-penalized rhyme score
+        from services import rhyme_service
+        rhyme_score_calc, _, _, _, _, _, _ = rhyme_service.calculate(lyrics)
+        rhyme_complexity = rhyme_score_calc
         
         # 2. Syllable Density & Variance
         avg_syllables = sum(syllable_counts) / len(syllable_counts)
@@ -405,21 +402,78 @@ class LyricalParser:
         syllable_score = (word_density_score * 0.60 + polysyl_score * 0.20 + line_length_score * 0.20)
 
         # 3. Lexical Information Density
-        total_tokens = sum(len(line) for line in self.token_lines)
-        distinct_phoneme_tokens = len(set(t.value for line in self.token_lines for t in line if t.type in ["T_VOWEL", "T_CONSONANT"]))
-        lex_density = (distinct_phoneme_tokens / max(1, total_tokens)) * 1000.0
-        lexical_score = min(100.0, (lex_density / 120.0) * 100.0)
+        # To avoid song-length bias (where unique phonemes saturate and penalise long songs),
+        # we delegate to the Mean Segmental Type-Token Ratio (MSTTR) vocabulary service.
+        from services import vocabulary_service
+        if lyrics:
+            vocab_score, _ = vocabulary_service.calculate(lyrics)
+            lexical_score = vocab_score
+        else:
+            total_tokens = sum(len(line) for line in self.token_lines)
+            distinct_phoneme_tokens = len(set(t.value for line in self.token_lines for t in line if t.type in ["T_VOWEL", "T_CONSONANT"]))
+            lex_density = (distinct_phoneme_tokens / max(1, total_tokens)) * 1000.0
+            lexical_score = min(100.0, (lex_density / 120.0) * 100.0)
 
-        # 4. Composite Lyrical Quality Index (LQI)
-        # Base formula: 50% rhyme_complexity + 25% syllable_density + 25% lexical_density
-        lqi = (rhyme_complexity * 0.50) + (syllable_score * 0.25) + (lexical_score * 0.25)
+        # 4. Poetic/Literary Poetic Axes
+        from services import (
+            wordplay_service,
+            alliteration_service,
+            assonance_service,
+            consonance_service,
+            onomatopoeia_service,
+        )
+        wordplay_score = 0.0
+        alliteration_score = 0.0
+        assonance_score = 0.0
+        consonance_score = 0.0
+        onomatopoeia_score = 0.0
+        
+        if lyrics:
+            wordplay_score, _ = wordplay_service.calculate(lyrics)
+            alliteration_score, _ = alliteration_service.calculate(lyrics)
+            assonance_score, _ = assonance_service.calculate(lyrics)
+            consonance_score, _ = consonance_service.calculate(lyrics)
+            onomatopoeia_score, _ = onomatopoeia_service.calculate(lyrics)
+
+        # 5. Cadence variance: variation in line length signals deliberate
+        # rhythmic control vs. monotone delivery.  Simple std-dev of
+        # syllable counts normalised to a 0-100 scale via an empirical
+        # piecewise curve (5/7/9/11 syllable stdev -> 10/30/60/85).
+        if len(syllable_counts) >= 3:
+            syl_stdev = statistics.pstdev(syllable_counts)
+        else:
+            syl_stdev = 0.0
+        cadence_score = scoring_config.evaluate_piecewise_curve(
+            syl_stdev,
+            [5.0, 7.0, 9.0, 11.0],
+            [10.0, 30.0, 60.0, 85.0],
+        )
+
+        # 5b. Composite Lyrical Quality Index (LQI)
+        # Use the configured weights from scoring_config.MAIN_WEIGHTS["TEXT_ONLY"]
+        w = scoring_config.MAIN_WEIGHTS["TEXT_ONLY"]
+        
+        lqi = (
+            rhyme_complexity * w.get("rhyme", 0.28) +
+            syllable_score * w.get("syllable", 0.10) +
+            wordplay_score * w.get("wordplay", 0.25) +
+            alliteration_score * w.get("alliteration", 0.05) +
+            lexical_score * w.get("vocabulary", 0.08) +
+            assonance_score * w.get("assonance", 0.06) +
+            consonance_score * w.get("consonance", 0.05) +
+            onomatopoeia_score * w.get("onomatopoeia", 0.03) +
+            cadence_score * w.get("cadence", 0.03)
+        )
+        # Syllable weight (complex word ratio) is a sub-signal of vocabulary
+        # richness -- fold it into the vocabulary slot so it adds to (not
+        # duplicates) the lexical_score contribution.
+        lqi += lexical_score * w.get("syllable_weight", 0.07)
 
         # 5. Vocabulary Richness Bonus (thresholds from config.VOCAB_BONUS)
         # Artists with near-zero word repetition are penalised by the rhyme density
         # component because flow-pocketing deliberately avoids repeated end-words.
         # We derive a proxy MSTTR from the token stream (distinct content-word ratio).
         from config.scoring_config import VOCAB_BONUS as _VB
-        _seg  = VOCABULARY.get("MSTTR_SEGMENT_SIZE", 50) if False else 50  # imported above
         _threshold = _VB["MSTTR_THRESHOLD"]
         _max_bonus = _VB["MAX_BONUS_POINTS"]
         _min_words = _VB["MIN_WORDS_REQUIRED"]
@@ -465,6 +519,8 @@ class LyricalParser:
 # ── Integration Interface ───────────────────────────────────────────────────
 def compile_lyrics(lyrics: str) -> dict[str, float]:
     """Main compilation entry point for the Lyrical Lexer & Parser Compiler (LLPC)."""
+    from services.language_utils import clean_lyrics_text
+    lyrics = clean_lyrics_text(lyrics)
     lexer = LyricalLexer(lyrics)
     token_lines = lexer.scan()
     parser = LyricalParser(token_lines)

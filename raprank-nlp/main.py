@@ -185,6 +185,8 @@ from services.language_utils import detect_language
 from services.semantic_service import analyze_semantics
 from services import gmm_style_service
 from services import rf_quality_service
+from services import svm_quality_service
+from services import bayesian_scoring_service
 from services import prosody_service
 from services import element_cluster_service
 from services.transcription_service import transcribe_audio
@@ -214,6 +216,22 @@ try:
     logger.info("Loaded RF quality-tier model (classes=%s).", _RF_QUALITY_BUNDLE.get("classes"))
 except Exception as _exc:
     logger.warning("RF quality-tier model unavailable (%s) -- tier fields will be null.", _exc)
+
+# SVM quality-tier classifier: second comparison head, same pattern.
+_SVM_QUALITY_BUNDLE = None
+try:
+    _SVM_QUALITY_BUNDLE = svm_quality_service.load()
+    logger.info("Loaded SVM quality-tier model (classes=%s).", _SVM_QUALITY_BUNDLE.get("classes"))
+except Exception as _exc:
+    logger.warning("SVM quality-tier model unavailable (%s) -- svm_tier fields will be null.", _exc)
+
+# Bayesian quality-tier network: third comparison head, same pattern.
+_BAYES_QUALITY_MODEL = None
+try:
+    _BAYES_QUALITY_MODEL = bayesian_scoring_service.load()
+    logger.info("Loaded Bayesian quality-tier model.")
+except Exception as _exc:
+    logger.warning("Bayesian quality-tier model unavailable (%s) -- bayes_tier fields will be null.", _exc)
 
 # Per-element cluster bundles (rhyme/wordplay/texture/rare): same load-once
 # pattern, but one independent try/except per family so a single missing
@@ -280,23 +298,98 @@ async def compute_scores_and_breakdown(
     
     syllable_weight_score = compiled["lexical_information_density"]
 
-    # Supervised RF quality-tier classification -- a comparison head alongside
-    # the Bayesian/SVM scorers. Depends only on lyrics text (no semantics),
-    # so it runs early. Guarded: None if the model is absent, request never fails.
+    # Supervised quality-tier classification: three comparison heads (RF, SVM,
+    # Bayesian) sharing ONE signature() pass via _axis_scores_from_lyrics, plus
+    # a majority-vote consensus. Depends only on lyrics text (no semantics),
+    # so it runs early. Each head is independently guarded: None if its model
+    # is absent or scoring fails; the request never fails.
     predicted_tier = tier_confidence = tier_probabilities = None
-    if _RF_QUALITY_BUNDLE is not None:
+    svm_tier = svm_tier_confidence = svm_tier_probabilities = None
+    bayes_tier = bayes_tier_probabilities = None
+    tier_consensus = tier_consensus_agreement = None
+    if any(m is not None for m in (_RF_QUALITY_BUNDLE, _SVM_QUALITY_BUNDLE, _BAYES_QUALITY_MODEL)):
+        axis_scores = None
         try:
-            rf_result = await asyncio.to_thread(
-                rf_quality_service.predict_tier,
-                _RF_QUALITY_BUNDLE,
-                lyrics,
+            axis_scores = await asyncio.to_thread(
+                bayesian_scoring_service._axis_scores_from_lyrics, lyrics
             )
-            if rf_result:
-                predicted_tier = rf_result["tier"]
-                tier_confidence = rf_result["confidence"]
-                tier_probabilities = rf_result["probabilities"]
         except Exception as exc:
-            logger.warning("RF quality-tier scoring failed: %s", exc)
+            logger.warning("Tier axis-score extraction failed: %s", exc)
+
+        if axis_scores is not None:
+            if _RF_QUALITY_BUNDLE is not None:
+                try:
+                    rf_result = await asyncio.to_thread(
+                        rf_quality_service.predict_tier_from_scores,
+                        _RF_QUALITY_BUNDLE, axis_scores,
+                    )
+                    predicted_tier = rf_result["tier"]
+                    tier_confidence = rf_result["confidence"]
+                    tier_probabilities = rf_result["probabilities"]
+                except Exception as exc:
+                    logger.warning("RF quality-tier scoring failed: %s", exc)
+
+            if _SVM_QUALITY_BUNDLE is not None:
+                try:
+                    svm_result = await asyncio.to_thread(
+                        svm_quality_service.predict_tier_from_scores,
+                        _SVM_QUALITY_BUNDLE, axis_scores,
+                    )
+                    svm_tier = svm_result["tier"]
+                    svm_tier_confidence = svm_result["confidence"]
+                    svm_tier_probabilities = svm_result["probabilities"]
+                except Exception as exc:
+                    logger.warning("SVM quality-tier scoring failed: %s", exc)
+
+            if _BAYES_QUALITY_MODEL is not None:
+                try:
+                    posterior = await asyncio.to_thread(
+                        bayesian_scoring_service.predict_posterior,
+                        _BAYES_QUALITY_MODEL, axis_scores,
+                    )
+                    bayes_tier = max(posterior, key=posterior.get)
+                    bayes_tier_probabilities = {t: round(float(p), 4) for t, p in posterior.items()}
+                except Exception as exc:
+                    logger.warning("Bayesian quality-tier scoring failed: %s", exc)
+
+            # ── Quality override baseline ───────────────────────────────────────────
+            # If key technical metrics (rhyme, vocabulary, wordplay) are simultaneously
+            # low, override predicted tiers to "commercial" (repetition and ad-libs in
+            # pop-rap can sometimes inflate consonance/onomatopoeia, tricking raw ML).
+            rhyme_val = axis_scores.get("rhyme", 0.0)
+            vocab_val = axis_scores.get("vocabulary", 0.0)
+            wordplay_val = axis_scores.get("wordplay", 0.0)
+            
+            is_commercial_by_rule = (
+                (rhyme_val < 35.0 and vocab_val < 60.0 and wordplay_val < 50.0) or
+                (wordplay_val < 35.0 and vocab_val < 60.0)
+            )
+            
+            if is_commercial_by_rule:
+                if _RF_QUALITY_BUNDLE is not None and predicted_tier is not None:
+                    predicted_tier = "commercial"
+                    tier_confidence = 1.0
+                    tier_probabilities = {"commercial": 1.0, "mid": 0.0, "elite": 0.0}
+                if _SVM_QUALITY_BUNDLE is not None and svm_tier is not None:
+                    svm_tier = "commercial"
+                    svm_tier_confidence = 1.0
+                    svm_tier_probabilities = {"commercial": 1.0, "mid": 0.0, "elite": 0.0}
+                if _BAYES_QUALITY_MODEL is not None and bayes_tier is not None:
+                    bayes_tier = "commercial"
+                    bayes_tier_confidence = 1.0
+                    bayes_tier_probabilities = {"commercial": 1.0, "mid": 0.0, "elite": 0.0}
+
+
+            # Majority vote across whichever heads produced a tier. Ties break
+            # toward the RF head (strongest under grouped CV), else first voter.
+            votes = [t for t in (predicted_tier, svm_tier, bayes_tier) if t]
+            if votes:
+                from collections import Counter as _Counter
+                counted = _Counter(votes)
+                top_count = max(counted.values())
+                winners = [t for t, n in counted.items() if n == top_count]
+                tier_consensus = predicted_tier if predicted_tier in winners else winners[0]
+                tier_consensus_agreement = round(top_count / len(votes), 2)
 
     # Map track metadata metrics
     avg_syl = compiled["avg_syllables_per_line"]
@@ -401,6 +494,13 @@ async def compute_scores_and_breakdown(
         predicted_tier=predicted_tier,
         tier_confidence=tier_confidence,
         tier_probabilities=tier_probabilities,
+        svm_tier=svm_tier,
+        svm_tier_confidence=svm_tier_confidence,
+        svm_tier_probabilities=svm_tier_probabilities,
+        bayes_tier=bayes_tier,
+        bayes_tier_probabilities=bayes_tier_probabilities,
+        tier_consensus=tier_consensus,
+        tier_consensus_agreement=tier_consensus_agreement,
         assonance_score=round(assonance_score, 2),
         consonance_score=round(consonance_score, 2),
         onomatopoeia_score=round(onomatopoeia_score, 2),

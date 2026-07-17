@@ -29,7 +29,16 @@ class TestCompoundSignature:
         sig = rh._phrase_signature(["dilwaala"])
         assert sig is not None
         _, mode = sig
-        assert mode == "translit"
+        assert mode == "dhh"
+
+    def test_mixed_script_phrase_uses_dhh_mode(self):
+        # One word resolves via CMU ("ice"), the other doesn't ("kream"):
+        # the WHOLE phrase must re-phonemize through the DHH engine so both
+        # sides of any candidate match share one G2P.
+        sig = rh._phrase_signature(["ice", "kream"])
+        assert sig is not None
+        tokens, mode = sig
+        assert mode == "dhh" and len(tokens) > 0
 
 
 class TestCompoundDetection:
@@ -72,6 +81,20 @@ class TestCompoundDetection:
     def test_short_input_safe(self):
         count, pairs = rh.detect_compound_rhymes(["one line only"])
         assert count == 0 and pairs == []
+
+    def test_hinglish_compound_detected(self):
+        # "apna" (single word, DHH phones a-p-n-aa, vowel-final so its rhyme
+        # tail spans both nuclei) vs "jhap naa" (two-word phrase): the whole
+        # tail is only reproduced by combining both words, aspiration-
+        # normalized (jh -> j doesn't matter here; a p n aa == a p n aa), and
+        # neither word's spelling literally reappears inside "apna".
+        lines = [
+            "yeh sab kuch hai apna",
+            "chhod de tu jhap naa",
+        ]
+        count, pairs = rh.detect_compound_rhymes(lines)
+        assert count >= 1
+        assert any("apna" in p and "jhap" in p for p in pairs)
 
     def test_calculate_returns_compound_count(self):
         lines = "I fixed the toaster\ngo on and roast her\n"

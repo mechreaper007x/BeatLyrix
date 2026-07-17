@@ -1,9 +1,9 @@
-# ─────────────────────────────────────────────────────────────────────────────
-# RapRank — Local Startup Script (Run without Docker)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# RapRank - Local Startup Script (Run without Docker)
+# -----------------------------------------------------------------------------
 # This script starts all necessary microservices, databases, and frontends
 # in separate, persistent PowerShell windows for local development.
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 $ErrorActionPreference = "Stop"
 
@@ -109,7 +109,7 @@ foreach ($service in $services) {
     $port = $service.Port
     
     if (Test-PortInUse $port) {
-        Write-Host "[✓] $name is already running on port $port." -ForegroundColor Gray
+        Write-Host "[OK] $name is already running on port $port." -ForegroundColor Gray
     } else {
         & $service.Action
     }

@@ -420,41 +420,46 @@ def detect_allusions(lyrics: str) -> Tuple[int, List[str]]:
     import urllib.request
     import urllib.error
 
-    if not NER_SPACE_URL:
-        return 0, []
+    found: List[str] = []
+    seen: Set[str] = set()
 
-    clean_lyr = re.sub(r"\[.*?\]", "", lyrics)
+    if NER_SPACE_URL:
+        clean_lyr = re.sub(r"\[.*?\]", "", lyrics)
+        try:
+            payload = _json.dumps({"text": clean_lyr}).encode("utf-8")
+            req = urllib.request.Request(
+                f"{NER_SPACE_URL}/ner",
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                data = _json.loads(resp.read().decode("utf-8"))
 
-    try:
-        payload = _json.dumps({"text": clean_lyr}).encode("utf-8")
-        req = urllib.request.Request(
-            f"{NER_SPACE_URL}/ner",
-            data=payload,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=8) as resp:
-            data = _json.loads(resp.read().decode("utf-8"))
+            for ent in data.get("entities", []):
+                word = ent.get("entity", "").strip()
+                key  = word.lower()
+                if len(word) < 2 or key in ALL_STOP_WORDS or key in seen:
+                    continue
+                seen.add(key)
+                found.append(word)
 
-        seen: Set[str] = set()
-        found: List[str] = []
+            if found:
+                return len(found), found
+        except Exception as e:
+            logger.warning("NER Space unreachable or failed: %s — falling back to closed-list match.", e)
 
-        for ent in data.get("entities", []):
-            word = ent.get("entity", "").strip()
-            key  = word.lower()
-            if len(word) < 2 or key in ALL_STOP_WORDS or key in seen:
-                continue
-            seen.add(key)
-            found.append(word)
+    # Local fallback
+    clean_lyr_lower = re.sub(r"\[.*?\]", "", lyrics).lower()
+    for ref_term in _ALLUSION_CATEGORIES.keys():
+        pattern = r"\b" + re.escape(ref_term) + r"\b"
+        if re.search(pattern, clean_lyr_lower):
+            if ref_term not in seen:
+                seen.add(ref_term)
+                found.append(ref_term)
 
-        return len(found), found
+    return len(found), found
 
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as exc:
-        logger.warning("NER Space unreachable (%s) — allusion score set to 0.", exc)
-        return 0, []
-    except Exception as exc:
-        logger.warning("NER Space error (%s) — allusion score set to 0.", exc)
-        return 0, []
 
 
 def calculate(lyrics: str) -> Tuple[float, Dict]:

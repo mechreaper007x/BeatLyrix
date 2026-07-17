@@ -29,20 +29,28 @@ COMMERCIAL_MAINSTREAM = {
 }
 
 def calculate_old_score(lyrics: str) -> float:
+    """Compute LQI using the OLD weights (before Jul 2026 rebalance) for
+    comparison against the new LLPC LQI -- the 'old' baseline.
+    """
     sy_score, _, sy_weight, _ = sy.calculate(lyrics)
     rh_score, _, _, _, _, _, _ = rh.calculate(lyrics)
     al_score, _ = al.calculate(lyrics)
     vo_score, _ = vo.calculate(lyrics)
     wp_score, _ = wp.calculate(lyrics)
     
-    w = scoring_config.MAIN_WEIGHTS["TEXT_ONLY"]
+    # Old weights: rhyme 40%, wordplay 49% dominated.  Hard-coded here
+    # so the comparison is against the *old* system, not the new one.
     return (
-        rh_score * w["rhyme"] +
-        sy_score * w["syllable"] +
-        al_score * w["alliteration"] +
-        vo_score * w["vocabulary"] +
-        wp_score * w["wordplay"] +
-        sy_weight * w["syllable_weight"]
+        rh_score * 0.40 +
+        sy_score * 0.00 +
+        al_score * 0.01 +
+        vo_score * 0.01 +
+        wp_score * 0.49 +
+        sy_weight * 0.04 +
+        0.0 +  # assonance
+        0.0 +  # consonance
+        0.0 +  # onomatopoeia
+        0.0    # cadence (didn't exist)
     )
 
 def main():
@@ -59,13 +67,22 @@ def main():
         title = t["title"]
         lyrics = t["lyrics"]
         
-        # Determine cohort
+        # Determine cohort -- expanded list to cover all commercial artists
         if artist in HARDCORE_LYRICAL:
             cohort = "Hardcore Lyrical"
         elif artist in COMMERCIAL_MAINSTREAM:
             cohort = "Commercial/Mainstream"
         else:
-            cohort = "Other"
+            # Auto-classify remaining artists by expected_profile
+            from corpus.artists import unique_artists
+            _artist_map = {a.name: a for a in unique_artists()}
+            _a = _artist_map.get(artist)
+            if _a and _a.expected_profile.get("commercial", 0) >= 0.50:
+                cohort = "Commercial/Mainstream"
+            elif _a and _a.expected_profile.get("multisyllabic", 0) >= 0.75:
+                cohort = "Hardcore Lyrical"
+            else:
+                cohort = "Other"
             
         old_score = calculate_old_score(lyrics)
         

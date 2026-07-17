@@ -12,8 +12,9 @@ mid / 21 commercial consented seeds -- than a global margin), and it exposes
 feature importances directly, which neither the SVM nor the Bayesian net's
 CPTs give you: which of the 10 axes actually drive tier prediction.
 
-Ground truth comes from corpus/synthetic_data/ (see svm_quality_service.py's
-docstring for the full provenance chain back to consented seeds).
+Ground truth comes from corpus/synthetic_data/ ONLY (see
+svm_quality_service.py's docstring for the provenance chain back to
+consented seeds); the real Indian corpus is held out purely for evaluation.
 
 Not wired into the live /analyze endpoint -- stays an offline/CLI comparison
 tool, like the other two heads, until one's accuracy earns that.
@@ -35,7 +36,13 @@ from services.bayesian_scoring_service import (  # noqa: E402
     AXES,
     SYNTHETIC_DATA_DIR,
     _axis_scores_from_lyrics,
-    load_all_records,
+    evaluate_on_real,
+    is_synthetic,
+    load_eval_records,
+    load_synthetic_only_records,
+    load_train_records,
+    print_real_eval,
+    record_groups,
 )
 from services.svm_quality_service import build_training_frame  # noqa: E402
 
@@ -61,19 +68,20 @@ PARAM_GRID = {
 
 
 def train(records: list[dict] | None = None) -> dict:
-    """Hyperparameter-sweep a RandomForestClassifier over stratified k-fold CV
-    (same rationale as svm_quality_service.train: one train/test split has
-    too much variance at this sample size). No feature scaling needed --
-    trees split per-feature, unaffected by differing axis scales.
+    """Hyperparameter-sweep a RandomForestClassifier over stratified GROUP
+    k-fold CV: folds are grouped by artist (record_groups), so songs by one
+    artist never straddle train/test -- with artist-level tier labels,
+    ungrouped folds would let per-artist style leak into the accuracy
+    estimate. No feature scaling needed -- trees split per-feature.
     Returns a bundle {rf, feature_names, classes, held_out_accuracy,
     held_out_accuracy_std, best_params, confusion_matrix, feature_importances, ...}."""
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.metrics import confusion_matrix
-    from sklearn.model_selection import GridSearchCV, StratifiedKFold, cross_val_predict
+    from sklearn.model_selection import GridSearchCV, StratifiedGroupKFold, cross_val_predict
     from sklearn.pipeline import Pipeline
 
     if records is None:
-        records = load_all_records()
+        records = load_train_records()
     if not records:
         raise RuntimeError(
             "No training data found -- run corpus.synthetic.generate, "
@@ -81,6 +89,7 @@ def train(records: list[dict] | None = None) -> dict:
         )
 
     X, y = build_training_frame(records)
+    groups = record_groups(records)
     classes = sorted(y.unique())
     if len(classes) < 2:
         raise RuntimeError(f"Need at least 2 distinct tiers to train a forest, found: {classes}")
@@ -103,10 +112,10 @@ def train(records: list[dict] | None = None) -> dict:
 
     if can_holdout:
         n_folds = min(CV_FOLDS, counts.min())
-        cv = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=RANDOM_STATE)
+        cv = StratifiedGroupKFold(n_splits=n_folds, shuffle=True, random_state=RANDOM_STATE)
 
         search = GridSearchCV(pipe, PARAM_GRID, cv=cv, scoring="accuracy", n_jobs=-1)
-        search.fit(X, y)
+        search.fit(X, y, groups=groups)
         best_params = search.best_params_
         accuracy = float(search.best_score_)
         accuracy_std = float(search.cv_results_["std_test_score"][search.best_index_])
@@ -117,7 +126,7 @@ def train(records: list[dict] | None = None) -> dict:
                 **{k.split("__")[1]: v for k, v in best_params.items()},
             )),
         ])
-        y_pred = cross_val_predict(best_pipe, X, y, cv=cv)
+        y_pred = cross_val_predict(best_pipe, X, y, cv=cv, groups=groups)
         cm = confusion_matrix(y, y_pred, labels=classes).tolist()
     else:
         print(
@@ -162,8 +171,16 @@ def load(path: Path = MODEL_PATH) -> dict:
 
 def predict_tier(bundle: dict, lyrics: str) -> dict:
     """{tier, confidence, probabilities} for a single verse."""
-    scores = _axis_scores_from_lyrics(lyrics)
-    X = [[scores[axis] for axis in bundle["feature_names"]]]
+    return predict_tier_from_scores(bundle, _axis_scores_from_lyrics(lyrics))
+
+
+def predict_tier_from_scores(bundle: dict, scores: dict[str, float]) -> dict:
+    """Same as predict_tier but from precomputed axis scores -- lets callers
+    that run several tier heads (RF/SVM/Bayes) share one signature() pass.
+    Applies domain-shift alignment so real-world scores match synthetic training space."""
+    from services.bayesian_scoring_service import align_synthetic_features
+    aligned = align_synthetic_features(scores)
+    X = [[aligned.get(axis, scores.get(axis, 0.0)) for axis in bundle["feature_names"]]]
     probs = bundle["rf"].predict_proba(X)[0]
     classes = bundle["rf"].classes_
     top = int(probs.argmax())
@@ -176,22 +193,29 @@ def predict_tier(bundle: dict, lyrics: str) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Train / evaluate the Random Forest quality-tier classifier")
-    ap.add_argument("--train", action="store_true", help="fit from corpus + synthetic data, save, report accuracy")
-    ap.add_argument("--eval-corpus", action="store_true", help="print predicted tier for every training sample")
+    ap.add_argument("--train", action="store_true",
+                    help="fit deploy model (real+synthetic, artist-grouped CV), save, "
+                         "plus report the synthetic->real transfer metric")
+    ap.add_argument("--eval-corpus", action="store_true",
+                    help="print predicted tier for every real Indian corpus song")
+    ap.add_argument("--skip-transfer", action="store_true",
+                    help="skip the synthetic->real transfer metric (faster)")
     args = ap.parse_args()
 
     if args.train:
-        records = load_all_records()
-        print(f"Training on {len(records)} samples...")
+        records = load_train_records()
+        n_seed = sum(not is_synthetic(r) for r in records)
+        print(f"Training DEPLOY model on {len(records)} samples "
+              f"({len(records) - n_seed} synthetic + {n_seed} consented seeds; "
+              f"scraped real lyrics are evaluation-only)...")
         bundle = train(records)
         save(bundle)
         print(f"Saved model to {MODEL_PATH}")
         if bundle["held_out_accuracy"] is None:
-            print("\nNo held-out accuracy available yet -- too few samples in the "
-                  "smallest tier for a trustworthy CV split. Generate more samples "
-                  "per tier before treating this model's predictions as meaningful.")
+            print("\nNo CV accuracy available yet -- too few samples in the "
+                  "smallest tier for a trustworthy CV split.")
         else:
-            print(f"\nHeld-out accuracy ({bundle['cv_folds']}-fold CV): "
+            print(f"\nDeploy CV accuracy (artist-grouped {bundle['cv_folds']}-fold): "
                   f"{bundle['held_out_accuracy']:.1%} +/- {bundle['held_out_accuracy_std']:.1%}")
             print(f"Best hyperparameters: {bundle['best_params']}")
             chance = 1.0 / len(bundle["classes"])
@@ -202,18 +226,26 @@ def main() -> int:
             print("\nFeature importances (which axes drive tier prediction):")
             for axis, imp in sorted(bundle["feature_importances"].items(), key=lambda kv: -kv[1]):
                 print(f"  {axis:15} {imp:.3f}")
+
+        if not args.skip_transfer:
+            print("\n--- Generator-realism transfer metric (synthetic-only fit -> real test) ---")
+            synth_bundle = train(load_synthetic_only_records())
+            print_real_eval(evaluate_on_real(lambda lyr: predict_tier(synth_bundle, lyr)["tier"]))
+            print("(This number tracks synthetic-corpus realism, NOT the deployed model.)")
         return 0
 
     if args.eval_corpus:
         bundle = load()
-        records = load_all_records()
+        records = load_eval_records()
         correct = 0
         for rec in records:
             pred = predict_tier(bundle, rec["lyrics"])
             correct += pred["tier"] == rec["tier"]
             print(f"  {rec['tier']:10} -> predicted={pred['tier']:10} conf={pred['confidence']:.2f}")
         if records:
-            print(f"\nAccuracy vs. training label: {correct}/{len(records)} = {correct/len(records):.0%}")
+            print(f"\nHeld-out accuracy vs. artist-level tier label: "
+                  f"{correct}/{len(records)} = {correct/len(records):.0%} "
+                  f"(real corpus is evaluation-only; deploy model never trains on it)")
         return 0
 
     ap.print_help()

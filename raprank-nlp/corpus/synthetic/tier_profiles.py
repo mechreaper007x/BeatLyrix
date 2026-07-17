@@ -25,7 +25,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from config import scoring_config as cfg  # noqa: E402
 
 TIER_NAMES: tuple[str, ...] = ("elite", "mid", "commercial")
-TIER_SCALARS: dict[str, float] = {"elite": 1.0, "mid": 0.5, "commercial": 0.2}
+# Tightened (Jul 2026): old commercial=0.20 still let simple hook-driven
+# tracks score 20% of elite density -- enough to register as "decent" on
+# some axes.  Pulled commercial down to 0.10 so the gap between a technical
+# lyricist and a commercial artist is unmistakable.
+TIER_SCALARS: dict[str, float] = {"elite": 1.0, "mid": 0.5, "commercial": 0.10}
 
 # axis_name -> raw "elite" value, sourced directly from scoring_config.py.
 # Units match whatever the underlying service measures (density fractions,

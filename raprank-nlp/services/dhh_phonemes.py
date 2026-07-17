@@ -40,8 +40,11 @@ Public API:
 """
 from __future__ import annotations
 
+import json
 import re
+import sys
 from functools import lru_cache
+from pathlib import Path
 
 # ── Phoneme inventory ────────────────────────────────────────────────────────
 # Vowels:     a aa i u e ai o au         (i/ii and u/uu merged; see header)
@@ -53,6 +56,30 @@ _VOWELS = {"a", "aa", "i", "u", "e", "ai", "o", "au"}
 
 def _is_vowel(p: str) -> bool:
     return p in _VOWELS
+
+
+# ── DHH pronunciation dictionary (first-line lookup) ─────────────────────────
+# corpus/dhh_dictionary/dhh_dictionary.json: word -> {phones, rhyme_key,
+# multi_key, freq}, mined from the local corpus by build_dictionary.py using
+# the rules in THIS module -- so entries agree with the rule pipeline today.
+# Loading it as a lookup layer makes the dictionary first-class runtime data:
+# hand-corrections in the JSON take effect everywhere at once (end/internal/
+# chain/compound/holorime all flow through to_phones), and a dict hit is
+# cheaper than tokenize+schwa-delete for the hot corpus words. If the JSON is
+# hand-edited later, its entries win over the rules by design.
+_DICT_PATH = Path(__file__).resolve().parent.parent / "corpus" / "dhh_dictionary" / "dhh_dictionary.json"
+
+
+@lru_cache(maxsize=1)
+def _dictionary() -> dict[str, tuple[str, ...]]:
+    """word -> phones tuple from the mined dictionary; {} if unavailable."""
+    try:
+        raw = json.loads(_DICT_PATH.read_text(encoding="utf-8"))
+        return {w: tuple(entry["phones"]) for w, entry in raw.items() if entry.get("phones")}
+    except Exception as exc:  # missing/corrupt file must never break runtime
+        print(f"dhh_phonemes: pronunciation dictionary unavailable ({exc}); "
+              f"falling back to rule-based G2P only", file=sys.stderr)
+        return {}
 
 
 # ── Devanagari tables ────────────────────────────────────────────────────────
@@ -185,6 +212,9 @@ def deva_to_phones(word: str) -> tuple[str, ...]:
     word = word.strip()
     if not word:
         return ()
+    hit = _dictionary().get(word)
+    if hit is not None:
+        return hit
     return tuple(_canonicalize(_delete_schwas(_deva_syllabify(word))))
 
 
@@ -259,6 +289,9 @@ def hinglish_to_phones(word: str) -> tuple[str, ...]:
     word = re.sub(r"[^a-z]", "", word)
     if not word:
         return ()
+    hit = _dictionary().get(word)
+    if hit is not None:
+        return hit
     word = _ROM_VARIANTS.get(word, word)
     phones = _canonicalize(_rom_tokenize(word))
     # A pronounced word-final 'a' is always the long vowel: Hindi deletes true
@@ -290,6 +323,13 @@ _KEY_CONS = {
 
 def _key_norm(p: str) -> str:
     return p if _is_vowel(p) else _KEY_CONS.get(p, p)
+
+
+def normalize_for_key(phones) -> tuple[str, ...]:
+    """Key-normalize a phoneme sequence (aspiration stripped, c/ch merged) --
+    the same alphabet rhyme_key/multi_rhyme_key emit, for callers that need
+    to compare raw phone streams against key output."""
+    return tuple(_key_norm(p) for p in phones)
 
 
 def _nuclei_indices(phones) -> list[int]:

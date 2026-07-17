@@ -157,6 +157,34 @@ class ScoreBreakdown(BaseModel):
         default=None, description="Full class distribution {tier_label: probability}."
     )
 
+    # ── Quality tier: SVM comparison head (services/svm_quality_service.py) ──
+    svm_tier: Optional[str] = Field(
+        default=None, description="SVM-predicted quality tier."
+    )
+    svm_tier_confidence: Optional[float] = Field(
+        default=None, ge=0, le=1, description="Posterior probability of the SVM tier (0-1)."
+    )
+    svm_tier_probabilities: Optional[dict] = Field(
+        default=None, description="SVM class distribution {tier_label: probability}."
+    )
+
+    # ── Quality tier: Bayesian comparison head (services/bayesian_scoring_service.py) ──
+    bayes_tier: Optional[str] = Field(
+        default=None, description="Bayesian-network-predicted quality tier (argmax posterior)."
+    )
+    bayes_tier_probabilities: Optional[dict] = Field(
+        default=None, description="Bayesian posterior {tier_label: probability}."
+    )
+
+    # ── Quality tier: consensus across the three heads ────────────────────────
+    tier_consensus: Optional[str] = Field(
+        default=None, description="Majority-vote tier across RF/SVM/Bayesian heads (ties -> RF)."
+    )
+    tier_consensus_agreement: Optional[float] = Field(
+        default=None, ge=0, le=1,
+        description="Fraction of available heads agreeing with the consensus (e.g. 0.67 = 2/3).",
+    )
+
     # ── Stats ─────────────────────────────────────────────────
     word_count: int
     line_count: int

@@ -113,4 +113,25 @@ public class ScoreBreakdownResponse {
 
     @JsonAlias("tier_probabilities")
     private java.util.Map<String, Double> tierProbabilities;
+
+    @JsonAlias("svm_tier")
+    private String svmTier;
+
+    @JsonAlias("svm_tier_confidence")
+    private Double svmTierConfidence;
+
+    @JsonAlias("svm_tier_probabilities")
+    private java.util.Map<String, Double> svmTierProbabilities;
+
+    @JsonAlias("bayes_tier")
+    private String bayesTier;
+
+    @JsonAlias("bayes_tier_probabilities")
+    private java.util.Map<String, Double> bayesTierProbabilities;
+
+    @JsonAlias("tier_consensus")
+    private String tierConsensus;
+
+    @JsonAlias("tier_consensus_agreement")
+    private Double tierConsensusAgreement;
 }

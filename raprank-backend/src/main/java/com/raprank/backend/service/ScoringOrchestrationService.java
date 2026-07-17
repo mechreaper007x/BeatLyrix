@@ -144,5 +144,15 @@ public class ScoringOrchestrationService {
         private String predicted_tier;
         private Double tier_confidence;
         private java.util.Map<String, Double> tier_probabilities;
+
+        private String svm_tier;
+        private Double svm_tier_confidence;
+        private java.util.Map<String, Double> svm_tier_probabilities;
+
+        private String bayes_tier;
+        private java.util.Map<String, Double> bayes_tier_probabilities;
+
+        private String tier_consensus;
+        private Double tier_consensus_agreement;
     }
 }

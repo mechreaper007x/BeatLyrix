@@ -246,6 +246,24 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
   const rankedStyleMembership = Object.entries(styleMembership).sort((a, b) => b[1] - a[1]).slice(0, 3);
   const rankedTierProbabilities = Object.entries(tierProbabilities).sort((a, b) => b[1] - a[1]);
 
+  // SVM + Bayesian comparison heads and the majority-vote consensus — all
+  // nullable (older analyses in the DB predate these fields).
+  const svmTier = track.scoreBreakdown?.svmTier ?? track.scoreBreakdown?.svm_tier ?? null;
+  const svmTierConfidence = track.scoreBreakdown?.svmTierConfidence ?? track.scoreBreakdown?.svm_tier_confidence ?? null;
+  const bayesTier = track.scoreBreakdown?.bayesTier ?? track.scoreBreakdown?.bayes_tier ?? null;
+  const bayesTierProbabilities: Record<string, number> =
+    track.scoreBreakdown?.bayesTierProbabilities ?? track.scoreBreakdown?.bayes_tier_probabilities ?? {};
+  const bayesTierConfidence = bayesTier != null ? bayesTierProbabilities[bayesTier] ?? null : null;
+  const tierConsensus = track.scoreBreakdown?.tierConsensus ?? track.scoreBreakdown?.tier_consensus ?? null;
+  const tierConsensusAgreement =
+    track.scoreBreakdown?.tierConsensusAgreement ?? track.scoreBreakdown?.tier_consensus_agreement ?? null;
+  const tierHeads = [
+    { name: "Flow Critic", tier: predictedTier, confidence: tierConfidence },
+    { name: "The Gatekeeper", tier: svmTier, confidence: svmTierConfidence },
+    { name: "The Oracle", tier: bayesTier, confidence: bayesTierConfidence },
+  ].filter((h): h is { name: string; tier: string; confidence: number | null } => h.tier != null);
+  const consensusVotes = tierConsensus ? tierHeads.filter((h) => h.tier === tierConsensus).length : 0;
+
   // Per-element cluster fingerprints (services/element_cluster_service.py) —
   // descriptive, one entry per family ("rhyme","wordplay","texture","rare")
   // that scored successfully; omitted entirely when no models were loaded.
@@ -564,12 +582,49 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
 
                   {predictedTier && (
                     <div className="space-y-2">
-                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-[#2a1f3a] border border-[#c7a8ff]/40 text-[#c7a8ff] rounded-full px-3 py-1.5 w-fit">
-                        Tier: {predictedTier}
-                        {tierConfidence != null && (
-                          <span className="opacity-70">({Math.round(tierConfidence * 100)}%)</span>
+                      {/* Consensus row: majority vote across RF/SVM/Bayesian heads.
+                          Falls back to the RF tier alone for older analyses. */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-[#2a1f3a] border border-[#c7a8ff]/40 text-[#c7a8ff] rounded-full px-3 py-1.5 w-fit">
+                          Tier: {tierConsensus ?? predictedTier}
+                          {tierConsensus == null && tierConfidence != null && (
+                            <span className="opacity-70">({Math.round(tierConfidence * 100)}%)</span>
+                          )}
+                        </span>
+                        {tierConsensus != null && tierHeads.length > 1 && (
+                          <span
+                            className={`text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-1 border ${
+                              tierConsensusAgreement === 1
+                                ? "border-[#a8ff3e]/50 text-[#a8ff3e] bg-[#a8ff3e]/5"
+                                : "border-[#ffb347]/50 text-[#ffb347] bg-[#ffb347]/5"
+                            }`}
+                          >
+                            {consensusVotes}/{tierHeads.length} models agree
+                          </span>
                         )}
-                      </span>
+                      </div>
+                      {/* Per-head comparison: shows each model's call so
+                          disagreement is visible, not hidden behind the vote. */}
+                      {tierHeads.length > 1 && (
+                        <div className="grid grid-cols-3 gap-2">
+                          {tierHeads.map((head) => (
+                            <div
+                              key={head.name}
+                              className={`flex flex-col items-center gap-0.5 bg-[#1a1a1a] rounded-lg border p-2 ${
+                                tierConsensus != null && head.tier === tierConsensus
+                                  ? "border-[#c7a8ff]/50"
+                                  : "border-[#2a2a2a]"
+                              }`}
+                            >
+                              <span className="text-[8px] text-[#888888] font-sans uppercase tracking-wider">{head.name}</span>
+                              <span className="text-[10px] font-bold uppercase text-[#c7a8ff]">{head.tier}</span>
+                              {head.confidence != null && (
+                                <span className="text-[9px] text-[#888888]">{Math.round(head.confidence * 100)}%</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       {rankedTierProbabilities.length > 0 && (
                         <div className="flex w-full h-3 rounded-full overflow-hidden border border-[#2a1518]/60">
                           {rankedTierProbabilities.map(([tier, prob], i) => (

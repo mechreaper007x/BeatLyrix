@@ -68,12 +68,12 @@ RHYME = {
     
     # Combined Rhyme Score weights
     "WEIGHTS": {
-        "end_rhyme": 0.15,
-        "internal": 0.20,
-        "multisyllabic": 0.25,
-        "chains": 0.22,
-        "compound": 0.10,
-        "holorime": 0.08,
+        "end_rhyme": 0.30,
+        "internal": 0.30,
+        "multisyllabic": 0.30,
+        "chains": 0.04,
+        "compound": 0.03,
+        "holorime": 0.03,
     },
 
     # Density targets for max sub-scores. internal/multisyllabic/chain refit
@@ -98,17 +98,20 @@ RHYME = {
     },
 
     # Compound/mosaic rhyme: minimum matched-unit length (CMU phones for
-    # English, normalized letters for Hinglish) required before a single-word
-    # vs. multi-word phrase match counts -- filters out short/trivial words
-    # (e.g. "her") coincidentally matching a phrase tail.
+    # all-English phrases, DHH phonemes otherwise) required before a
+    # single-word vs. multi-word phrase match counts -- filters out short/
+    # trivial words (e.g. "her") coincidentally matching a phrase tail.
+    # DHH phonemes are one vowel/consonant unit each (ARPAbet-like
+    # granularity), so the same floor applies; DHH collapses aspiration and
+    # vowel length in keys, so tighten if the corpus sweep shows inflation.
     "COMPOUND_MIN_PHONES": 4,
-    "COMPOUND_MIN_LETTERS": 5,
+    "COMPOUND_MIN_PHONES_DHH": 4,
 
     # Holorime ("perfect" multi-word rhyme, e.g. "ice cream" / "I scream"):
     # minimum matched-unit length for a FULL phrase-to-phrase match (stricter
     # than compound since the entire phrase, not just a tail, must agree).
     "HOLORIME_MIN_PHONES": 5,
-    "HOLORIME_MIN_LETTERS": 6,
+    "HOLORIME_MIN_PHONES_DHH": 5,
 
     # End Rhyme Ratio Piecewise Scoring Curve. Thresholds = corpus 25th/50th/
     # 75th/90th percentiles of the raw end-rhyme ratio (ECDF-fit via
@@ -130,8 +133,7 @@ RHYME = {
         "iya", "iye", "iyaan", "wala", "wali", "wale", "waala", "waale",
         "raha", "rahi", "rahe", "gaya", "gayi", "gaye",
         "diya", "liya", "kiya", "tani", "nani", "hani", "vani",
-        "taa", "naa", "hai", "hain", " hoon", "hoon",
-        "ta", "ti", "te", "na", "ne", "ya", "ye", "da", "de", "la", "le", "ra", "ri", "re",
+        "hai", "hain", " hoon", "hoon",
     ),
 
     # A trivial-suffix rhyme still counts toward the basic end-rhyme ratio, but
@@ -143,10 +145,15 @@ RHYME = {
     # distinct rhyme sounds; monotonous tracks hammer the same 1-2 sounds every
     # line. diversity = distinct end-rhyme keys / keyed lines. Below FLOOR the
     # rhyme score is scaled to MIN_MULT; at/above CEIL it is untouched.
+    #
+    # Tightened (Jul 2026): old floor=0.25/ceil=0.40 let commercial
+    # hook-driven songs (AAAA/AABB with ~30% diversity) barely trigger the
+    # penalty.  New values shift the band so that songs relying on 1-2
+    # repeated end-sounds are meaningfully penalised.
     "DIVERSITY_MIN_LINES": 6,
-    "DIVERSITY_FLOOR": 0.25,
-    "DIVERSITY_CEIL": 0.40,
-    "DIVERSITY_MIN_MULT": 0.65,
+    "DIVERSITY_FLOOR": 0.30,
+    "DIVERSITY_CEIL": 0.50,
+    "DIVERSITY_MIN_MULT": 0.55,
 }
 
 # ── LLPC live rhyme formula (services/lyrical_compiler.py) ───────────────────
@@ -514,15 +521,21 @@ MAIN_WEIGHTS = {
         "onomatopoeia": 0.02,
     },
     "TEXT_ONLY": {
-        "rhyme": 0.40,
-        "syllable": 0.00,
-        "alliteration": 0.01,
-        "vocabulary": 0.01,
-        "wordplay": 0.49,
-        "syllable_weight": 0.04,
-        "assonance": 0.02,
-        "consonance": 0.02,
-        "onomatopoeia": 0.01,
+        # Rebalanced (Jul 2026): rhyme+wordplay previously dominated at 89%,
+        # letting commercial hook-driven tracks score high on technical merit
+        # they don't exhibit. Syllable density was entirely excluded (0.00).
+        # New distribution spreads weight across ALL measured rap elements so
+        # a track must demonstrate craft on multiple axes to score well.
+        "rhyme": 0.28,           # Down from 0.40 -- still king, but not sole gatekeeper
+        "syllable": 0.10,        # UP from 0.00 -- line-length density IS a technical signal
+        "alliteration": 0.05,    # UP from 0.01 -- onset stacking is a real skill marker
+        "vocabulary": 0.08,      # UP from 0.01 -- lexical variety separates real writers
+        "wordplay": 0.25,        # Down from 0.49 -- important but was inflating simple brags
+        "syllable_weight": 0.07, # UP from 0.04 -- complex polysyllabic words = sophistication
+        "assonance": 0.06,       # UP from 0.02 -- vowel harmony is deliberate artistry
+        "consonance": 0.05,      # UP from 0.02 -- interior consonant echo
+        "onomatopoeia": 0.03,    # UP from 0.01 -- ad-libs/sound effects are part of rap
+        "cadence": 0.03,         # NEW -- cadence variance is a delivery/flow signal
     }
 }
 

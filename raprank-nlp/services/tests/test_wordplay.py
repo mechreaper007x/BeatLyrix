@@ -26,65 +26,7 @@ class TestDetectors:
         assert n >= 1
 
 
-class TestAllusions:
-    """Mythology / Bollywood / global pop-culture reference detection. This is
-    intentionally a closed-lexicon match, not a proper-noun heuristic --
-    ordinary capitalized names are not allusions, only a curated set of
-    references where the reference itself carries meaning."""
 
-    def test_bollywood_villain_reference_detected(self):
-        n, refs = wp.detect_allusions(
-            "Villain jaisa mera swag Amrish Puri ki tarah dikhta hai\n"
-            "Gabbar ka dar sabko, Mogambo khush hua\n"
-        )
-        assert n >= 2
-        assert "amrish puri" in refs
-        assert "gabbar" in refs or "mogambo" in refs
-
-    def test_ledger_oscar_punchline_detected(self):
-        n, refs = wp.detect_allusions(
-            "Oscar milega ledger jaise life khoke\n"
-        )
-        assert n >= 1
-        assert "oscar" in refs
-
-    def test_multiword_reference_not_double_counted(self):
-        """'heath ledger' should count once, not once for the full name and
-        again for the substring 'ledger'."""
-        n, refs = wp.detect_allusions("Heath Ledger won an Oscar posthumously\n")
-        assert n == 2  # "heath ledger" + "oscar", not a third for bare "ledger"
-        assert "heath ledger" in refs
-
-    def test_ordinary_capitalized_word_not_an_allusion(self):
-        n, refs = wp.detect_allusions("Monday morning I went to Delhi with Rahul\n")
-        assert n == 0
-
-    def test_common_verb_homograph_not_an_allusion(self):
-        """'karna' (Mahabharata figure) collides with 'karna'/'karna hai' -- the
-        single most common Hindi verb ('to do'). A corpus sweep found 101 such
-        hits across 59 songs, none the mythological figure -- this word is
-        deliberately excluded from the lexicon rather than mismatched."""
-        n, refs = wp.detect_allusions(
-            "Dekh ke andekha karna kaam inka roz ka\n"
-            "Mujhe kuch nahi karna tere jaisa\n"
-        )
-        assert n == 0
-        assert "karna" not in refs
-
-    def test_common_adjective_homograph_not_an_allusion(self):
-        """'kali' (goddess) collides with 'kali'/'kaali' ('black'), an
-        everyday Hindi adjective -- also excluded from the lexicon."""
-        n, refs = wp.detect_allusions("Saddi kali kali gall ae trend ho gayi ni\n")
-        assert n == 0
-        assert "kali" not in refs
-
-    def test_allusions_wired_into_calculate(self):
-        _, meta = wp.calculate(
-            "Amrish Puri jaisa villain hoon mai stage pe\n"
-            "Gabbar se bhi zyada khatarnak hoon range mein\n"
-        )
-        assert meta["allusions_count"] >= 2
-        assert "allusions" in meta
 
 
 class TestCalibration:

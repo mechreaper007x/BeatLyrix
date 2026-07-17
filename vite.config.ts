@@ -11,6 +11,16 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    watch: {
+      ignored: [
+        '**/raprank-backend/**',
+        '**/raprank-nlp/**',
+        '**/raprank-semantic/**',
+        '**/raprank-upload/**',
+        '**/local_real_model/**',
+        '**/kaggle_rap_data/**',
+      ],
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:8080',

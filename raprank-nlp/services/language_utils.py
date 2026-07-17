@@ -163,10 +163,33 @@ def clean_word(word: str) -> str:
     return cleaned
 
 
+def clean_lyrics_text(lyrics: str) -> str:
+    """Strip out Genius headers, math lines, and noise lines."""
+    # 1. Clean Genius Contributors header
+    cleaned = re.sub(r"^\s*\d+\s+Contributors.*?\s+Lyrics\s*", "", lyrics, flags=re.IGNORECASE)
+    
+    # 2. Rebuild line by line, filtering out lines without any letters
+    lines = []
+    for line in cleaned.split("\n"):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        # Skip section headers
+        if stripped.startswith("[") and stripped.endswith("]"):
+            lines.append(line)
+            continue
+        # Skip math or symbol-only lines (e.g. "0,1,1,2,3...")
+        if not re.search(r"[a-zA-Z\u0900-\u097F]", stripped):
+            continue
+        lines.append(line)
+    return "\n".join(lines)
+
+
 def content_lines(lyrics: str) -> list[str]:
     """Return non-empty, non-header lyric lines, stripping parenthetical ad-libs."""
+    cleaned_lyrics = clean_lyrics_text(lyrics)
     result = []
-    for line in lyrics.strip().split("\n"):
+    for line in cleaned_lyrics.strip().split("\n"):
         stripped = line.strip()
         if stripped and not (stripped.startswith("[") and stripped.endswith("]")):
             # Strip out parenthetical ad-libs (e.g. "(Woo)", "(Yeah)", "(Brr)")

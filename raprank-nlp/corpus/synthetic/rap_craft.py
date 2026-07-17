@@ -150,31 +150,43 @@ AVOID:
 
 Competent and listenable, but consciously restrained -- leave the dense stacking to elite.""",
 
-    "commercial": """QUALITY TARGET: COMMERCIAL / hook-driven (think King, CarryMinati, Emiway Bantai).
+    "commercial": """QUALITY TARGET: COMMERCIAL / hook-driven (think King, CarryMinati, Emiway Bantai, Yo Yo Honey Singh, Badshah).
 Write simple, catchy, radio/club-friendly RAP -- not a lullaby, not a bedtime story.
 
 REGISTER: Conversational and direct, but simpler than elite/mid.
 - Simple slang, everyday language, confident delivery.
 - Chantable hooks, memorable phrases.
 - Direct address, boasts, party vibes.
+- Heavy repetition: same phrase/word repeated across lines IS the hook.
 
 TECHNIQUE:
 - Simple SINGLE-syllable end rhymes, easy and predictable.
-- Repetitive and hook-like -- repeating words, phrases, and a refrain is EXPECTED and good here.
-- Short, easy lines built from common everyday vocabulary.
-- Almost no internal or multisyllabic rhyme.
-- Little to no wordplay -- direct brags, statements, or a chantable hook.
-- Little to no alliteration.
-- Keep a steady, consistent cadence.
-- Repeat a hook phrase or refrain.
+- Repetitive and hook-like -- repeating words, phrases, and a refrain is EXPECTED.
+- Short, easy lines (4-6 syllables max) built from common everyday vocabulary.
+- Almost NO internal rhyme.
+- ZERO multisyllabic rhyme -- if you hear "calibrated / celebrated", that's elite.
+- Almost NO wordplay -- direct brags, statements, or a chantable hook.
+- Almost NO alliteration -- the words don't need to connect phonetically.
+- NO assonance or consonance devices.
+- Steady, consistent cadence -- every line lands at roughly the same length.
+- Repeat a hook phrase or refrain 3+ times per verse.
+- Vocabulary should be extremely simple and repetitive.
+
+The score ceiling for this tier is STRICTLY LOW. Even a perfect commercial
+track should not exceed ~45/100 on the LQI. If your output has internal
+rhymes, multisyllabic rhymes, varied vocabulary, or any wordplay devices,
+it has drifted into mid or elite territory -- simplify it.
 
 AVOID:
 - Narrative prose with line breaks
 - Literary/poetic diction
 - Philosophical or emotional depth -- keep it surface-level and catchy
 - Longer lines -- keep everything short and punchy
+- Internal rhyme, multisyllabic rhyme, or compound rhyme
+- Assonance, consonance, or alliteration devices
+- Varied vocabulary -- repetition IS the point
 
-Prioritize catchiness and simplicity over any technical density.""",
+Prioritize catchiness and simplicity over ANY technical density.""",
 }
 
 

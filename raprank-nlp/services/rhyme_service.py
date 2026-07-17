@@ -153,6 +153,33 @@ def _get_line_vowels(line: str) -> list[str]:
     return line_vowels
 
 
+def _get_line_vowels_ex_last(line: str) -> list[str]:
+    words = [clean_word(w) for w in line.split()]
+    words = [w for w in words if w]
+    if len(words) <= 1:
+        return []
+    target_words = words[-3:-1] if len(words) >= 3 else words[-2:-1]
+    
+    line_vowels = []
+    for w in target_words:
+        rom = devanagari_to_roman(w) if is_hindi_word(w) else w
+        rom_clean = re.sub(r"[^\w]", "", rom)
+        
+        phones = pronouncing.phones_for_word(rom_clean.lower())
+        if phones:
+            vowel_phones = []
+            for p in phones[0].split():
+                if any(c.isdigit() for c in p):
+                    vowel_phones.append(re.sub(r"\d", "", p).lower())
+            line_vowels.extend(vowel_phones)
+        else:
+            norm = _normalize_hinglish_vowels(rom_clean)
+            spelling_vowels = [c for c in norm if c in "aeiou"]
+            line_vowels.extend(spelling_vowels)
+            
+    return line_vowels
+
+
 def _get_word_vowels(word: str) -> list[str]:
     rom = devanagari_to_roman(word) if is_hindi_word(word) else word
     rom_clean = re.sub(r"[^\w]", "", rom)
@@ -320,31 +347,40 @@ def _phrase_phones(words: List[str]) -> Optional[List[str]]:
     return out
 
 
-def _phrase_letters(words: List[str]) -> List[str]:
-    """Concatenated normalized Hinglish letters for an ordered word list."""
+def _phrase_phones_dhh(words: List[str]) -> Optional[List[str]]:
+    """Concatenated DHH phonemes (key-normalized) for an ordered word list.
+    Routes by script per word (Devanagari or romanized Hinglish/English-ish
+    Latin); None if any word yields no phonemes (digits/punct-only).
+    Key-normalized so the stream lives in the same alphabet rhyme_key emits."""
     out: List[str] = []
     for w in words:
-        rom = devanagari_to_roman(w) if is_hindi_word(w) else w
-        letters = normalize_hinglish(re.sub(r"[^a-zA-Z]", "", rom))
-        out.extend(list(letters))
+        phones = dhh_phonemes.to_phones(w)
+        if not phones:
+            return None
+        out.extend(dhh_phonemes.normalize_for_key(phones))
     return out
 
 
 def _phrase_signature(words: List[str]) -> Optional[Tuple[List[str], str]]:
     """(tokens, mode) for an ordered word list. mode is 'en' when every word
-    resolves via CMU, else 'translit' (Hinglish letter fallback)."""
+    resolves via CMU; otherwise the WHOLE phrase re-phonemizes through the
+    DHH engine ('dhh' mode) so both sides of any candidate match share one
+    G2P -- mixed CMU/DHH representations can never be compared directly."""
     if not words:
         return None
     phones = _phrase_phones(words)
     if phones is not None:
         return phones, "en"
-    return _phrase_letters(words), "translit"
+    dhh = _phrase_phones_dhh(words)
+    if dhh is not None:
+        return dhh, "dhh"
+    return None
 
 
 def _word_rhyme_tail(word: str) -> Optional[Tuple[List[str], str]]:
     """Rhyme-relevant tail of a single word: phones from its last primary-
     stressed vowel onward (English, onset dropped -- matching how ordinary
-    rhyme keys work, e.g. `_rhyme_key_en`), or its Hinglish rhyme-key letters.
+    rhyme keys work, e.g. `_rhyme_key_en`), or its DHH phoneme rhyme key.
     """
     rom = devanagari_to_roman(word) if is_hindi_word(word) else word
     rom_clean = re.sub(r"[^a-zA-Z]", "", rom)
@@ -361,8 +397,8 @@ def _word_rhyme_tail(word: str) -> Optional[Tuple[List[str], str]]:
             return None
         return [re.sub(r"\d", "", p).lower() for p in plist[start:]], "en"
 
-    key = _rhyme_key_hinglish(rom_clean)
-    return (list(key), "translit") if key else None
+    key = dhh_phonemes.rhyme_key(dhh_phonemes.to_phones(word))
+    return (list(key), "dhh") if key else None
 
 
 def detect_compound_rhymes(lines: List[str]) -> Tuple[int, List[str]]:
@@ -376,7 +412,7 @@ def detect_compound_rhymes(lines: List[str]) -> Tuple[int, List[str]]:
     """
     window = scoring_config.RHYME["WINDOW_SIZE_LINES"]
     min_units = {"en": scoring_config.RHYME["COMPOUND_MIN_PHONES"],
-                 "translit": scoring_config.RHYME["COMPOUND_MIN_LETTERS"]}
+                 "dhh": scoring_config.RHYME["COMPOUND_MIN_PHONES_DHH"]}
 
     per_line: List[dict] = []
     for line in lines:
@@ -462,7 +498,7 @@ def detect_holorimes(lines: List[str]) -> Tuple[int, List[str]]:
     """
     window = scoring_config.RHYME["WINDOW_SIZE_LINES"]
     min_units = {"en": scoring_config.RHYME["HOLORIME_MIN_PHONES"],
-                 "translit": scoring_config.RHYME["HOLORIME_MIN_LETTERS"]}
+                 "dhh": scoring_config.RHYME["HOLORIME_MIN_PHONES_DHH"]}
 
     def _normalized_word(w: str) -> str:
         """Script/spelling-invariant form of a word, for detecting when two
@@ -865,8 +901,12 @@ def calculate(lyrics: str, debug: bool = False):
             # Robust multisyllabic rhyme detection across last 2 words of the line
             is_multi = False
             if not trivial and (is_end_rhyme or is_slant_rhyme):
-                v1 = _get_line_vowels(lines[idx_a])
-                v2 = _get_line_vowels(lines[idx_b])
+                if is_identity:
+                    v1 = _get_line_vowels_ex_last(lines[idx_a])
+                    v2 = _get_line_vowels_ex_last(lines[idx_b])
+                else:
+                    v1 = _get_line_vowels(lines[idx_a])
+                    v2 = _get_line_vowels(lines[idx_b])
                 common_suffix = _get_longest_common_vowel_suffix(v1, v2)
                 if len(common_suffix) >= 3:
                     is_multi = True
@@ -883,7 +923,7 @@ def calculate(lyrics: str, debug: bool = False):
                             line_b=idx_b,
                             word_a=actual_word_a,
                             word_b=actual_word_b,
-                            is_multisyllabic=is_multi or is_slant_rhyme,
+                            is_multisyllabic=is_multi,
                         )
                     )
 
@@ -943,6 +983,24 @@ def calculate(lyrics: str, debug: bool = False):
     # sounds every line is monotonous, not lyrical. Scale the rhyme score down
     # toward MIN_MULT when the distinct-key ratio falls below FLOOR.
     rhyme_score *= _diversity_multiplier(indexed_words)
+
+    # Chain-score monotonous-AAAA penalty: a track where the SAME rhyme key
+    # repeats across 80%+ of lines (e.g. every line ends in "hai" / "-aya")
+    # is not demonstrating chain mastery -- it's a hook-driven repetitive
+    # structure.  Cap the chain sub-score so long monotonous chains can't
+    # peg it at 100 and inflate the combined rhyme score.
+    if chain_score > 60.0 and len(indexed_words) > 6:
+        keys = [str(_get_rhyme_key(w)) for _, w in indexed_words if _get_rhyme_key(w) is not None]
+        if keys:
+            from collections import Counter as _RC
+            most_common_count = _RC(keys).most_common(1)[0][1]
+            mono_ratio = most_common_count / len(keys)
+            if mono_ratio >= 0.80:
+                # Heavy penalty: the "chain" is just repetition
+                chain_score = min(chain_score, 35.0)
+            elif mono_ratio >= 0.60:
+                # Moderate penalty: still quite monotonous
+                chain_score = min(chain_score, 55.0)
 
     result = (round(rhyme_score, 2), rhyme_pairs, multisyl_count, round(internal_score, 2),
               round(chain_score, 2), compound_count, holorime_count)

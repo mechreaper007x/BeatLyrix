@@ -11,12 +11,17 @@ GMM (not percentiles) is correct HERE because this is genuine latent-mode
 clustering, not a monotonic score. total_score is NOT affected -- clustering is
 descriptive.
 
+Training contract (shared by all five model services): TRAIN on the synthetic
+corpus only (semantic metrics live-fetched from the Space on first run and
+persisted to _synthetic_semantic_cache.jsonl); the real Indian corpus is the
+held-out evaluation pool (avg log-likelihood / BIC / assignment table).
+
 Mirrors the train/save/load/predict + argparse shape of
 services/bayesian_scoring_service.py. scikit-learn is imported lazily so a
 missing install never breaks the /analyze request path.
 
 Usage:
-    python -m services.gmm_style_service --train        # fit + pickle from corpus
+    python -m services.gmm_style_service --train        # fit on synthetic (live-fetch), eval on real
     python -m services.gmm_style_service --report       # human-readable cluster labels
     python -m services.gmm_style_service --eval-corpus   # per-song assignment
 """
@@ -50,6 +55,10 @@ MODEL_PATH = ROOT / "corpus" / "synthetic_data" / "_gmm_style_model.pkl"
 REPORT_PATH = ROOT / "corpus" / "synthetic_data" / "_gmm_style_report.json"
 # Semantic raw metrics collected once by raprank-semantic/build_calibration.py.
 SEMANTIC_CACHE = ROOT.parent / "raprank-semantic" / "calibration_raw.jsonl"
+# Live-fetched semantic metrics for SYNTHETIC tracks (not covered by the
+# calibration cache) are persisted here so retraining never refetches -- one
+# jsonl line per track, keyed by the record's repo-relative _path.
+SYNTHETIC_SEMANTIC_CACHE = ROOT / "corpus" / "synthetic_data" / "_synthetic_semantic_cache.jsonl"
 
 # Candidate cluster counts. Capped at 6: on 302 songs, BIC will happily split
 # off 2-song micro-clusters around single-feature outliers (e.g. a compound_dens
@@ -98,17 +107,20 @@ def _technical_features(lyrics: str) -> dict[str, float]:
 
 
 def _load_semantic_cache() -> dict[str, dict]:
-    """id ('artist-slug/title-slug') -> {metric: value}, from build_calibration's log."""
+    """id -> {metric: value}, merged from build_calibration's log (real corpus,
+    'artist-slug/title-slug' ids) and the synthetic live-fetch cache (repo-
+    relative _path ids)."""
     out: dict[str, dict] = {}
-    if not SEMANTIC_CACHE.exists():
-        return out
-    for line in SEMANTIC_CACHE.read_text(encoding="utf-8").splitlines():
-        try:
-            rec = json.loads(line)
-        except Exception:
+    for cache_path in (SEMANTIC_CACHE, SYNTHETIC_SEMANTIC_CACHE):
+        if not cache_path.exists():
             continue
-        if "_id" in rec:
-            out[rec["_id"]] = rec
+        for line in cache_path.read_text(encoding="utf-8").splitlines():
+            try:
+                rec = json.loads(line)
+            except Exception:
+                continue
+            if "_id" in rec:
+                out[rec["_id"]] = rec
     return out
 
 
@@ -119,9 +131,18 @@ def _cache_id_from_path(path_str: str) -> str:
 
 
 def _semantic_features(song: dict, cache: dict[str, dict], live_fetch: bool) -> dict[str, float] | None:
-    rec = cache.get(_cache_id_from_path(song.get("_path", "")))
+    # Synthetic records cache under their full repo-relative _path; real
+    # corpus songs under the calibration log's 'artist/title' id.
+    path = song.get("_path", "")
+    rec = cache.get(path) or cache.get(_cache_id_from_path(path))
     if rec is None and live_fetch:
         rec = _fetch_semantic_live(song["lyrics"])
+        if rec is not None and path:
+            try:  # persist so retraining never refetches this track
+                with open(SYNTHETIC_SEMANTIC_CACHE, "a", encoding="utf-8") as f:
+                    f.write(json.dumps({"_id": path, **rec}, ensure_ascii=False) + "\n")
+            except Exception:
+                pass
     if rec is None:
         return None
     try:
@@ -148,13 +169,19 @@ def build_feature_matrix(records: list[dict], live_fetch: bool = False):
     import numpy as np
     cache = _load_semantic_cache()
     rows, kept = [], []
-    for song in records:
+    dropped = 0
+    for i, song in enumerate(records):
+        if live_fetch and i and i % 25 == 0:
+            print(f"  ...{i}/{len(records)} processed ({len(kept)} kept, {dropped} dropped)")
         sem = _semantic_features(song, cache, live_fetch)
         if sem is None:
+            dropped += 1
             continue
         tech = _technical_features(song["lyrics"])
         rows.append([tech[a] for a in TECHNICAL_AXES] + [sem[a] for a in SEMANTIC_AXES])
         kept.append(song)
+    if dropped:
+        print(f"  build_feature_matrix: kept {len(kept)}, dropped {dropped} (no semantic metrics)")
     return np.asarray(rows, dtype=float), kept
 
 
@@ -167,12 +194,13 @@ def train(records: list[dict] | None = None, live_fetch: bool = False) -> dict:
     from sklearn.preprocessing import StandardScaler
 
     if records is None:
-        records = _load_corpus_records()
+        records = _load_train_records()
     X, kept = build_feature_matrix(records, live_fetch=live_fetch)
     if len(X) < max(BIC_K_RANGE) * 3:
         raise RuntimeError(
             f"Only {len(X)} songs had both technical + semantic features -- "
-            f"run raprank-semantic/build_calibration.py first (needs the cache)."
+            f"run with live_fetch=True (synthetic tracks) or "
+            f"raprank-semantic/build_calibration.py (real corpus) first."
         )
 
     scaler = StandardScaler()
@@ -196,8 +224,8 @@ def train(records: list[dict] | None = None, live_fetch: bool = False) -> dict:
         "feature_names": list(FEATURE_NAMES),
         "k": k,
         "assignments": assignments,
-        "kept_ids": [_cache_id_from_path(s.get("_path", "")) for s in kept],
-        "kept_artists": [s.get("artist", "?") for s in kept],
+        "kept_ids": [_record_id(s) for s in kept],
+        "kept_artists": [s.get("artist", s.get("tier", "?")) for s in kept],
     }
 
 
@@ -345,15 +373,56 @@ def score_style(lyrics: str, semantic_metrics: dict | None = None, bundle: dict 
         return None
 
 
+def _record_id(song: dict) -> str:
+    """Stable per-record id: synthetic records use their repo-relative _path,
+    real corpus songs their calibration-cache 'artist/title' id."""
+    path = song.get("_path", "")
+    if path.startswith("corpus/synthetic_data"):
+        return path
+    return _cache_id_from_path(path)
+
+
 def _load_corpus_records() -> list[dict]:
+    """The real Indian corpus -- the held-out evaluation pool."""
     from services.tests.conftest import load_corpus
     return load_corpus()
+
+
+def _load_train_records() -> list[dict]:
+    """The training pool: synthetic data + consented seeds (copyright-clean
+    contract -- see bayesian_scoring_service.load_train_records; scraped real
+    lyrics never train a shipped model). Synthetic tracks' semantic metrics
+    come from the persisted synthetic cache (live-fetched once); consented
+    seeds live-fetch the same way on first run."""
+    from services.bayesian_scoring_service import load_train_records
+    return load_train_records()
+
+
+def evaluate_on_real(bundle: dict) -> dict:
+    """Fit statistics of the synthetic-trained GMM on the held-out real
+    corpus: average log-likelihood, BIC, and the cluster-assignment table
+    (real features standardized with the synthetic-fit scaler)."""
+    from collections import Counter
+    records = _load_corpus_records()
+    X, kept = build_feature_matrix(records, live_fetch=False)
+    if not len(X):
+        return {"n": 0}
+    Xs = bundle["scaler"].transform(X)
+    gmm = bundle["gmm"]
+    counts = Counter(gmm.predict(Xs).tolist())
+    return {
+        "n": len(kept),
+        "avg_log_likelihood": float(gmm.score(Xs)),
+        "bic": float(gmm.bic(Xs)),
+        "cluster_counts": {int(c): n for c, n in sorted(counts.items())},
+    }
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
 def main() -> int:
     ap = argparse.ArgumentParser(description="Train / report / evaluate the GMM style clusters")
-    ap.add_argument("--train", action="store_true", help="fit from corpus and pickle")
+    ap.add_argument("--train", action="store_true",
+                     help="fit from synthetic data (live-fetching semantic metrics), eval on real corpus")
     ap.add_argument("--report", action="store_true", help="print + persist human cluster labels")
     ap.add_argument("--eval-corpus", action="store_true", help="print each song's cluster")
     ap.add_argument("--compare-kmeans", action="store_true",
@@ -370,10 +439,21 @@ def main() -> int:
         return 0
 
     if args.train:
-        bundle = train(live_fetch=args.live_fetch)
+        # Training pool is synthetic-only; synthetic tracks aren't in the
+        # calibration cache, so live-fetch is ON by default for --train
+        # (fetched metrics persist to SYNTHETIC_SEMANTIC_CACHE -- only the
+        # first run pays the Space calls).
+        bundle = train(live_fetch=True)
         bundle["_labels"] = label_clusters(bundle)
         save(bundle)
-        print(f"Trained GMM: k={bundle['k']} on {len(bundle['assignments'])} songs -> {MODEL_PATH}")
+        print(f"Trained GMM: k={bundle['k']} on {len(bundle['assignments'])} synthetic songs -> {MODEL_PATH}")
+        print("\nEvaluating fit on the held-out real corpus...")
+        ev = evaluate_on_real(bundle)
+        if not ev.get("n"):
+            print("  (no real-corpus songs had semantic metrics -- skipped)")
+        else:
+            print(f"  n={ev['n']}  avg log-likelihood={ev['avg_log_likelihood']:.2f}  BIC={ev['bic']:.0f}")
+            print(f"  cluster counts on real corpus: {ev['cluster_counts']}")
         return 0
 
     if args.report:

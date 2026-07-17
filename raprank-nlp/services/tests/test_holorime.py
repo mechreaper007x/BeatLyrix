@@ -33,6 +33,26 @@ class TestHolorimeDetection:
         count, pairs = rh.detect_holorimes(["one line only"])
         assert count == 0 and pairs == []
 
+    def test_hinglish_holorime_detected(self):
+        # "yaar ab" / "yaa rab": different word splits over the same DHH
+        # phone stream (y aa r a b) -- a genuine Hinglish holorime, and the
+        # word lists differ so the same-underlying-words guard lets it pass.
+        lines = [
+            "usne bola mere yaar ab",
+            "phir se hua yaa rab",
+        ]
+        count, pairs = rh.detect_holorimes(lines)
+        assert count >= 1
+        assert any("yaar ab" in p and "yaa rab" in p for p in pairs)
+
+    def test_devanagari_vs_roman_same_phrase_not_holorime(self):
+        # The same underlying words written in two scripts is one phrase
+        # respelled, not two phrasings -- must NOT count (guard still applies
+        # in dhh mode).
+        lines = ["dil se मेरा यार", "bola phir mera yaar"]
+        count, _ = rh.detect_holorimes(lines)
+        assert count == 0
+
     def test_calculate_returns_holorime_count(self):
         lines = "on a hot day we all want ice cream\nwhen something scares me I scream\n"
         result = rh.calculate(lines)
