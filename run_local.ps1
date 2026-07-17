@@ -9,7 +9,7 @@ $ErrorActionPreference = "Stop"
 
 # Helper function to check if a port is in use
 function Test-PortInUse($port) {
-    $connection = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+    $connection = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
     return $null -ne $connection
 }
 
