@@ -521,21 +521,22 @@ MAIN_WEIGHTS = {
         "onomatopoeia": 0.02,
     },
     "TEXT_ONLY": {
-        # Rebalanced (Jul 2026): rhyme+wordplay previously dominated at 89%,
-        # letting commercial hook-driven tracks score high on technical merit
-        # they don't exhibit. Syllable density was entirely excluded (0.00).
-        # New distribution spreads weight across ALL measured rap elements so
-        # a track must demonstrate craft on multiple axes to score well.
-        "rhyme": 0.28,           # Down from 0.40 -- still king, but not sole gatekeeper
-        "syllable": 0.10,        # UP from 0.00 -- line-length density IS a technical signal
-        "alliteration": 0.05,    # UP from 0.01 -- onset stacking is a real skill marker
-        "vocabulary": 0.08,      # UP from 0.01 -- lexical variety separates real writers
-        "wordplay": 0.25,        # Down from 0.49 -- important but was inflating simple brags
-        "syllable_weight": 0.07, # UP from 0.04 -- complex polysyllabic words = sophistication
-        "assonance": 0.06,       # UP from 0.02 -- vowel harmony is deliberate artistry
-        "consonance": 0.05,      # UP from 0.02 -- interior consonant echo
-        "onomatopoeia": 0.03,    # UP from 0.01 -- ad-libs/sound effects are part of rap
-        "cadence": 0.03,         # NEW -- cadence variance is a delivery/flow signal
+        "rhyme": 0.22,
+        "syllable": 0.08,
+        "vocabulary": 0.08,
+        "wordplay": 0.20,
+        "alliteration": 0.04,
+        "assonance": 0.05,
+        "consonance": 0.05,
+        "onomatopoeia": 0.03,
+        "cadence": 0.03,
+        "codeswitch": 0.04,
+        "repetition": 0.04,
+        "coherence": 0.04,
+        "surprisal": 0.04,
+        "sophistication": 0.04,
+        "theme": 0.04,
+        "callback": 0.04,
     }
 }
 

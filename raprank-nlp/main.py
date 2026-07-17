@@ -460,8 +460,41 @@ async def compute_scores_and_breakdown(
         except Exception as exc:
             logger.warning("Element-cluster scoring failed: %s", exc)
 
-    # ── Decoupled LQI Score ───────────────────────────────────────────────
-    total = compiled["lyrical_score"]
+    # ── Fully Integrated LQI Score ─────────────────────────────────────────
+    # Compute LQI dynamically using the 15 features if they are available,
+    # normalizing weights for any missing/None features (e.g. if the semantic
+    # or prosody services fail).
+    features_map = {
+        "rhyme": rhyme_score,
+        "syllable": syllable_score,
+        "vocabulary": vocab_score,
+        "wordplay": wordplay_score,
+        "assonance": assonance_score,
+        "consonance": consonance_score,
+        "onomatopoeia": onomatopoeia_score,
+        "cadence": cadence_text_score,
+        "codeswitch": codeswitch_score,
+        "repetition": repetition_score,
+        "coherence": coherence_score,
+        "surprisal": semantic_surprisal_score,
+        "sophistication": lexical_sophistication_score,
+        "theme": theme_consistency_score,
+        "callback": callback_score,
+    }
+    
+    w = scoring_config.MAIN_WEIGHTS["TEXT_ONLY"]
+    active_weights = {}
+    weighted_sum = 0.0
+    for name, score in features_map.items():
+        if score is not None:
+            active_weights[name] = w.get(name, 0.0)
+            weighted_sum += score * w.get(name, 0.0)
+            
+    total_active_weight = sum(active_weights.values())
+    if total_active_weight > 0:
+        total = weighted_sum / total_active_weight
+    else:
+        total = compiled["lyrical_score"]
 
     line_count = sum(
         1
