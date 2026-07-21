@@ -18,16 +18,19 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# ── Application source ────────────────────────────────────────────────────────
-COPY . .
+# Create non-root user for Hugging Face Spaces compatibility
+RUN useradd -m -u 1000 user
+USER user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH
 
-# ── Port 8000 — matches app.python.service.url in Spring Boot ────────────────
+WORKDIR $HOME/app
+
+COPY --chown=user . $HOME/app
+
+EXPOSE 7860
 EXPOSE 8000
 
-# ── Environment ───────────────────────────────────────────────────────────────
-# Override WHISPER_API_URL to point at a local whisper instance during dev:
-#   docker run -e WHISPER_API_URL=http://localhost:7860 raprank-nlp
 ENV WHISPER_API_URL=https://mechreaper007x-raprank-whisper.hf.space
 
-# ── Start server ──────────────────────────────────────────────────────────────
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-7860}"]

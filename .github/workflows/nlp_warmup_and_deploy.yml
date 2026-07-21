@@ -1,0 +1,33 @@
+name: NLP Space Warmup & CI/CD Deployment
+
+on:
+  push:
+    branches: [ master ]
+  schedule:
+    # Ping Hugging Face NLP Space every 4 hours to prevent sleeping on free tier
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+
+jobs:
+  warmup_and_sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ping Hugging Face NLP Space Healthcheck
+        run: |
+          echo "Pinging Hugging Face NLP Space to wake up instance..."
+          curl -s -f --max-time 30 https://mechreaper007x-raprank-nlp.hf.space/health || echo "Space is warming up..."
+
+      - name: Sync NLP Code to Hugging Face Space (Optional)
+        if: ${{ env.HF_TOKEN != '' }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add hf https://mechreaper007x:$HF_TOKEN@huggingface.co/spaces/mechreaper007x/raprank-nlp || true
+          git subtree push --prefix=raprank-nlp hf main || true

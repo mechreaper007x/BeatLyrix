@@ -1,0 +1,72 @@
+services:
+  # 1. Main Spring Boot Core Backend
+  - type: web
+    name: raprank-backend
+    runtime: docker
+    dockerfilePath: raprank-backend/Dockerfile
+    region: singapore
+    plan: free
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: raprank-db
+          property: connectionString
+      - key: SPRING_REDIS_HOST
+        fromService:
+          type: pserv
+          name: raprank-redis
+          property: host
+      - key: SPRING_REDIS_PORT
+        fromService:
+          type: pserv
+          name: raprank-redis
+          property: port
+      - key: APP_PYTHON_SERVICE_URL
+        value: https://mechreaper007x-raprank-nlp.hf.space
+      - key: APP_GO_SERVICE_URL
+        fromService:
+          type: web
+          name: raprank-upload
+          property: host
+      - key: JWT_SECRET
+        generateValue: true
+
+  # 2. Go Audio Upload Service
+  - type: web
+    name: raprank-upload
+    runtime: docker
+    dockerfilePath: raprank-upload/Dockerfile
+    region: singapore
+    plan: free
+
+  # 3. Vite React Frontend
+  - type: web
+    name: beatlyrix-frontend
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: raprank-backend
+          property: url
+      - key: VITE_UPLOAD_API_URL
+        fromService:
+          type: web
+          name: raprank-upload
+          property: url
+
+databases:
+  - name: raprank-db
+    plan: free
+    databaseName: raprank_db
+    user: raprank_user
+    region: singapore
+
+privateServices:
+  - type: pserv
+    name: raprank-redis
+    runtime: redis
+    plan: free
+    region: singapore

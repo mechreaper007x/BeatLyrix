@@ -12,8 +12,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +27,25 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final RestTemplate restTemplate;
+
+    @Value("${app.python.service.url}")
+    private String pythonServiceUrl;
+
+    private void wakeUpNlpServiceAsync() {
+        CompletableFuture.runAsync(() -> {
+            try {
+                if (pythonServiceUrl != null && !pythonServiceUrl.isBlank()) {
+                    String healthUrl = pythonServiceUrl.endsWith("/") 
+                        ? pythonServiceUrl + "health" 
+                        : pythonServiceUrl + "/health";
+                    restTemplate.getForObject(healthUrl, String.class);
+                }
+            } catch (Exception ignored) {
+                // Background warmup failure is silently ignored to prevent blocking authentication
+            }
+        });
+    }
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -50,6 +73,7 @@ public class AuthService {
                 .build();
 
         String token = jwtService.generateToken(userDetails);
+        wakeUpNlpServiceAsync();
 
         return AuthResponse.builder()
                 .token(token)
@@ -75,6 +99,7 @@ public class AuthService {
                 .build();
 
         String token = jwtService.generateToken(userDetails);
+        wakeUpNlpServiceAsync();
 
         return AuthResponse.builder()
                 .token(token)
