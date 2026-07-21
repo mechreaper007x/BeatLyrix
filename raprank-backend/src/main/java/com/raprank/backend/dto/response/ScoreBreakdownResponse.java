@@ -129,6 +129,15 @@ public class ScoreBreakdownResponse {
     @JsonAlias("bayes_tier_probabilities")
     private java.util.Map<String, Double> bayesTierProbabilities;
 
+    @JsonAlias("dpst_tier")
+    private String dpstTier;
+
+    @JsonAlias("dpst_tier_confidence")
+    private Double dpstTierConfidence;
+
+    @JsonAlias("dpst_tier_probabilities")
+    private java.util.Map<String, Double> dpstTierProbabilities;
+
     @JsonAlias("tier_consensus")
     private String tierConsensus;
 

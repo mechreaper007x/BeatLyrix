@@ -290,44 +290,17 @@ ALLITERATION = {
     # design, a repeated phrase mid-line ("talve laal ... talve laal") counts
     # exactly like a repeated line-initial hook word.
     "MIN_OCCURRENCES_PER_GROUP": 3,
+    # V5: a qualifying group needs >= this many genuinely different word ROOTS
+    # (inflections like yaad/yaadein collapse to one root). Doublets and
+    # same-word loops ("bolo bam bam bam") never fire; each unique
+    # (sound, root-set) counts once per song no matter how often the hook repeats.
+    "MIN_DISTINCT_ROOTS": 3,
     "MIN_WORD_LEN": 2,
     "MAX_GROUP_WEIGHT": 3.0,
-
-    # Within a firing cluster, credit is split into a variety component
-    # (distinct words beyond the first, full weight) and a repetition
-    # component (occurrences of an already-seen word, weighted down by
-    # REPEATED_WORD_WEIGHT_SCALE) -- pure repetition of one word is still
-    # alliteration, but genuine word variety ("Big blue bouncy balls") is a
-    # more skilled device than saying the same word four times, so it should
-    # score higher for the same occurrence count.
     "REPEATED_WORD_WEIGHT_SCALE": 0.5,
-
-    # Raw density (total cluster weight / valid lines) is divided by this
-    # before the curve below. Re-fit after the recurring-hook-line fix in
-    # alliteration_service.py (a verbatim chorus block reappearing later in
-    # the song no longer re-earns MAX_GROUP_WEIGHT credit a second time --
-    # previously a single repeated hook, printed as two separate physical
-    # chorus blocks, could independently peg the per-cluster cap in each
-    # block, letting one 4-word hook contribute a third or more of a song's
-    # total density).
-    #
-    # A 3-point curve (25th/50th/75th pctile) normalized at the 80th
-    # percentile was tried first but left evaluate_piecewise_curve's
-    # always-ramps-to-100-at-value=1.0 tail badly compressed: everything from
-    # the 80th to 99th percentile got jammed into the last 0.06-wide
-    # normalized band (0.94->1.0), so a solidly-good-but-not-exceptional song
-    # (e.g. 80th percentile) scored 96, barely distinguishable from a 99th
-    # percentile song pinned at literal 100. Normalizing at the 95th
-    # percentile instead (1.22) spreads that same tail across a much wider
-    # 0.90->1.0 band, and only the genuine top ~5% saturate.
-    "DENSITY_NORM": 1.22,
-
-    # Density (normalized, see DENSITY_NORM above) piecewise curve -> 0-100.
-    # 4-point fit (25th/50th/75th/90th percentile of normalized density),
-    # matching the resolution VOCABULARY/SYLLABLE already use for their top
-    # quartile instead of leaving it to a single steep tail segment.
-    "THRESHOLDS": [0.42, 0.58, 0.74, 0.90],
-    "SCORES": [20.0, 45.0, 65.0, 88.0],
+    "DENSITY_NORM": 0.60,
+    "THRESHOLDS": [0.20, 0.35, 0.50, 0.70],
+    "SCORES": [20.0, 45.0, 65.0, 85.0],
 }
 
 # ── Audio Pipeline (Demucs separation, CPU-only) ────────────────────────────

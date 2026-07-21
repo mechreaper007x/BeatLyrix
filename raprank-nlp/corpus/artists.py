@@ -99,7 +99,7 @@ ARTISTS: tuple[Artist, ...] = (
         name="Raftaar",
         search_terms=("Raftaar",),
         primary_language="mixed",
-        expected_profile={"multisyllabic": 0.8, "wordplay": 0.65, "commercial": 0.6},
+        expected_profile={"multisyllabic": 0.85, "wordplay": 0.75, "commercial": 0.30},
     ),
     Artist(
         name="Muhfaad",
@@ -141,14 +141,14 @@ ARTISTS: tuple[Artist, ...] = (
         search_terms=("Naam Sujal",),
         genius_artist_id=2780157,
         primary_language="mixed",
-        expected_profile={"multisyllabic": 0.75, "wordplay": 0.7, "commercial": 0.2},
+        expected_profile={"multisyllabic": 0.85, "wordplay": 0.85, "commercial": 0.20},
     ),
     Artist(
         name="Vichaar",
         search_terms=("Vichaar", "Vichaar rapper"),
         genius_artist_id=3815901,
         primary_language="mixed",
-        expected_profile={"multisyllabic": 0.7, "wordplay": 0.7, "commercial": 0.2},
+        expected_profile={"multisyllabic": 0.85, "wordplay": 0.80, "commercial": 0.20},
     ),
     Artist(
         name="Lil Bhatia",

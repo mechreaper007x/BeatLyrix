@@ -35,3 +35,9 @@ scratch/*.tsv
 # Run logs from background generation/scrape jobs -- operational noise,
 # and belt-and-braces against any future lyric echo in a log line.
 scratch/*.log
+
+# Scraped lyrics JSON files inside raprank-nlp -- copyrighted raw text.
+scraped_*.json
+
+# Dataset build logs (.out files) -- may echo lyric text in debug lines.
+*.out

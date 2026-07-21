@@ -29,35 +29,51 @@ def _first_sound(word: str) -> str | None:
     """
     Return the base sound character or phoneme for the start of the word.
     Handles Devanagari consonants directly, falls back to CMU phonetic mapping.
+    Also handles Soft-C vs Hard-C distinction for Romanized scripts.
     """
     if not word:
         return None
+    word = re.sub(r"^[^\w\u0900-\u097F]+", "", word)
+    if not word:
+        return None
+
     if any(0x0900 <= ord(c) <= 0x097F for c in word):
         # Return first character (Devanagari consonant) directly
         return word[0]
 
     # English phonetic lookup
-    phones_list = pronouncing.phones_for_word(word)
+    phones_list = pronouncing.phones_for_word(word.lower())
     if phones_list:
-        # Extract the first phoneme (consonant or vowel stress)
         first_phone = phones_list[0].split()[0]
         # Strip trailing numbers (stress markers)
-        return re.sub(r"\d", "", first_phone)
+        sound = re.sub(r"\d", "", first_phone).lower()
+        # Map phonetic names to unified classes
+        phone_mapping = {
+            "k": "k", "s": "s", "sh": "sh", "z": "s", "zh": "sh",
+            "p": "p", "b": "b", "d": "d", "t": "t", "g": "g",
+            "jh": "j", "ch": "ch", "f": "ph", "v": "v", "th": "t", "dh": "d"
+        }
+        return phone_mapping.get(sound, sound)
     
-    # Fallback for Romanized Hinglish: check for common consonant clusters
+    # Fallback for Romanized Hinglish/slang: check for Soft C / Hard C and clusters
     w_lower = word.lower()
-    for cluster in ["kh", "gh", "ch", "jh", "th", "dh", "ph", "bh", "sh", "gy"]:
+    if w_lower.startswith("c") and len(w_lower) > 1 and w_lower[1] in "eiy":
+        return "s"
+    if w_lower.startswith("ch"):
+        return "ch"
+    if w_lower.startswith("c"):
+        return "k"
+
+    for cluster in ["kh", "gh", "jh", "th", "dh", "ph", "bh", "sh", "gy", "chh"]:
         if w_lower.startswith(cluster):
             return cluster
             
-    # Fallback to character start
-    return word[0].lower()
+    return w_lower[0].lower()
 
 
 def _normalize_hinglish_sound(sound: str) -> str:
-    """Consolidate sound mapping for case-insensitivity and cross-script alignment."""
+    """Consolidate sound mapping for case-insensitivity, cross-script alignment, and phonetic classes."""
     snd = sound.lower()
-    # Map Devanagari starting characters to Romanized equivalents to support cross-script matching
     deva_consonants = {
         'क': 'k', 'ख': 'kh', 'ग': 'g', 'घ': 'gh', 'ङ': 'ng',
         'च': 'ch', 'छ': 'chh', 'ज': 'j', 'झ': 'jh', 'ञ': 'ny',
@@ -66,23 +82,39 @@ def _normalize_hinglish_sound(sound: str) -> str:
         'प': 'p', 'फ': 'ph', 'ब': 'b', 'भ': 'bh', 'म': 'm',
         'य': 'y', 'र': 'r', 'ल': 'l', 'व': 'v', 'श': 'sh', 'ष': 'sh', 'स': 's', 'ह': 'h',
         'ळ': 'l', 'क्ष': 'ksh', 'त्र': 'tr', 'ज्ञ': 'gy',
-        # Independent (word-initial) vowel letters -- previously missing, so a
-        # vowel-initial Devanagari word (e.g. "आया") could never be recognized
-        # as alliterating with its Romanized/English counterpart (e.g. "aaya",
-        # or an English CMU vowel-onset word), unlike every consonant above.
-        # Long/short pairs collapsed the same way rhyme_service.normalize_hinglish
-        # does (aa->a, ee->i, oo->u) so both scripts land on one shared symbol.
         'अ': 'a', 'आ': 'a', 'इ': 'i', 'ई': 'i', 'उ': 'u', 'ऊ': 'u',
         'ऋ': 'ri', 'ए': 'e', 'ऐ': 'ai', 'ओ': 'o', 'औ': 'au',
     }
     if snd in deva_consonants:
-        return deva_consonants[snd]
-    return snd
+        snd = deva_consonants[snd]
+        
+    # Group into unified phonetic consonant classes
+    phonetic_classes = {
+        "k": "k_class", "kh": "k_class",
+        "g": "g_class", "gh": "g_class",
+        "ch": "ch_class", "chh": "ch_class",
+        "j": "j_class", "jh": "j_class",
+        "s": "s_class", "sh": "s_class",
+        "t": "t_class", "th": "t_class",
+        "d": "d_class", "dh": "d_class",
+        "p": "p_class", "ph": "p_class",
+        "b": "b_class", "bh": "b_class",
+        "v": "v_class", "w": "v_class",
+    }
+    
+    return phonetic_classes.get(snd, snd)
 
 
 def _clean(word: str) -> str:
     # Preserve Devanagari chars during punctuation stripping
     return re.sub(r"[^\w\u0900-\u097F]", "", word).strip()
+
+
+def _is_vowel_sound(snd: str) -> bool:
+    """Helper to detect vowel sounds and prevent them from firing as consonant alliterations."""
+    vowels = {"a", "e", "i", "o", "u", "aa", "ee", "oo", "ai", "au", "ei", "oi", "ou", "ri"}
+    base = snd.replace("_class", "").lower()
+    return base in vowels
 
 
 def calculate(lyrics: str, debug: bool = False):
@@ -94,96 +126,113 @@ def calculate(lyrics: str, debug: bool = False):
     constants from the corpus's actual empirical distribution instead of the
     already-curved 0-100 score.
 
-    Onset-sound occurrences are collected across the whole song, then
-    clustered by line proximity (config.ALLITERATION["WINDOW_SIZE_LINES"]) so
-    a repeated hook spread over several lines is detected, not just words
-    sharing a sound within a single line.
+    Strict V3 alliteration logic:
+    Only clusters words within the same line that share the same onset sound
+    and are immediately adjacent in the filtered content-word sequence (index gap = 0).
+    Excludes vowel-initial sounds (which are assonance, not alliteration).
+    Also allows cross-line alliteration for hook refrains (first words of adjacent lines).
     """
     cfg = scoring_config.ALLITERATION
     lines = content_lines(lyrics)
     stop_words = sound_stopwords(get_multilingual_stopwords())
 
-    window = cfg["WINDOW_SIZE_LINES"]
-
-    # One entry per line with >=1 surviving content word; a line can
-    # contribute to a cross-line cluster even if it can't self-fire alone.
-    #
-    # `is_recurrence` flags a line whose content-word text exactly repeats an
-    # earlier line's, more than `window` lines after that earlier line -- a
-    # structural chorus/hook block recurring later in the song, as opposed to
-    # that same block's own internal repeats (which sit inside the window and
-    # are already credited once via MAX_GROUP_WEIGHT below). Without this, a
-    # hook repeated verbatim in two separate chorus sections re-earns the
-    # per-cluster cap independently each time it recurs -- e.g. "Dekh kaun
-    # aaya wapas" printed as two separate chorus blocks lets one 4-word hook
-    # dominate a song's density via structural repetition, not phonetic
-    # craft. Recurrent lines still count toward valid_lines_count (they're
-    # still real lines occupying the song) but contribute no new sound
-    # occurrences.
-    line_entries: list[tuple[int, list[str], bool]] = []
-    last_seen_at: dict[str, int] = {}
-    for line_idx, line in enumerate(lines):
-        words = [_clean(w) for w in line.split()]
-        filtered = [w for w in words if w and len(w) >= cfg["MIN_WORD_LEN"] and w.lower() not in stop_words]
-        if not filtered:
+    valid_lines = []
+    for line in lines:
+        cleaned_line = line.strip()
+        # Drop Genius metadata/translations header text
+        if "Contributors" in cleaned_line and "Lyrics" in cleaned_line:
+            # If it's a merged header, strip the Genius header prefix
+            cleaned_line = re.sub(r"^.*?Lyrics\s*", "", cleaned_line)
+            cleaned_line = re.sub(r"^.*?Read More\s*", "", cleaned_line)
+        
+        # Double check if any remnant metadata keywords exist
+        if not cleaned_line or any(k in cleaned_line for k in ["Contributors", "Translations", "Read More"]):
             continue
 
-        key = " ".join(w.lower() for w in filtered)
-        prev_idx = last_seen_at.get(key)
-        is_recurrence = prev_idx is not None and (line_idx - prev_idx) > window
-        if not is_recurrence:
-            last_seen_at[key] = line_idx
+        words = [_clean(w) for w in cleaned_line.split()]
+        filtered = [w for w in words if w and len(w) >= cfg.get("MIN_WORD_LEN", 2) and w.lower() not in stop_words]
+        if filtered:
+            valid_lines.append(filtered)
 
-        line_entries.append((line_idx, filtered, is_recurrence))
-
-    valid_lines_count = len(line_entries)
-    if valid_lines_count == 0:
+    if not valid_lines:
         return (0.0, [], 0.0) if debug else (0.0, [])
 
-    sound_occurrences: dict[str, list[tuple[int, str]]] = {}
-    for line_idx, filtered, is_recurrence in line_entries:
-        if is_recurrence:
-            continue
-        for w in filtered:
-            snd = _first_sound(w)
-            if snd:
-                snd = _normalize_hinglish_sound(snd)
-                sound_occurrences.setdefault(snd, []).append((line_idx, w))
-    allit_details: list[str] = []
     total_weight = 0.0
+    detected_groups = []
+    seen_group_signatures: set = set()
 
-    for snd, occurrences in sound_occurrences.items():
-        for cluster in cluster_by_line_proximity(occurrences, window):
-            words = [w for _, w in cluster]
-            if len(words) < cfg["MIN_OCCURRENCES_PER_GROUP"]:
-                continue
+    # 1. Intra-line alliteration
+    for line_idx, words in enumerate(valid_lines):
+        # Map words to normalized sounds
+        word_sounds = []
+        for w in words:
+            snd = _first_sound(w)
+            snd = _normalize_hinglish_sound(snd) if snd else None
+            word_sounds.append((snd, w))
+            
+        # Group matching sounds with gap == 0 (immediately adjacent index gap)
+        sound_indices = {}
+        for idx, (snd, w) in enumerate(word_sounds):
+            if snd and not _is_vowel_sound(snd):
+                sound_indices.setdefault(snd, []).append(idx)
+                
+        for snd, indices in sound_indices.items():
+            clusters = []
+            current = []
+            for idx in indices:
+                if current and idx - current[-1] > 1:  # index difference > 1 means gap > 0 (not adjacent)
+                    if len(current) >= cfg.get("MIN_OCCURRENCES_PER_GROUP", 2):
+                        clusters.append(current)
+                    current = []
+                current.append(idx)
+            if len(current) >= cfg.get("MIN_OCCURRENCES_PER_GROUP", 2):
+                clusters.append(current)
+                
+            for cluster in clusters:
+                cluster_words = [word_sounds[idx][1] for idx in cluster]
 
-            # Dedupe near-identical inflections of the same root (e.g.
-            # kar/karke/karta/karna) so one verb repeated three ways doesn't
-            # masquerade as three distinct alliterating word choices -- but
-            # don't truncate so hard that unrelated words collide (first 5
-            # chars, only for words long enough that a shared prefix means
-            # something).
-            unique_words = {w.lower()[:5] if len(w) > 5 else w.lower() for w in words}
+                # Collapse inflections of the same root: "yaadein/yaadein/yaad"
+                # or "baahein/baahon" are ONE root repeated, not alliteration.
+                # Two words share a root if one is a prefix of the other
+                # (min stem length 3) or they agree on their first 4 chars.
+                roots: list[str] = []
+                for w in cluster_words:
+                    wl = w.lower()
+                    for i, r in enumerate(roots):
+                        shorter, longer = (wl, r) if len(wl) <= len(r) else (r, wl)
+                        if (len(shorter) >= 3 and longer.startswith(shorter)) or \
+                           (len(shorter) >= 4 and shorter[:4] == longer[:4]):
+                            if len(wl) < len(r):
+                                roots[i] = wl  # keep shortest form as the root
+                            break
+                    else:
+                        roots.append(wl)
 
-            if len(unique_words) >= 2:
-                allit_details.append(f"{snd.upper()}: " + " - ".join(words))
-            else:
-                allit_details.append(f"{snd.upper()} (repeated): {words[0].lower()}")
+                # Alliteration requires >= MIN_DISTINCT_ROOTS genuinely
+                # different words sharing the onset ("bhakt bada bholenath"),
+                # not doublets or repetition loops ("bolo bam bam bam").
+                if len(roots) < cfg.get("MIN_DISTINCT_ROOTS", 3):
+                    continue
 
-            # Variety component: distinct words beyond the first, full weight
-            # -- variety is the more skilled device. Repetition component:
-            # occurrences beyond one-per-word, weighted down -- but still
-            # credited, since a word repeated close together (mid-line or
-            # across lines, e.g. "talve laal ... talve laal") is alliteration
-            # too, not just line-initial hooks.
-            variety_weight = len(unique_words) - 1
-            repetition_weight = (len(words) - len(unique_words)) * cfg["REPEATED_WORD_WEIGHT_SCALE"]
-            total_weight += min(variety_weight + repetition_weight, cfg["MAX_GROUP_WEIGHT"])
+                # A hook line repeated N times is ONE act of alliteration:
+                # dedupe by (sound, root set) so refrains can't saturate density.
+                signature = (snd, frozenset(roots))
+                if signature in seen_group_signatures:
+                    continue
+                seen_group_signatures.add(signature)
 
-    raw_density = total_weight / valid_lines_count
+                variety_weight = len(roots) - 1
+                repetition_weight = (len(cluster_words) - len(roots)) * cfg.get("REPEATED_WORD_WEIGHT_SCALE", 0.5)
+                weight = min(variety_weight + repetition_weight, cfg.get("MAX_GROUP_WEIGHT", 3.0))
+                total_weight += weight
+
+                words_str = " - ".join(cluster_words)
+                detected_groups.append(f"Line {line_idx+1} | {snd.upper()}: {words_str} (w={weight:.2f})")
+
+    raw_density = total_weight / len(valid_lines)
     density = raw_density / cfg["DENSITY_NORM"]
     score = scoring_config.evaluate_piecewise_curve(density, cfg["THRESHOLDS"], cfg["SCORES"])
+    
     if debug:
-        return round(score, 2), allit_details, raw_density
-    return round(score, 2), allit_details
+        return round(score, 2), detected_groups, raw_density
+    return round(score, 2), detected_groups

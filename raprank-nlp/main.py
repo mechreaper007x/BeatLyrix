@@ -187,6 +187,7 @@ from services import gmm_style_service
 from services import rf_quality_service
 from services import svm_quality_service
 from services import bayesian_scoring_service
+from services import dpst_quality_service
 from services import prosody_service
 from services import element_cluster_service
 from services.transcription_service import transcribe_audio
@@ -232,6 +233,14 @@ try:
     logger.info("Loaded Bayesian quality-tier model.")
 except Exception as _exc:
     logger.warning("Bayesian quality-tier model unavailable (%s) -- bayes_tier fields will be null.", _exc)
+
+# DPST dual-tower neural classifier: load G2P + classifier weights at startup.
+_DPST_BUNDLE = None
+try:
+    _DPST_BUNDLE = dpst_quality_service.load()
+    logger.info("Loaded DPST dual-tower classifier.")
+except Exception as _exc:
+    logger.warning("DPST classifier unavailable (%s) -- dpst_tier fields will be null.", _exc)
 
 # Per-element cluster bundles (rhyme/wordplay/texture/rare): same load-once
 # pattern, but one independent try/except per family so a single missing
@@ -307,6 +316,7 @@ async def compute_scores_and_breakdown(
     svm_tier = svm_tier_confidence = svm_tier_probabilities = None
     bayes_tier = bayes_tier_probabilities = None
     tier_consensus = tier_consensus_agreement = None
+    dpst_tier = dpst_tier_confidence = dpst_tier_probabilities = None
     if any(m is not None for m in (_RF_QUALITY_BUNDLE, _SVM_QUALITY_BUNDLE, _BAYES_QUALITY_MODEL)):
         axis_scores = None
         try:
@@ -380,16 +390,53 @@ async def compute_scores_and_breakdown(
                     bayes_tier_probabilities = {"commercial": 1.0, "mid": 0.0, "elite": 0.0}
 
 
-            # Majority vote across whichever heads produced a tier. Ties break
-            # toward the RF head (strongest under grouped CV), else first voter.
-            votes = [t for t in (predicted_tier, svm_tier, bayes_tier) if t]
-            if votes:
-                from collections import Counter as _Counter
-                counted = _Counter(votes)
-                top_count = max(counted.values())
-                winners = [t for t, n in counted.items() if n == top_count]
-                tier_consensus = predicted_tier if predicted_tier in winners else winners[0]
-                tier_consensus_agreement = round(top_count / len(votes), 2)
+    # DPST / BarsNet V2 dual-tower neural classifier (phonetic + character-semantic fusion).
+    # Runs independently from the feature-based heads above — no axis_scores needed.
+    if _DPST_BUNDLE is not None:
+        try:
+            dpst_result = await asyncio.to_thread(
+                dpst_quality_service.predict,
+                _DPST_BUNDLE, lyrics,
+            )
+            dpst_tier             = dpst_result["tier"]
+            dpst_tier_confidence  = dpst_result["confidence"]
+            dpst_tier_probabilities = dpst_result["probabilities"]
+            
+            # Use BarsNet V2 multi-task neural element predictions for element scoring
+            if "predicted_elements" in dpst_result and dpst_result["predicted_elements"]:
+                b_elems = dpst_result["predicted_elements"]
+                if "rhyme" in b_elems:
+                    rhyme_score = b_elems["rhyme"]
+                if "syllable" in b_elems:
+                    syllable_score = b_elems["syllable"]
+                if "vocabulary" in b_elems:
+                    vocab_score = b_elems["vocabulary"]
+                if "wordplay" in b_elems:
+                    wordplay_score = b_elems["wordplay"]
+                if "assonance" in b_elems:
+                    assonance_score = b_elems["assonance"]
+                if "consonance" in b_elems:
+                    consonance_score = b_elems["consonance"]
+                if "onomatopoeia" in b_elems:
+                    onomatopoeia_score = b_elems["onomatopoeia"]
+        except Exception as exc:
+            logger.warning("DPST classifier scoring failed: %s", exc)
+
+    # Majority vote across whichever heads produced a tier (BarsNet V2, RF, SVM, Bayes).
+    # Ties break toward BarsNet V2 (strongest neural model), then RF head.
+    votes = [t for t in (dpst_tier, predicted_tier, svm_tier, bayes_tier) if t]
+    if votes:
+        from collections import Counter as _Counter
+        counted = _Counter(votes)
+        top_count = max(counted.values())
+        winners = [t for t, n in counted.items() if n == top_count]
+        if dpst_tier and dpst_tier in winners:
+            tier_consensus = dpst_tier
+        elif predicted_tier and predicted_tier in winners:
+            tier_consensus = predicted_tier
+        else:
+            tier_consensus = winners[0]
+        tier_consensus_agreement = round(top_count / len(votes), 2)
 
     # Map track metadata metrics
     avg_syl = compiled["avg_syllables_per_line"]
@@ -534,6 +581,9 @@ async def compute_scores_and_breakdown(
         bayes_tier_probabilities=bayes_tier_probabilities,
         tier_consensus=tier_consensus,
         tier_consensus_agreement=tier_consensus_agreement,
+        dpst_tier=dpst_tier,
+        dpst_tier_confidence=dpst_tier_confidence,
+        dpst_tier_probabilities=dpst_tier_probabilities,
         assonance_score=round(assonance_score, 2),
         consonance_score=round(consonance_score, 2),
         onomatopoeia_score=round(onomatopoeia_score, 2),

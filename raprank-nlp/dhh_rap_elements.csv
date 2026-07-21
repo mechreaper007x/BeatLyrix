@@ -1,0 +1,522 @@
+artist,title,true_tier,pred_tier,conf,chars,rhyme,syllable,alliteration,vocabulary,wordplay,assonance,consonance,onomatopoeia,compound_dens,holorime_dens
+Badshah,Abhi Toh Party Shuru Hui Hai,commercial,commercial,0.7074,1408,12.9,53.4,8.1,83.0,22.1,26.5,58.9,65.1,0.0,0.0
+Badshah,Bachpan Ka Pyaar,commercial,commercial,0.7664,1451,31.5,24.4,0.0,41.2,24.6,19.3,9.1,0.0,0.0,0.0
+Badshah,Bad Boy,commercial,commercial,0.8199,1044,6.0,25.8,0.0,50.6,91.9,8.0,9.8,0.0,0.0,0.0
+Badshah,Bandook,commercial,commercial,0.7649,2718,57.7,68.3,0.0,38.6,35.6,51.5,18.1,0.0,0.0,0.0
+Badshah,Daaku,commercial,commercial,0.7636,2342,20.2,33.9,4.3,51.9,63.2,68.1,18.7,0.0,0.0,0.0
+Badshah,Dear Aditya,commercial,commercial,0.6787,4815,34.5,88.2,9.9,80.0,36.1,77.8,82.3,0.0,0.0,0.7
+Badshah,Dj Waley Babu,commercial,commercial,0.7552,1625,9.5,80.3,0.0,24.6,29.0,19.4,18.8,0.0,0.0,0.0
+Badshah,Driving Slow,commercial,commercial,0.6678,1643,25.5,85.9,0.0,66.7,88.2,97.0,85.0,0.0,0.0,0.0
+Badshah,G-Yaan,commercial,commercial,0.4573,4596,32.5,83.0,0.0,80.0,81.6,27.5,77.5,9.7,0.0,0.0
+Badshah,Genda Phool (Pahari Version),commercial,commercial,0.781,2912,49.8,72.8,0.0,44.2,75.7,34.8,62.0,0.0,0.0,0.0
+Badshah,God Damn,commercial,commercial,0.5481,1788,42.1,72.2,0.0,78.4,54.2,94.5,61.4,85.2,0.0,0.0
+Badshah,Happy Happy,commercial,commercial,0.9025,1334,33.3,70.6,8.8,36.9,23.9,29.3,76.1,85.4,0.0,0.0
+Badshah,Hola At Your Boy,commercial,commercial,0.7608,3341,28.5,54.9,0.0,60.4,74.9,71.0,57.7,29.9,0.0,0.0
+Badshah,Hot Launde,commercial,commercial,0.7512,2625,31.9,88.2,15.6,33.0,92.9,76.5,69.1,0.0,0.0,0.0
+Badshah,Jugnu,commercial,commercial,0.7386,846,39.8,44.7,0.0,21.9,0.0,29.3,49.6,86.2,0.0,0.0
+Badshah,Kar Gayi Chull,commercial,commercial,0.7438,1705,31.4,73.5,0.0,34.4,91.4,89.3,85.0,0.0,0.0,0.0
+Badshah,Like A Snake,commercial,commercial,0.6391,3179,42.7,90.0,0.0,65.0,92.5,96.8,76.5,0.0,0.0,0.0
+Badshah,MERCY,commercial,commercial,0.7175,1127,7.2,94.0,29.4,76.0,86.4,100.0,85.0,0.0,0.0,0.0
+Badshah,Perfect,commercial,commercial,0.7166,1484,18.7,65.3,14.8,72.0,79.5,52.7,58.9,0.0,0.0,0.0
+Badshah,Players,commercial,mid,0.4235,1878,22.0,78.2,6.2,33.4,52.3,20.7,61.3,22.1,0.0,0.0
+Badshah,Proper Patola,commercial,commercial,0.5202,1593,17.8,27.2,5.8,51.6,0.0,69.4,52.2,0.0,0.0,0.0
+Badshah,She Move It Like,commercial,commercial,0.7483,863,33.5,42.6,11.9,89.0,23.9,79.1,72.9,0.0,0.0,0.0
+Badshah,Soulmate,commercial,commercial,0.6602,1345,20.7,27.8,0.0,28.7,14.8,16.2,10.6,0.0,0.0,0.0
+Badshah,Tareefan,commercial,commercial,0.7762,1053,30.2,43.9,9.5,83.0,79.1,59.3,33.0,0.0,0.0,0.0
+Badshah,Voodoo,commercial,commercial,0.6618,2025,50.7,29.4,6.9,23.6,95.4,8.4,14.7,0.0,0.0,0.0
+Bali,Bar Bar,commercial,commercial,0.7341,1913,32.0,77.0,6.1,40.9,45.0,95.8,85.0,0.0,1.8,0.0
+Bali,Feel Hai,commercial,commercial,0.7847,2114,42.5,29.4,8.8,34.1,30.5,18.9,19.2,41.8,0.0,0.0
+Bali,Hutt Hutt,commercial,commercial,0.7973,2995,33.4,42.9,0.0,31.9,33.6,19.8,19.6,42.7,0.0,0.0
+Bali,Kalesh,commercial,commercial,0.662,3564,31.1,84.4,0.0,41.2,35.2,70.3,42.8,11.6,0.0,0.0
+Bali,Kya Baat Hai,commercial,commercial,0.8422,1789,20.0,63.5,6.2,28.1,6.1,29.3,42.1,0.0,0.0,0.0
+Bali,Kya Haal Hai,commercial,commercial,0.7095,2204,17.8,29.1,0.0,28.3,32.4,13.7,9.3,0.0,0.0,0.0
+Bali,No Mercy,commercial,commercial,0.6169,3017,19.7,72.7,4.0,60.6,60.7,67.2,60.5,0.0,0.0,0.0
+Bali,Ohh Yeah,commercial,commercial,0.9525,2723,24.8,86.8,0.0,55.3,48.7,11.5,13.4,18.0,0.0,0.0
+Bali,Pyaar Chahiye,commercial,commercial,0.5803,1506,39.6,29.2,0.0,53.1,5.9,19.4,16.8,0.0,0.0,0.0
+Bali,Shor Sharaba,commercial,commercial,0.715,2261,24.7,36.6,8.6,28.3,4.8,15.6,11.7,28.5,0.0,0.0
+Bali,Sunn Na,commercial,commercial,0.771,2769,28.0,28.9,0.0,38.8,41.3,18.0,15.6,0.0,0.0,0.0
+Bali,Wow,commercial,commercial,0.7947,3081,46.2,71.5,6.4,54.8,27.1,88.9,85.0,0.0,0.0,0.0
+Brodha V,Aigiri Nandini,mid,elite,0.9947,8987,50.6,95.0,65.5,49.1,3.0,93.9,85.0,0.0,0.0,0.0
+Brodha V,Flex,mid,mid,0.6387,895,58.6,95.0,0.0,48.8,86.1,100.0,77.5,0.0,0.0,0.0
+Brodha V,Forever,mid,mid,0.9939,3607,34.7,95.0,0.0,95.3,93.1,95.3,85.0,30.1,0.0,0.0
+Brodha V,Ready Steady Po,mid,mid,0.9048,2231,17.3,67.3,19.8,28.4,26.2,18.4,21.5,88.3,0.0,0.0
+Brodha V,Vainko,mid,mid,0.9711,2917,13.2,57.9,0.0,44.6,78.9,18.9,54.3,0.0,0.0,0.0
+Calm,Bam Bam,elite,commercial,0.4583,1260,33.4,94.6,18.5,29.2,38.2,76.6,73.4,100.0,0.0,0.0
+Calm,Ringtone,elite,commercial,0.7614,2391,22.0,65.5,3.9,28.4,20.2,17.9,15.1,0.0,0.0,0.0
+CarryMinati,Date Kar Le,commercial,commercial,0.7792,1519,20.1,47.3,0.0,43.1,32.2,77.7,58.9,0.0,0.0,0.0
+CarryMinati,Jalwa,commercial,commercial,0.5229,1471,63.6,43.9,0.0,80.0,76.3,43.9,42.7,0.0,0.0,0.0
+CarryMinati,Trigger,commercial,commercial,0.5672,2190,52.8,62.6,0.0,93.5,29.5,68.1,85.0,0.0,0.0,0.0
+CarryMinati,Vardaan,commercial,commercial,0.7207,1976,42.8,72.1,0.0,51.6,5.9,87.8,56.6,0.0,0.0,0.0
+CarryMinati,Warrior,commercial,commercial,0.7596,2364,49.4,36.3,10.7,52.1,38.7,18.4,39.0,0.0,0.0,0.0
+CarryMinati,Yalgaar,commercial,commercial,0.6893,2037,35.6,79.7,5.6,35.6,22.7,21.6,39.4,0.0,0.0,0.0
+CarryMinati,Zindagi,commercial,commercial,0.7373,1307,46.2,49.2,0.0,26.9,0.0,85.6,36.2,0.0,0.0,0.0
+Dino James,Bin Bulaye,commercial,commercial,0.5824,4267,34.2,44.8,0.0,85.2,56.9,21.7,24.8,0.0,0.0,0.0
+Dino James,Chosen,commercial,commercial,0.5694,2688,34.9,95.0,5.8,89.6,93.2,98.0,85.0,20.9,0.0,0.0
+Dino James,D N Me,commercial,commercial,0.7165,2648,33.3,89.6,5.2,58.9,92.4,16.3,69.1,34.1,0.0,0.0
+Dino James,Dhundhla,commercial,commercial,0.7207,1490,21.1,34.1,0.0,59.4,51.5,86.5,56.1,0.0,0.0,0.0
+Dino James,Dooriyan,commercial,commercial,0.5976,1074,62.3,51.8,0.0,72.0,79.1,85.2,85.0,0.0,0.0,0.0
+Dino James,Faltu Rapper,commercial,commercial,0.5477,4018,23.9,50.1,4.1,77.0,33.9,59.9,34.5,0.0,0.0,0.0
+Dino James,GIRLFRIEND,commercial,commercial,0.7993,1377,16.7,24.6,0.0,23.3,6.3,5.0,15.4,0.0,0.0,0.0
+Dino James,Jealous,commercial,commercial,0.7902,1763,25.5,53.2,0.0,18.4,33.9,13.3,12.2,43.1,0.0,0.0
+Dino James,Keede,commercial,commercial,0.6967,2443,34.9,71.3,4.6,73.6,24.1,42.3,26.5,0.0,0.0,0.0
+Dino James,Lost,commercial,commercial,0.715,1338,32.5,54.4,0.0,68.0,52.9,29.3,58.9,0.0,0.0,0.0
+Dino James,MAA,commercial,mid,0.6261,871,56.7,95.0,0.0,39.4,15.7,18.6,85.0,0.0,0.0,0.0
+Dino James,Mirage,commercial,commercial,0.5078,2728,26.1,78.7,7.0,87.2,29.1,63.7,26.0,0.0,1.4,0.0
+Dino James,Nidarr,commercial,commercial,0.7368,2936,33.7,28.8,0.0,89.0,30.0,39.9,14.4,12.4,0.0,0.0
+Dino James,Plastic,commercial,commercial,0.7659,3433,10.6,29.4,0.0,68.6,55.2,19.5,16.0,0.0,0.0,0.0
+Dino James,Pyaar Pyaar,commercial,commercial,0.6857,1464,24.4,32.6,0.0,41.9,92.3,13.9,14.6,0.0,0.0,0.0
+Dino James,Still Here,commercial,commercial,0.5287,6190,24.9,49.3,0.0,81.3,57.9,34.8,32.8,0.0,0.9,0.5
+Dino James,Sunn,commercial,commercial,0.651,2576,26.4,71.5,4.7,76.8,41.2,63.7,33.3,31.2,1.4,0.0
+Dino James,Tandav,commercial,commercial,0.7354,6127,18.1,46.3,3.0,77.1,31.9,45.2,20.6,0.0,0.0,0.0
+Dino James,Tere Naam Sahare,commercial,commercial,0.6502,929,32.9,28.2,0.0,35.6,9.7,36.2,16.8,0.0,0.0,0.0
+Dino James,Unstoppable,commercial,commercial,0.7538,3768,21.3,32.7,5.5,95.7,42.4,24.5,19.1,27.6,0.0,0.0
+Dino James,Wishlist,commercial,commercial,0.654,2470,13.2,85.1,5.5,92.0,46.2,42.7,54.6,0.0,0.0,0.0
+Dino James,Yaadein,commercial,commercial,0.8626,1138,30.8,29.4,0.0,29.1,71.4,9.2,21.4,0.0,0.0,0.0
+DIVINE,100 Million,commercial,mid,0.5022,1891,57.6,82.0,7.2,68.0,64.8,92.5,85.0,0.0,0.0,0.0
+DIVINE,4.10,commercial,commercial,0.8166,2871,37.6,60.9,0.0,52.5,86.0,33.8,58.9,0.0,0.0,0.0
+DIVINE,Akela,commercial,commercial,0.7058,2976,11.7,28.8,0.0,30.4,23.8,13.4,10.1,11.2,0.0,0.0
+DIVINE,Azadi,commercial,commercial,0.7421,713,33.4,56.5,13.3,22.4,13.2,24.7,19.4,0.0,0.0,4.0
+DIVINE,Baazigar,commercial,commercial,0.6428,2862,37.0,63.8,4.3,60.0,69.0,85.2,85.0,0.0,0.0,0.0
+DIVINE,Chal Bombay,commercial,commercial,0.4393,3802,53.4,88.6,3.1,33.8,41.4,37.0,62.6,11.5,0.0,0.0
+DIVINE,Disco Rap,commercial,commercial,0.7063,2977,4.6,26.4,0.0,43.1,21.2,14.1,12.9,20.8,0.0,0.0
+DIVINE,Gandhi Money,commercial,commercial,0.7955,2567,14.5,71.6,5.0,31.1,38.2,25.8,37.3,0.0,0.0,0.0
+DIVINE,Gunehgar,commercial,commercial,0.6876,3293,14.7,28.4,2.9,66.3,49.9,19.1,27.6,53.3,0.0,0.0
+DIVINE,Junoon,commercial,commercial,0.74,1677,29.9,29.6,0.0,92.0,39.0,21.8,12.4,19.5,0.0,0.0
+DIVINE,Kohinoor,commercial,commercial,0.7459,5530,31.4,62.3,9.1,78.2,35.4,41.5,75.3,30.1,0.0,0.0
+DIVINE,Mere Gully Mein (Single),commercial,commercial,0.7965,3199,54.7,26.5,2.7,39.4,18.0,11.7,14.4,9.8,0.0,0.0
+DIVINE,Mirchi,commercial,commercial,0.6111,2861,35.3,27.8,3.1,60.0,32.6,22.9,30.1,39.5,0.0,0.0
+DIVINE,Punya Paap,commercial,commercial,0.6382,2215,22.3,58.4,0.0,48.4,52.7,45.5,58.9,0.0,0.0,0.0
+DIVINE,Satya,commercial,commercial,0.731,1895,32.1,27.8,0.0,62.0,48.9,16.9,39.1,71.8,0.0,0.0
+DIVINE,Sitara,commercial,commercial,0.806,2337,37.0,50.7,0.0,34.9,76.8,19.1,18.7,0.0,0.0,0.0
+DIVINE,Too Hype,commercial,commercial,0.7436,4242,19.2,53.0,0.0,71.1,79.3,29.3,19.8,25.4,0.0,0.0
+DIVINE,Traffic Jam,commercial,commercial,0.7153,2807,44.6,67.6,8.8,41.2,92.8,53.9,81.2,0.0,0.0,0.0
+DIVINE,Triple OG,commercial,commercial,0.6677,5461,50.0,82.5,15.7,37.4,30.1,38.3,85.0,30.8,0.0,0.0
+DIVINE,Vibe Hai,commercial,commercial,0.8512,3641,13.1,27.9,2.9,29.6,29.1,19.7,18.8,0.0,0.0,0.0
+DIVINE,Wallah,commercial,commercial,0.8104,1531,38.3,95.0,0.0,27.5,10.0,87.8,66.8,88.8,0.0,0.0
+Emiway Bantai,Checkmate,commercial,commercial,0.8111,1685,26.6,29.5,0.0,29.6,45.4,13.5,17.8,20.1,0.0,0.0
+Emiway Bantai,Chusamba,commercial,commercial,0.7021,3283,27.0,52.9,3.3,59.2,68.8,83.3,70.5,63.9,1.0,0.0
+Emiway Bantai,Company,commercial,commercial,0.6436,1672,43.5,66.5,0.0,33.8,0.0,15.3,48.7,0.0,0.0,0.0
+Emiway Bantai,Dhua Dhua,commercial,commercial,0.8088,2446,37.5,27.0,0.0,27.9,29.7,13.2,17.4,0.0,0.0,0.0
+Emiway Bantai,Dhyan De,commercial,commercial,0.7689,1772,41.8,25.7,0.0,64.0,49.1,32.4,26.5,54.2,0.0,0.0
+Emiway Bantai,Firse Machayenge,commercial,commercial,0.6768,2364,40.4,84.5,0.0,93.5,29.1,23.8,44.5,0.0,0.0,0.0
+Emiway Bantai,Freeverse Feast 2,commercial,commercial,0.7538,4277,25.4,69.2,2.7,65.8,79.8,53.0,67.4,10.0,0.0,0.0
+Emiway Bantai,Giraftaar,commercial,commercial,0.7165,3882,38.5,52.6,0.0,66.0,34.6,27.5,37.6,9.4,0.0,0.0
+Emiway Bantai,GUESS,commercial,commercial,0.7414,3626,19.9,40.4,0.0,77.7,56.3,23.0,55.4,0.0,0.0,0.0
+Emiway Bantai,Gully ka Kutta,commercial,commercial,0.7406,5245,31.2,53.0,0.0,83.5,51.5,39.9,50.2,37.9,0.0,0.0
+Emiway Bantai,HARD,commercial,commercial,0.72,3323,21.5,83.5,9.9,64.0,55.4,91.8,85.0,14.6,0.0,0.0
+Emiway Bantai,HEAL,commercial,commercial,0.7296,2364,15.9,27.2,0.0,33.8,5.7,11.2,9.4,0.0,0.0,0.0
+Emiway Bantai,Jallad,commercial,commercial,0.7597,6088,15.9,51.3,7.7,28.4,30.7,17.7,12.4,10.7,0.0,0.0
+Emiway Bantai,Khatam Hue Waande,commercial,commercial,0.6605,3053,11.6,59.5,0.0,33.1,40.3,20.6,49.1,0.0,4.3,0.0
+Emiway Bantai,Khatam,commercial,commercial,0.6974,3655,29.6,51.6,2.9,61.7,35.3,17.2,26.5,77.9,0.0,0.0
+Emiway Bantai,King Of Indian Hip Hop,commercial,commercial,0.662,8091,39.8,82.6,8.1,55.8,82.8,61.4,85.0,5.9,0.0,0.5
+Emiway Bantai,MACHAYENGE 4 (Teri Maa Chahegi More),commercial,elite,0.459,9781,41.4,93.0,4.2,75.2,54.7,80.5,85.0,4.3,0.0,0.0
+Emiway Bantai,No Brands,commercial,commercial,0.5277,4027,34.4,87.5,7.9,67.2,22.4,85.8,85.0,0.0,7.1,0.0
+Emiway Bantai,Round One,commercial,commercial,0.9497,3667,28.7,58.5,0.0,29.0,30.5,18.8,85.0,11.3,0.0,0.0
+EPR,ADR / ABR,elite,elite,0.4946,3476,52.7,80.6,10.5,86.9,31.4,88.6,85.0,24.3,0.0,0.0
+EPR,Badluram ka badan,elite,mid,0.6498,2310,11.3,38.8,0.0,49.9,4.5,13.5,40.4,0.0,0.0,0.0
+EPR,Ekla Cholo Re,elite,elite,0.6164,1531,12.8,52.5,0.0,77.3,0.0,52.7,77.2,0.0,0.0,0.0
+EPR,Fibonacci,elite,elite,0.4887,3466,10.6,32.6,8.1,98.4,82.8,16.6,85.0,0.0,0.0,0.0
+EPR,Koi Gham Nahi,elite,commercial,0.6188,1839,22.8,87.0,0.0,41.9,19.7,100.0,85.0,0.0,0.0,0.0
+EPR,Q,elite,elite,0.9341,2137,32.3,89.0,6.4,96.4,47.8,78.4,85.0,0.0,0.0,0.0
+EPR,Raastamahn,elite,elite,0.7512,1793,35.1,85.7,6.5,72.0,32.5,59.0,85.0,41.6,0.0,0.0
+EPR,Srini Bana EPR,elite,elite,0.9652,1505,31.4,87.4,9.5,97.1,89.8,100.0,85.0,70.6,0.0,0.0
+Hanumankind,Big Dawgs,mid,mid,0.7324,3176,27.9,71.2,0.0,70.4,80.2,36.0,68.2,85.7,0.0,0.0
+Hanumankind,Holiday,mid,commercial,0.7581,1798,37.6,70.2,0.0,27.2,32.8,18.1,36.9,0.0,0.0,0.0
+Hanumankind,Run It Up,mid,commercial,0.8921,5850,8.0,27.3,1.4,66.2,16.2,15.6,11.3,9.6,0.0,0.0
+Hanumankind,Taste the Thunder,mid,commercial,0.9121,2647,23.5,27.5,3.2,44.4,39.7,14.2,20.2,0.0,0.0,0.0
+Ikka,Angaar,commercial,commercial,0.691,4427,45.9,49.7,12.4,92.0,62.1,31.8,53.4,0.0,0.0,0.0
+Ikka,House of Lies,commercial,commercial,0.7947,3252,39.2,43.3,0.0,39.8,2.7,70.0,24.3,0.0,0.0,0.0
+Ikka,Jagga Jatt,commercial,commercial,0.5019,2754,30.1,94.5,0.0,30.8,83.1,62.1,85.0,0.0,0.0,0.0
+Ikka,KEM CHO,commercial,commercial,0.5125,1179,30.3,69.1,14.3,76.0,66.2,85.2,18.8,0.0,0.0,0.0
+Ikka,Khatma,commercial,commercial,0.7261,3070,42.6,73.6,3.8,53.8,51.6,30.7,47.0,13.9,0.0,0.0
+Ikka,Laadla,commercial,commercial,0.6031,1767,32.7,84.2,22.9,40.3,37.8,18.9,75.9,0.0,0.0,0.0
+Ikka,Nindra,commercial,commercial,0.799,1284,53.8,61.0,0.0,38.1,43.4,29.3,26.5,0.0,0.0,0.0
+Ikka,Nishu,commercial,commercial,0.6982,2740,30.7,44.7,3.6,55.6,36.0,19.9,19.2,0.0,0.0,0.0
+Ikka,Sab Jaanta Hai,commercial,commercial,0.678,2684,30.5,29.6,0.0,53.6,41.4,47.5,11.1,0.0,0.0,0.0
+Ikka,Sanki,commercial,commercial,0.7788,4344,29.7,88.2,14.4,57.8,71.6,96.1,85.0,22.8,1.9,0.0
+Ikka,Trap Munde,commercial,commercial,0.5831,2957,53.4,73.8,4.3,67.6,83.0,100.0,85.0,0.0,5.2,0.0
+Ikka,WOH,commercial,commercial,0.7743,3504,44.8,74.7,0.0,38.8,45.4,23.6,19.2,0.0,0.0,0.0
+JTrix,Aadat,commercial,commercial,0.5625,870,10.4,50.4,0.0,92.0,0.0,10.9,17.4,38.3,0.0,0.0
+JTrix,Banger Pro Max,commercial,commercial,0.742,2306,21.2,64.9,0.0,51.4,40.4,16.3,40.7,59.0,0.0,0.0
+JTrix,Blow Up,commercial,commercial,0.6427,2018,21.1,64.4,0.0,41.2,38.9,55.9,70.3,21.2,0.0,0.0
+JTrix,Bohot Sahi,commercial,commercial,0.5793,2820,42.2,76.0,8.8,66.7,79.4,44.7,55.5,16.1,0.0,0.0
+JTrix,East Side Flow,commercial,commercial,0.8245,2878,24.9,24.4,0.0,33.3,8.2,26.5,14.2,19.5,0.0,0.0
+JTrix,Ek Tarfa,commercial,commercial,0.8123,899,18.2,30.1,0.0,54.4,9.1,22.9,8.7,0.0,0.0,0.0
+JTrix,Jazbaat,commercial,commercial,0.7576,1414,6.2,25.9,0.0,35.6,5.5,68.1,17.6,0.0,0.0,0.0
+JTrix,Kaala,commercial,commercial,0.7675,1973,44.4,89.5,0.0,66.0,77.8,49.6,73.1,0.0,0.0,0.0
+JTrix,Kalaakaar,commercial,commercial,0.5881,2255,38.0,62.6,10.1,95.1,41.2,89.5,78.7,0.0,0.0,0.0
+JTrix,Khayaal,commercial,commercial,0.6421,1105,38.7,41.3,9.3,54.4,0.0,12.1,33.7,0.0,0.0,0.0
+JTrix,Kya Scene,commercial,commercial,0.5836,2042,35.4,77.6,0.0,50.6,78.5,86.2,38.1,81.3,0.0,0.0
+JTrix,Mast,commercial,commercial,0.5121,2901,26.5,76.0,4.4,44.2,81.3,90.0,58.9,41.8,0.0,0.0
+JTrix,Masti Nahi,commercial,commercial,0.5612,1831,14.6,95.0,22.3,74.0,88.2,91.1,85.0,0.0,0.0,0.0
+JTrix,Mera Naam,commercial,commercial,0.8384,1266,25.7,63.8,0.0,49.4,8.4,26.3,82.3,0.0,2.6,0.0
+JTrix,Muskura,commercial,commercial,0.7472,2677,47.3,82.9,4.7,43.1,23.4,57.2,85.0,31.2,0.0,0.0
+JTrix,One and Only,commercial,commercial,0.7456,2534,45.0,60.0,0.0,47.5,96.0,43.0,60.6,15.7,0.0,0.0
+JTrix,Pehchaan,commercial,commercial,0.7668,2344,26.4,66.5,5.6,46.9,23.2,44.9,45.9,0.0,1.7,0.0
+JTrix,Sharaab,commercial,mid,0.5314,1915,45.8,54.2,0.0,26.7,28.0,13.3,14.3,0.0,0.0,0.0
+JTrix,Sort Hai,commercial,commercial,0.5996,2509,43.0,52.4,4.5,81.2,69.3,51.4,34.4,16.6,2.7,0.0
+JTrix,Streets,commercial,commercial,0.4923,2290,57.8,90.5,13.3,83.6,84.7,100.0,85.0,0.0,0.0,0.0
+JTrix,Tehelka,commercial,commercial,0.455,2459,25.2,28.9,4.2,89.0,61.6,70.0,85.0,15.2,0.0,0.0
+JTrix,Waqt,commercial,commercial,0.7816,1197,47.0,49.8,0.0,21.2,0.0,16.9,15.9,0.0,0.0,0.0
+Kaam Bhaari,BHAARAT,mid,commercial,0.3806,6557,43.3,95.0,2.0,62.5,65.5,58.8,85.0,0.0,0.0,0.0
+Kaam Bhaari,Mohabbat,mid,mid,0.7445,1065,31.9,93.1,0.0,46.9,13.7,88.0,85.0,0.0,0.0,0.0
+Kaam Bhaari,Pataka,mid,commercial,0.7817,2023,59.2,32.1,0.0,53.4,21.5,16.9,49.9,30.8,0.0,0.0
+Kaam Bhaari,Zeher,mid,mid,0.5724,1802,32.0,92.2,0.0,33.8,43.0,76.3,67.2,23.9,0.0,0.0
+Karma,Airplane Mode,elite,commercial,0.7949,3249,11.1,47.9,3.5,67.4,71.5,20.7,24.8,0.0,0.0,0.0
+Karma,Baba Yaga,elite,commercial,0.7647,2306,34.8,27.9,0.0,49.9,52.6,17.5,12.4,13.1,0.0,0.0
+Karma,Basic Bars,elite,commercial,0.5576,1681,14.2,56.1,0.0,96.2,84.7,66.5,64.1,0.0,0.0,0.0
+Karma,Beat Do,elite,commercial,0.7436,2767,28.1,27.4,6.5,53.8,46.1,13.5,22.4,0.0,0.0,0.0
+Karma,Best Nai,elite,commercial,0.658,2672,37.0,68.3,0.0,68.8,65.2,66.0,62.5,0.0,0.0,0.0
+Karma,Catchy Hook,elite,commercial,0.75,3437,15.1,30.0,0.0,34.5,69.5,22.0,13.9,10.7,0.0,0.0
+Karma,Fate,elite,commercial,0.7609,2390,17.3,41.5,0.0,72.0,9.7,49.0,14.5,0.0,0.0,0.0
+Karma,Fearless,elite,elite,0.4426,1337,69.6,88.8,0.0,25.7,11.1,86.4,62.8,0.0,0.0,0.0
+Karma,Gangster,elite,commercial,0.6937,1996,26.5,60.8,0.0,46.9,88.9,23.6,16.4,0.0,0.0,0.0
+Karma,Godzilla,elite,commercial,0.7334,3515,42.3,72.2,0.0,60.6,75.0,31.6,52.5,0.0,0.0,0.0
+Karma,Google Pay,elite,commercial,0.7341,3805,34.5,63.4,0.0,78.0,89.3,80.4,69.3,12.0,0.0,0.0
+Karma,I GET IT,elite,commercial,0.7999,2269,14.5,21.2,7.0,72.0,78.0,11.9,13.2,0.0,0.0,0.0
+Karma,Lena Mera Naam,elite,commercial,0.7744,803,31.9,53.3,0.0,50.6,12.6,16.7,12.1,0.0,0.0,0.0
+Karma,Lessons,elite,commercial,0.513,2588,27.6,72.1,5.0,80.0,77.3,16.2,62.8,0.0,0.0,0.0
+Karma,Mere Bhai Log,elite,commercial,0.7244,2234,39.3,78.7,6.0,59.1,64.2,88.7,45.0,0.0,1.7,0.0
+Karma,No Bro,elite,commercial,0.7764,1639,19.7,27.8,0.0,43.1,55.8,36.9,18.4,0.0,0.0,0.0
+Karma,Online,elite,mid,0.433,2348,46.1,94.8,12.6,77.7,91.3,100.0,85.0,0.0,0.0,0.0
+Karma,Pomfret Fry,elite,commercial,0.7444,2831,10.1,27.2,3.3,88.4,69.0,14.1,15.1,12.0,0.0,0.0
+Karma,SAARI SAARI RAAT,elite,commercial,0.806,629,38.9,87.3,21.4,23.3,0.0,43.9,58.9,86.4,0.0,0.0
+Karma,SUCCESS,elite,commercial,0.6964,2050,15.0,55.2,0.0,48.8,75.1,86.3,76.6,20.6,0.0,0.0
+Karma,Take Diss,elite,commercial,0.742,2619,34.5,41.2,7.8,59.6,72.0,33.5,36.0,0.0,0.0,0.0
+Karma,Tera Hua,elite,commercial,0.6766,695,27.2,64.6,0.0,21.4,0.0,16.6,4.1,0.0,0.0,0.0
+Karma,The Game Is On,elite,commercial,0.6711,2080,18.8,36.2,0.0,70.0,51.8,17.0,36.6,0.0,0.0,0.0
+Karma,Tony Montana,elite,commercial,0.722,2652,24.1,38.8,10.6,72.0,87.9,30.8,29.4,40.0,0.0,1.3
+Karma,Zaruri Nahi,elite,commercial,0.6791,3007,40.1,38.6,6.9,72.0,82.3,75.3,44.0,0.0,0.0,0.0
+King,90s,commercial,commercial,0.7968,2678,27.7,62.7,0.0,41.6,28.2,12.2,24.1,0.0,0.0,0.0
+King,Baazi,commercial,commercial,0.8655,4567,25.5,95.0,0.0,27.0,19.1,17.4,58.9,12.9,0.0,0.0
+King,Desi Dan Bilzerian,commercial,mid,0.4199,3056,28.5,90.5,11.9,87.7,59.8,100.0,85.0,0.0,1.4,0.0
+King,Dracula,commercial,commercial,0.5665,1757,39.0,77.5,0.0,43.1,85.2,91.8,27.1,0.0,0.0,0.0
+King,EKTARFA,commercial,commercial,0.6394,2416,30.6,93.5,0.0,93.5,52.1,57.5,72.4,0.0,0.0,0.0
+King,GOAT SHIT,commercial,commercial,0.6832,6530,19.8,72.0,1.7,71.5,71.5,78.1,72.6,17.9,0.0,0.0
+King,IICONIC,commercial,commercial,0.7509,2351,15.6,38.1,4.1,78.4,27.0,57.8,14.6,0.0,0.0,0.0
+King,KODAK,commercial,commercial,0.5851,10229,22.6,82.2,2.5,90.3,33.7,73.2,58.4,32.3,0.0,0.0
+King,Laapata,commercial,commercial,0.4905,642,0.0,61.0,0.0,35.6,0.0,85.6,17.1,0.0,0.0,0.0
+King,Let The Eyes Talk,commercial,commercial,0.7682,1633,6.5,59.6,0.0,33.8,6.3,8.4,9.3,0.0,0.0,0.0
+King,Maan Meri Jaan,commercial,commercial,0.6189,1119,11.0,75.2,0.0,29.6,0.0,17.4,28.6,0.0,0.0,0.0
+King,No Loss,commercial,commercial,0.6514,2064,36.3,78.5,0.0,78.0,28.7,63.8,85.0,0.0,0.0,0.0
+King,OOPS,commercial,commercial,0.7726,2236,17.4,73.2,0.0,45.0,4.6,19.3,13.9,0.0,0.0,0.0
+King,Picasso,commercial,commercial,0.5146,1901,12.0,29.2,0.0,56.9,35.1,11.9,13.4,0.0,0.0,0.0
+King,Shaamein,commercial,commercial,0.7824,1257,26.0,27.9,0.0,26.3,15.7,17.7,10.6,0.0,0.0,0.0
+King,Sinner,commercial,commercial,0.6721,2082,12.0,45.5,0.0,42.2,12.4,42.3,6.3,0.0,0.0,0.0
+King,TERE HO KE,commercial,commercial,0.7204,3978,15.6,80.4,0.0,49.4,72.5,45.1,32.5,0.0,0.0,0.0
+King,Tu Aake Dekhle,commercial,commercial,0.7693,1841,32.1,29.0,0.0,41.2,5.2,32.6,11.5,0.0,0.0,0.0
+King,WARCRY,commercial,commercial,0.7753,3969,38.8,83.7,6.4,81.7,51.3,45.0,67.7,0.0,0.0,0.0
+King,Yeh Zindagi Hai,commercial,commercial,0.742,2122,22.5,22.5,0.0,46.9,27.6,10.2,4.3,0.0,0.0,0.0
+KR$NA,Been A While,elite,commercial,0.7145,3572,25.7,85.1,4.4,89.0,84.9,93.9,85.0,38.3,0.0,0.0
+KR$NA,Blowing Up,elite,commercial,0.7507,4016,51.1,95.0,8.2,57.2,92.7,67.3,64.1,23.1,0.0,0.0
+KR$NA,Hello,elite,mid,0.4623,2282,31.7,74.7,0.0,59.1,92.8,15.3,16.4,17.5,0.0,0.0
+KR$NA,Hola Amigo,elite,commercial,0.7032,5096,50.9,65.4,13.7,89.6,53.5,89.2,64.8,83.8,0.0,0.0
+KR$NA,I Guess,elite,commercial,0.6974,3347,63.6,36.1,0.0,53.8,72.6,16.4,21.7,0.0,2.0,0.0
+KR$NA,Joota Japani,elite,commercial,0.6026,2283,55.6,54.3,0.0,68.8,80.3,64.9,64.3,17.0,0.0,0.0
+KR$NA,Kaha Tak,elite,commercial,0.7309,3158,17.3,38.0,0.0,54.4,43.0,15.8,19.6,0.0,0.0,0.0
+KR$NA,Khatta Flow,elite,commercial,0.6251,2864,58.9,95.0,0.0,92.8,93.3,84.9,85.0,0.0,0.0,0.0
+KR$NA,Knock Knock,elite,commercial,0.7895,1730,72.3,29.7,5.4,23.5,21.6,12.6,12.4,0.0,1.6,0.0
+KR$NA,Lil Bunty,elite,mid,0.5022,2946,42.4,92.2,10.0,87.7,92.6,86.8,84.1,38.7,0.0,0.0
+KR$NA,Machayenge 4,elite,commercial,0.7158,7353,23.8,77.3,1.7,90.0,72.7,88.2,74.2,12.5,0.0,0.0
+KR$NA,MAHARANI,elite,commercial,0.7155,3711,16.4,22.2,0.0,90.3,32.8,11.7,8.0,14.0,0.6,0.0
+KR$NA,Makasam,elite,elite,0.4867,5237,38.9,95.0,7.7,80.4,83.7,87.1,85.0,8.0,0.0,0.0
+KR$NA,Muqabla,elite,commercial,0.4544,3661,46.3,92.7,9.8,68.6,92.5,66.3,80.4,0.0,0.0,0.0
+KR$NA,NGL,elite,commercial,0.7992,4339,41.0,71.5,3.1,84.5,89.3,80.9,83.1,0.0,0.9,0.0
+KR$NA,No Cap,elite,elite,0.9618,3695,42.2,64.1,3.3,60.6,93.1,87.6,65.3,0.0,0.0,0.0
+KR$NA,OG,elite,mid,0.5112,3245,21.3,66.8,0.0,68.0,52.2,23.6,28.9,0.0,0.0,0.0
+KR$NA,Prarthana,elite,commercial,0.4951,3867,55.5,87.0,4.6,81.7,59.9,85.3,70.5,85.1,0.0,0.0
+KR$NA,Roll Up,elite,mid,0.4685,2143,39.3,76.1,4.7,58.9,91.1,40.8,44.3,17.0,2.8,0.0
+KR$NA,Saath Ya Khilaaf,elite,elite,0.4812,2819,53.1,85.3,4.0,68.0,77.8,47.6,35.5,0.0,0.0,0.0
+KR$NA,Say My Name (English Version),elite,commercial,0.8822,3381,28.2,75.3,0.0,86.0,93.0,80.3,74.8,27.6,0.0,0.0
+KR$NA,Saza E Maut,elite,commercial,0.5106,2959,56.6,75.1,0.0,66.7,92.6,72.9,85.0,73.6,0.0,0.0
+KR$NA,Seedha Makeover,elite,commercial,0.7248,3128,45.9,81.2,4.0,73.1,89.9,56.0,85.0,0.0,0.0,0.0
+KR$NA,Sensitive,elite,elite,0.8806,6327,39.7,84.2,5.9,63.4,53.9,78.5,49.0,0.0,0.0,0.0
+KR$NA,Shut Up,elite,mid,0.9245,3239,57.4,95.0,8.4,94.6,93.0,91.2,85.0,82.0,0.0,0.0
+KR$NA,Some Of Us,elite,mid,0.9446,3761,69.8,95.0,4.2,96.4,54.2,61.4,85.0,0.0,0.0,0.0
+KR$NA,Still Standing,elite,commercial,0.7239,2742,70.4,95.0,6.0,65.3,94.4,100.0,85.0,55.0,0.0,0.0
+KR$NA,Untitled,elite,mid,0.4059,2877,42.4,79.3,4.6,66.7,92.6,81.8,80.3,16.4,1.4,0.0
+KR$NA,Vibrate,elite,commercial,0.4593,5179,27.9,62.2,2.1,88.5,80.0,40.9,85.0,7.5,0.0,0.0
+KR$NA,Villain,elite,elite,0.5634,2767,45.9,81.1,0.0,57.6,94.8,69.0,52.8,0.0,0.0,0.0
+KR$NA,Vyanjan,elite,elite,0.5578,3046,51.0,95.0,100.0,96.2,89.7,100.0,85.0,0.0,0.0,0.0
+KR$NA,Wanna Know,elite,mid,0.9236,2971,66.2,89.0,0.0,76.0,94.0,85.2,60.7,0.0,0.0,0.0
+KR$NA,Whats Up,elite,commercial,0.8335,2495,37.0,72.4,0.0,33.8,85.3,19.4,17.1,0.0,0.0,0.0
+MC Stan,Amin,commercial,commercial,0.6683,4693,60.3,77.4,0.0,54.4,49.6,45.4,85.0,28.4,0.8,0.0
+MC Stan,Astaghfirullah,commercial,commercial,0.7675,3581,48.0,44.7,7.2,27.1,14.8,13.9,15.3,63.0,0.0,0.0
+MC Stan,Basti Ka Hasti,commercial,commercial,0.7389,3021,62.5,69.8,3.9,72.0,38.2,87.9,77.1,26.3,0.0,0.0
+MC Stan,Bitch,commercial,commercial,0.4905,2438,32.7,73.2,0.0,76.8,25.9,85.4,85.0,0.0,0.0,0.0
+MC Stan,Dil Pe Mat Le,commercial,commercial,0.7617,3422,41.0,77.7,7.5,41.2,44.2,22.8,40.0,13.8,0.0,0.0
+MC Stan,Ek Din Pyaar,commercial,commercial,0.6713,2937,36.0,83.2,4.8,44.7,48.2,56.0,72.0,0.0,0.0,0.0
+MC Stan,Gender,commercial,commercial,0.7877,417,27.1,71.0,33.0,49.8,0.0,18.1,19.1,71.8,0.0,0.0
+MC Stan,How To Hate,commercial,commercial,0.6376,2580,43.0,53.6,0.0,90.0,51.1,85.8,67.4,0.0,0.0,0.0
+MC Stan,Inn Log Ne Maare,commercial,commercial,0.5495,2224,56.2,74.1,11.7,94.4,0.0,88.9,85.0,0.0,0.0,0.0
+MC Stan,Insaan,commercial,commercial,0.737,2134,37.0,90.5,8.5,59.1,43.4,41.2,85.0,0.0,0.0,0.0
+MC Stan,Insaaniyat,commercial,commercial,0.5297,1288,18.0,81.7,0.0,95.0,33.6,61.1,85.0,0.0,3.0,0.0
+MC Stan,Kal Hai Mera Show,commercial,commercial,0.693,1545,12.9,74.0,0.0,45.6,37.8,53.8,18.6,26.1,0.0,0.0
+MC Stan,Maa Baap,commercial,commercial,0.7664,746,39.5,27.3,0.0,28.2,0.0,18.4,29.0,0.0,0.0,0.0
+MC Stan,One Day Uh Gonna Pay,commercial,commercial,0.6884,3162,19.3,61.8,0.0,43.7,3.5,38.1,21.2,87.4,0.0,0.0
+MC Stan,Regret,commercial,commercial,0.7293,1513,19.8,25.1,5.4,26.4,5.3,29.3,17.5,0.0,0.0,0.0
+MC Stan,Rehmani Keeda,commercial,commercial,0.6594,3483,17.6,91.6,8.4,68.6,21.0,30.8,85.0,0.0,0.0,0.0
+MC Stan,Shana Bann,commercial,commercial,0.6326,3323,33.8,94.2,0.0,74.0,43.5,90.0,85.0,59.6,0.0,0.0
+MC Stan,YEDE KI CHADAAR,commercial,commercial,0.8138,1147,29.6,25.9,0.0,82.0,19.3,36.8,17.0,24.7,0.0,0.0
+Muhfaad,Abe Chodna,commercial,commercial,0.7439,2267,43.2,81.0,12.9,49.9,0.0,19.1,28.0,38.3,0.0,0.0
+Muhfaad,Adayein,commercial,commercial,0.7757,2029,48.9,72.6,11.5,46.9,34.8,65.4,43.2,0.0,0.0,0.0
+Muhfaad,Aelaan,commercial,commercial,0.6354,5177,36.6,71.0,0.0,71.3,43.2,63.8,67.9,8.4,0.7,0.0
+Muhfaad,Ambaran,commercial,commercial,0.7198,2042,27.7,50.9,0.0,34.1,19.8,88.1,18.9,17.5,0.0,0.0
+Muhfaad,BackFlip,commercial,commercial,0.7266,2280,40.0,91.9,14.9,40.9,5.9,21.0,85.0,0.0,1.8,0.0
+Muhfaad,Bakri (GOAT),commercial,commercial,0.6372,3056,37.3,80.7,4.1,80.0,82.2,90.8,73.2,0.0,0.0,0.0
+Muhfaad,Bhoot Banega,commercial,commercial,0.72,8301,19.3,76.2,0.0,89.7,44.9,81.4,85.0,5.5,0.9,0.0
+Muhfaad,Bulbul,commercial,commercial,0.74,1295,74.1,75.3,0.0,38.4,0.0,88.5,72.0,0.0,0.0,0.0
+Muhfaad,Duniya Chutiya,commercial,commercial,0.7451,1422,29.4,57.1,0.0,64.0,18.9,17.2,13.1,0.0,0.0,0.0
+Muhfaad,DUSSEHRA,commercial,commercial,0.5677,4538,24.6,95.0,0.0,66.7,32.9,51.3,85.0,12.2,0.0,0.0
+Muhfaad,Ego Friendly,commercial,commercial,0.7097,2627,13.3,35.7,3.6,52.2,48.8,58.1,25.4,0.0,0.0,0.0
+Muhfaad,Glitch,commercial,commercial,0.9407,2286,21.4,25.5,0.0,45.6,67.5,11.4,5.8,0.0,0.0,0.0
+Muhfaad,Happy Diwala Ravan,commercial,commercial,0.7361,2670,49.3,71.8,3.9,89.0,28.1,37.5,33.3,14.3,0.0,0.0
+Muhfaad,Har Har Gange,commercial,mid,0.5225,2856,66.7,66.9,4.4,43.8,0.0,93.8,50.2,85.0,0.0,0.0
+Muhfaad,Instagram Live,commercial,commercial,0.6992,6207,21.4,90.5,2.1,95.2,41.0,73.5,85.0,0.0,0.0,0.0
+Muhfaad,Jaldi Aao,commercial,commercial,0.7325,3275,57.4,70.6,3.5,74.7,22.8,47.4,44.2,0.0,0.0,0.0
+Muhfaad,KALI ZUBAN,commercial,commercial,0.7645,2590,26.9,89.7,11.7,78.7,74.8,54.9,85.0,0.0,0.0,0.0
+Muhfaad,Maa Kasam,commercial,commercial,0.7687,1819,33.1,86.7,6.8,51.6,49.4,74.4,72.2,0.0,0.0,0.0
+Muhfaad,Moksh,commercial,commercial,0.6897,3673,38.3,55.4,3.0,93.5,66.3,66.7,53.1,21.3,0.0,0.0
+Muhfaad,Nateejay,commercial,commercial,0.6144,4160,48.6,90.2,5.2,97.1,67.9,80.1,85.0,0.0,1.6,0.0
+Muhfaad,Pablo (Love Bites),commercial,commercial,0.8303,1384,15.4,70.2,0.0,26.4,27.2,86.3,85.0,0.0,0.0,0.0
+Muhfaad,Paisa Paisa,commercial,commercial,0.6239,2015,11.0,25.3,3.8,21.3,4.2,10.3,5.5,0.0,0.0,0.0
+Muhfaad,Sach Too Much Hai,commercial,commercial,0.672,3306,36.5,41.1,0.0,96.3,39.2,57.2,26.8,38.0,2.7,0.0
+Muhfaad,Sare Karo Dab,commercial,commercial,0.8624,2288,15.6,53.5,54.5,43.1,36.3,25.7,16.8,0.0,0.0,0.0
+Naam Sujal,Blind Spot,mid,commercial,0.413,2513,24.8,85.7,0.0,95.4,32.2,91.0,85.0,0.0,0.0,0.0
+Naam Sujal,Blueprint,mid,mid,0.4167,3259,17.0,64.5,7.2,93.7,69.7,50.7,80.0,67.3,0.0,0.0
+Naam Sujal,Dafli Wale,mid,mid,0.4911,3481,27.4,78.2,7.4,87.7,41.4,78.3,85.0,46.5,0.0,0.0
+Naam Sujal,Its About Time,mid,mid,0.4809,4188,49.8,57.6,2.8,87.5,48.5,39.1,63.3,47.4,0.0,0.0
+Naam Sujal,Protocol,mid,commercial,0.6494,3971,47.9,72.8,3.1,96.5,76.9,91.8,85.0,31.0,0.9,0.0
+Naam Sujal,PYAAR?,mid,commercial,0.6684,3096,17.4,81.1,0.0,90.0,4.1,71.8,57.3,50.6,0.0,0.0
+Naam Sujal,The Waddup,mid,mid,0.4045,2513,27.8,39.5,0.0,58.9,15.0,19.6,17.5,32.1,0.0,0.0
+Naam Sujal,Vishay Khatam,mid,mid,0.6246,3259,53.5,80.1,10.5,86.9,81.9,76.0,85.0,0.0,0.0,0.0
+Narci,Angad Lalkaar,elite,elite,0.9615,5145,12.5,27.1,6.2,56.1,39.5,17.5,17.5,0.0,0.0,0.0
+Narci,Bhole Ka Sawan,elite,elite,0.7949,2298,39.7,26.6,0.0,44.6,14.8,34.4,18.3,0.0,0.0,0.0
+Narci,Govardhan Girdhari,elite,elite,0.5134,3614,42.2,67.4,2.5,58.1,34.7,17.2,37.6,0.0,0.0,0.0
+Narci,Haridoot,elite,commercial,0.5014,3055,35.0,53.8,2.5,45.5,13.0,14.9,38.6,0.0,0.0,0.0
+Narci,Jatajoot,elite,elite,0.9289,2500,21.8,26.3,22.7,93.2,23.9,22.9,55.3,0.0,0.0,0.0
+Narci,Kali Paksh Ya Hari Paksh,elite,mid,0.4688,3719,13.4,28.8,0.0,87.7,40.5,18.4,15.9,0.0,0.0,0.0
+Narci,Kashinath,elite,elite,0.8664,4398,11.9,75.9,0.0,28.4,18.1,35.2,21.6,0.0,0.0,0.0
+Narci,Kumbh Katha,elite,elite,0.9552,2948,32.4,67.3,9.3,72.0,25.2,50.1,54.6,0.0,0.0,0.0
+Narci,Lanka Dahan,elite,commercial,0.6067,4364,21.1,27.9,4.8,79.1,53.3,17.6,17.6,0.0,0.0,0.0
+Narci,Maryada,elite,elite,0.9056,3149,71.1,95.0,12.2,78.0,94.5,100.0,85.0,0.0,0.0,0.0
+Narci,Maya Teri Ram,elite,elite,0.9262,5259,18.0,59.4,10.7,38.8,42.5,46.2,18.0,0.0,0.0,0.0
+Narci,Paap Naashak,elite,elite,0.9745,2412,34.9,95.0,5.5,56.6,69.2,46.5,85.0,0.0,0.0,0.0
+Narci,Panchmukhi,elite,elite,0.5813,4516,65.2,95.0,0.0,76.0,54.8,45.7,85.0,0.0,0.0,0.0
+Narci,Phir Hari Aur Main,elite,elite,0.8814,2362,23.5,38.2,0.0,31.9,36.2,15.0,17.3,0.0,2.4,0.0
+Narci,Ram Bin Jaaun Kahan,elite,elite,0.9627,2214,19.1,84.6,0.0,45.0,16.3,55.9,70.3,0.0,0.0,0.0
+Narci,Suno Parth,elite,elite,0.824,2019,60.0,95.0,0.0,65.6,93.3,100.0,85.0,0.0,0.0,0.0
+Narci,Trilokpati,elite,commercial,0.4537,2676,28.8,25.5,2.9,68.0,37.2,23.2,17.0,0.0,0.0,0.0
+Panther,Aisi Jagah Se,commercial,commercial,0.8093,3540,75.3,95.0,0.0,50.1,33.6,71.4,72.2,0.0,0.0,0.0
+Panther,Bemisaal,commercial,elite,0.6833,3802,44.0,95.0,3.8,59.7,41.9,88.8,67.8,91.7,0.0,0.0
+Panther,Bhasad,commercial,commercial,0.6838,1328,75.8,28.7,0.0,27.2,18.9,11.8,17.3,82.4,0.0,2.1
+Panther,Bohot Aagey,commercial,commercial,0.6826,2217,27.9,74.7,4.8,70.4,65.3,94.2,23.2,0.0,0.0,0.0
+Panther,G Shit,commercial,commercial,0.6865,1318,27.4,29.8,0.0,44.1,67.3,66.4,36.8,0.0,0.0,0.0
+Panther,Galat Karam,commercial,commercial,0.7196,3113,56.7,95.0,6.4,34.2,91.9,44.3,85.0,0.0,0.0,0.0
+Panther,Ghoda,commercial,commercial,0.8109,1508,22.3,87.1,0.0,45.4,22.1,54.9,85.0,0.0,0.0,0.0
+Panther,Haal,commercial,commercial,0.8538,1166,12.4,46.8,0.0,40.6,22.7,12.0,12.9,0.0,0.0,0.0
+Panther,Jaani,commercial,commercial,0.7082,2107,48.3,94.4,0.0,34.7,6.7,83.8,32.4,0.0,0.0,0.0
+Panther,Kiska Hai,commercial,elite,0.5237,2923,62.1,95.0,0.0,46.9,65.9,17.2,63.7,86.1,0.0,0.0
+Panther,Loriyan,commercial,commercial,0.7179,1944,43.5,50.6,8.1,46.9,37.4,25.6,18.4,0.0,0.0,0.0
+Panther,Non Talha,commercial,commercial,0.6359,9843,35.1,90.9,10.1,72.3,91.9,69.0,85.0,0.0,0.0,0.0
+Panther,Oh My God,commercial,commercial,0.7506,2384,52.7,62.9,16.9,58.1,69.1,84.8,85.0,17.5,0.0,0.0
+Panther,Parinda,commercial,commercial,0.5051,2182,71.9,95.0,0.0,49.9,17.4,74.0,85.0,0.0,0.0,0.0
+Panther,Parwah,commercial,commercial,0.597,925,7.8,76.3,0.0,96.4,82.8,77.7,85.0,43.9,0.0,0.0
+Panther,Rang,commercial,commercial,0.4525,2032,57.9,95.0,0.0,46.9,33.8,44.2,25.9,0.0,0.0,0.0
+Panther,Rangey Haath,commercial,commercial,0.5294,4417,66.5,93.8,11.3,84.5,71.9,79.1,85.0,9.2,0.8,0.0
+Panther,Rukna Nahi Tha,commercial,mid,0.4346,2458,18.9,73.0,4.8,72.0,91.6,68.1,77.8,0.0,0.0,0.0
+Panther,Sajke,commercial,commercial,0.7095,2491,41.7,51.5,0.0,29.9,37.3,19.3,27.7,15.2,0.0,0.0
+Paradox,Bhola Naache,commercial,commercial,0.683,3280,39.8,30.4,8.2,20.3,14.2,13.5,16.2,0.0,0.0,0.0
+Paradox,Gang Wale Munde,commercial,commercial,0.7783,1371,18.7,32.6,0.0,26.9,72.1,54.7,25.1,25.1,0.0,0.0
+Paradox,Ghatotkach,commercial,commercial,0.7974,970,57.0,43.5,0.0,83.0,49.6,19.9,29.3,31.6,0.0,0.0
+Paradox,Glitch,commercial,commercial,0.7043,1151,10.1,95.0,0.0,54.4,93.0,34.9,85.0,0.0,0.0,0.0
+Paradox,Hasti Rahe Tu,commercial,commercial,0.6694,1627,70.7,81.3,0.0,31.9,51.5,21.6,17.8,46.5,0.0,0.0
+Paradox,Itni Shakti,commercial,commercial,0.6376,2077,50.1,93.5,33.0,90.5,79.3,86.8,85.0,24.3,0.0,0.0
+Paradox,Jaadugar,commercial,commercial,0.6702,1618,57.8,57.0,0.0,64.0,0.0,46.0,19.4,85.5,0.0,0.0
+Paradox,Rihaayi,commercial,commercial,0.5988,1267,20.0,84.5,9.3,28.4,0.0,61.7,37.3,0.0,0.0,0.0
+Paradox,Sheesha,commercial,mid,0.5153,854,43.0,77.1,0.0,26.4,14.9,17.8,85.0,0.0,4.5,0.0
+Paradox,Tantrums,commercial,commercial,0.6842,4615,46.5,75.1,12.4,87.2,23.9,62.3,85.0,8.6,0.7,0.0
+Paradox,Zimmedaar,commercial,elite,0.5615,2115,63.3,95.0,0.0,23.7,68.7,68.1,62.3,0.0,0.0,0.0
+Prabh Deep,Amar,mid,commercial,0.7804,3228,47.7,32.1,0.0,49.7,8.4,76.6,37.3,11.2,0.9,0.0
+Prabh Deep,Chitta,mid,commercial,0.7396,1669,59.6,81.9,0.0,35.6,20.6,42.9,58.9,47.4,0.0,0.0
+Prabh Deep,Fly,mid,commercial,0.582,2491,13.2,29.1,0.0,41.9,26.3,18.8,20.6,0.0,0.0,0.0
+Prabh Deep,Khat,mid,mid,0.4542,1529,18.4,84.5,0.0,51.6,77.5,92.2,85.0,86.8,0.0,0.0
+Prabh Deep,Paapi,mid,commercial,0.663,3502,47.7,90.5,0.0,54.8,66.5,73.4,85.0,0.0,1.1,0.0
+Prabh Deep,Paisa,mid,commercial,0.4949,1105,29.8,82.6,11.1,45.0,46.5,90.4,58.9,0.0,0.0,0.0
+Prabh Deep,Preet,mid,mid,0.4762,1205,23.1,37.2,0.0,28.7,26.5,62.2,32.3,0.0,0.0,0.0
+Prabh Deep,Safar,mid,mid,0.4359,1174,31.9,87.1,0.0,54.4,10.6,19.6,46.3,0.0,0.0,0.0
+Prabh Deep,Sukoon,mid,commercial,0.6161,818,17.6,26.6,0.0,26.0,0.0,12.6,9.2,0.0,0.0,0.0
+Prabh Deep,Suno,mid,commercial,0.4585,933,14.9,26.8,8.6,72.0,8.6,14.5,13.9,0.0,0.0,0.0
+Prabh Deep,Tofa,mid,commercial,0.6713,1654,21.7,56.9,8.0,80.0,67.6,85.6,19.8,0.0,0.0,0.0
+Raftaar,36,commercial,commercial,0.7719,3863,52.7,95.0,0.0,44.7,66.8,74.0,85.0,85.2,0.0,0.0
+Raftaar,Aage Chal,commercial,commercial,0.8603,2698,62.2,91.1,4.1,48.5,57.2,19.3,79.8,0.0,0.0,0.0
+Raftaar,Aisa Main Shaitaan,commercial,commercial,0.5893,1121,69.0,67.0,17.9,20.9,7.8,5.2,19.7,0.0,0.0,0.0
+Raftaar,Awein Hai,commercial,commercial,0.6803,4824,46.3,77.6,7.6,68.8,36.4,53.0,66.8,25.9,0.8,0.0
+Raftaar,BAAWE,commercial,commercial,0.7299,4011,78.0,91.5,0.0,84.2,93.2,88.6,85.0,11.6,0.0,0.9
+Raftaar,BADNAAM,commercial,commercial,0.7887,2553,65.2,50.4,6.1,48.1,45.4,20.8,19.2,0.0,0.0,0.0
+Raftaar,BANJO BOUNCE,commercial,commercial,0.6529,2508,50.7,34.0,73.5,93.0,73.8,19.4,85.0,0.0,0.0,0.0
+Raftaar,Beshaq,commercial,commercial,0.6757,1897,41.4,43.7,0.0,28.0,14.9,20.0,15.0,0.0,0.0,0.0
+Raftaar,Black Sheep,commercial,commercial,0.5055,3528,62.5,87.4,7.5,56.9,57.9,89.0,85.0,23.3,0.0,0.0
+Raftaar,Damn,commercial,commercial,0.6097,3094,34.2,72.4,3.9,26.1,36.6,15.2,18.9,46.0,0.0,0.0
+Raftaar,Dhaakad,commercial,commercial,0.5923,1212,27.7,41.1,6.7,41.9,34.7,57.3,16.0,0.0,0.0,0.0
+Raftaar,Dilli Waali Baatcheet,commercial,commercial,0.532,2405,76.4,91.8,0.0,36.2,57.5,91.8,30.3,0.0,2.6,0.0
+Raftaar,Do Hazaar Solo,commercial,commercial,0.7601,1652,38.9,82.6,0.0,66.0,86.9,49.6,81.6,45.6,0.0,0.0
+Raftaar,Down,commercial,commercial,0.6253,1798,16.4,74.2,7.9,35.0,26.7,100.0,36.3,0.0,0.0,0.0
+Raftaar,Drama,commercial,commercial,0.7902,1916,43.9,62.6,0.0,21.7,4.0,17.5,8.4,0.0,0.0,0.0
+Raftaar,F16,commercial,commercial,0.8998,2665,35.0,29.9,0.0,56.2,73.9,13.4,8.8,13.2,0.0,0.0
+Raftaar,Feeling You,commercial,commercial,0.9331,1281,22.9,46.6,0.0,38.1,34.7,13.0,9.1,0.0,0.0,0.0
+Raftaar,Gaddi,commercial,commercial,0.8415,1754,42.4,27.7,0.0,88.4,49.6,87.1,18.8,0.0,0.0,0.0
+Raftaar,Gall Goriye,commercial,commercial,0.8386,1657,27.6,34.4,0.0,46.9,51.0,34.9,21.9,18.9,0.0,0.0
+Raftaar,Gangnum,commercial,commercial,0.7821,2372,47.6,29.9,0.0,25.3,24.4,7.0,10.1,85.6,0.0,0.0
+Raftaar,Go Pagal,commercial,commercial,0.8161,1033,25.2,26.0,0.0,35.6,7.5,17.8,16.2,0.0,0.0,0.0
+Raftaar,Goat Dekho,commercial,commercial,0.7244,3325,38.8,71.2,6.0,58.1,82.8,87.6,74.4,49.5,3.6,0.0
+Raftaar,Haan,commercial,commercial,0.7465,1689,41.9,51.2,0.0,46.9,50.5,27.1,36.9,0.0,5.7,0.0
+Raftaar,Haseeno Ka Deewana,commercial,commercial,0.758,1045,5.1,28.0,0.0,60.0,33.8,18.0,16.0,0.0,0.0,0.0
+Raftaar,HELLO,commercial,commercial,0.735,1115,25.3,55.5,8.8,28.7,8.4,47.8,12.0,52.9,0.0,0.0
+Raftaar,Ice,commercial,commercial,0.3816,2273,59.4,95.0,11.9,84.8,92.1,93.8,85.0,21.5,0.0,0.0
+Raftaar,Lonely,commercial,commercial,0.7616,1578,19.3,29.6,0.0,27.5,79.5,76.9,8.9,19.8,0.0,0.0
+Raftaar,Main Wahi Hoon,commercial,elite,0.4942,2785,35.0,29.8,0.0,44.2,47.5,58.7,15.3,0.0,0.0,0.0
+Raftaar,Mantoiyat,commercial,commercial,0.687,2234,42.9,47.1,0.0,92.0,76.2,87.6,66.4,17.5,0.0,0.0
+Raftaar,Mask On,commercial,commercial,0.8764,2270,40.8,54.9,13.5,53.6,61.0,26.2,58.9,0.0,0.0,0.0
+Raftaar,ME AND MY BROSKI,commercial,commercial,0.7456,7584,32.4,32.0,0.0,76.0,41.1,49.1,39.1,4.2,0.0,0.0
+Raftaar,Me And My Pen,commercial,commercial,0.7795,2465,46.2,74.1,5.3,30.6,73.2,74.9,34.3,0.0,0.0,0.0
+Raftaar,MERA PARICHAY,commercial,commercial,0.7523,3501,58.3,75.0,9.0,88.2,92.5,90.1,75.7,24.1,0.0,0.0
+Raftaar,Move,commercial,commercial,0.7856,1135,77.5,88.5,0.0,35.6,86.7,29.3,17.5,0.0,0.0,0.0
+Raftaar,MUNDE HOOD DE,commercial,commercial,0.7626,6009,17.7,25.1,0.0,89.6,24.1,18.5,15.8,17.4,0.0,0.0
+Raftaar,Naachne Ka Shaunq,commercial,commercial,0.5742,3468,38.2,37.4,7.0,48.8,78.7,13.7,18.4,50.3,0.0,0.0
+Raftaar,Never Back Down,commercial,commercial,0.7207,2479,46.9,78.3,7.9,42.4,36.8,53.4,46.5,0.0,0.0,0.0
+Raftaar,No China,commercial,elite,0.474,2688,51.6,84.5,0.0,59.6,52.5,34.3,84.6,31.2,0.0,0.0
+Raftaar,Popular,commercial,commercial,0.641,1796,22.3,70.9,9.1,31.9,60.2,35.7,16.6,0.0,0.0,0.0
+Raftaar,Proud,commercial,commercial,0.7496,3417,56.7,66.5,0.0,31.3,29.4,24.5,19.1,0.0,2.1,0.0
+Raftaar,Raashah,commercial,commercial,0.8272,3258,71.0,92.9,3.8,58.1,87.8,67.2,85.0,56.5,0.0,0.0
+Raftaar,RAP-TA,commercial,mid,0.4709,2751,59.5,92.8,17.9,57.4,49.6,56.2,85.0,0.0,0.0,0.0
+Raftaar,REAL SHIT,commercial,commercial,0.7108,3509,30.3,28.1,2.6,86.0,29.1,17.3,16.1,34.1,0.0,0.0
+Raftaar,Sare Karo Dab,commercial,commercial,0.7678,2298,31.0,68.3,56.4,60.8,43.5,55.5,76.4,18.3,0.0,0.0
+Raftaar,Sheikh Chilli,commercial,commercial,0.706,3742,38.6,73.9,6.1,59.7,56.8,17.9,25.6,21.8,0.0,0.0
+Raftaar,Sick,commercial,mid,0.5483,1375,31.0,64.5,0.0,55.6,73.5,19.0,19.6,0.0,0.0,0.0
+Raftaar,Superman,commercial,commercial,0.529,1740,37.7,84.8,0.0,28.0,26.7,86.1,29.8,0.0,0.0,0.0
+Raftaar,Swag Mera Desi,commercial,commercial,0.8536,3515,43.0,95.0,4.2,39.8,81.7,57.4,57.3,67.7,0.0,0.0
+Raftaar,TRAP PRAA,commercial,commercial,0.787,2672,64.5,27.3,0.0,66.7,64.1,16.6,19.3,0.0,0.0,0.0
+Raftaar,Tu Phir Se Aana,commercial,commercial,0.5133,1382,39.7,29.8,0.0,64.0,13.6,31.1,14.1,0.0,0.0,0.0
+Raftaar,Warna Gabbar Aa Jayega,commercial,commercial,0.6833,1217,17.0,29.5,0.0,41.2,72.6,16.8,17.5,0.0,0.0,0.0
+Raftaar,Woh Raat,commercial,commercial,0.789,2985,29.7,57.1,4.0,80.0,79.1,67.2,68.3,37.9,0.0,0.0
+Raga,AFSOS,commercial,commercial,0.4268,2733,31.8,28.4,0.0,52.8,7.6,18.6,13.4,0.0,0.0,0.0
+Raga,Akatsuki,commercial,commercial,0.6958,3140,62.4,95.0,0.0,80.9,88.8,100.0,85.0,58.5,0.0,0.0
+Raga,Badan,commercial,commercial,0.4552,2527,69.9,35.7,0.0,68.0,25.5,25.3,17.1,26.3,0.0,0.0
+Raga,Biba,commercial,commercial,0.7144,821,17.0,27.6,0.0,46.9,41.0,36.2,13.4,0.0,8.8,0.0
+Raga,GTA NCR,commercial,commercial,0.7028,1599,10.9,44.6,6.0,53.1,56.5,13.2,19.4,0.0,0.0,0.0
+Raga,Jahannum,commercial,commercial,0.617,1938,19.4,69.7,5.8,81.5,46.1,25.3,19.2,63.1,0.0,0.0
+Raga,Jamnapaar 2,commercial,commercial,0.6909,878,31.5,23.9,0.0,72.0,19.4,13.4,8.8,0.0,0.0,0.0
+Raga,Jamnapaar,commercial,elite,0.8129,2613,33.9,61.4,0.0,78.4,36.8,91.4,74.8,0.0,0.0,0.0
+Raga,NASHA!,commercial,commercial,0.8281,1627,14.8,59.2,0.0,28.9,6.7,50.8,21.9,23.9,0.0,0.0
+Raga,NO OFFENSE,commercial,commercial,0.6996,2212,43.7,80.1,11.3,83.0,30.2,43.2,85.0,20.3,0.0,0.0
+Raga,PINNAK NA TOD,commercial,commercial,0.7628,2089,21.8,59.8,0.0,58.1,56.0,60.8,73.4,0.0,0.0,0.0
+Raga,Rap Ka Mausam,commercial,commercial,0.6747,2098,27.5,35.9,0.0,37.1,45.6,17.9,13.3,42.8,0.0,0.0
+Raga,Sheher,commercial,commercial,0.6097,2313,51.7,43.2,8.7,67.2,47.1,52.1,79.2,0.0,0.0,0.0
+Raga,Skills,commercial,commercial,0.5475,1846,24.4,41.5,7.9,62.4,83.8,86.3,44.5,19.5,0.0,0.0
+Seedhe Maut,101,elite,commercial,0.6399,2396,35.1,71.3,5.2,57.4,87.9,96.4,85.0,18.9,0.0,0.0
+Seedhe Maut,11K,elite,commercial,0.776,2287,18.5,49.8,5.5,68.8,44.5,53.9,26.5,0.0,0.0,0.0
+Seedhe Maut,Alla Freestyle,elite,mid,0.6808,3301,69.8,93.2,4.6,83.4,74.5,96.9,85.0,0.0,0.0,0.0
+Seedhe Maut,Batti,elite,mid,0.7115,3719,32.7,75.1,14.6,97.1,62.5,71.8,85.0,40.5,0.0,0.0
+Seedhe Maut,Brahamachari,elite,elite,0.8696,2937,94.0,95.0,19.2,74.7,65.9,100.0,85.0,40.9,0.0,0.0
+Seedhe Maut,Do Guna,elite,commercial,0.4232,2579,24.9,42.4,0.0,52.5,52.0,49.0,18.3,13.2,0.0,0.0
+Seedhe Maut,Gourmet Shit,elite,commercial,0.4748,3907,64.8,87.5,0.0,84.5,34.1,39.0,20.8,10.7,0.0,0.0
+Seedhe Maut,ICE,elite,commercial,0.7285,2436,36.5,26.5,3.7,86.0,62.8,31.9,25.8,25.3,0.0,0.0
+Seedhe Maut,Khatta Flow,elite,commercial,0.6857,3083,26.9,67.5,3.8,93.7,92.7,63.7,85.0,0.0,0.0,0.0
+Seedhe Maut,Kohra,elite,commercial,0.6428,2654,22.4,55.6,0.0,60.0,8.3,20.4,18.5,13.5,0.0,0.0
+Seedhe Maut,Maar Kaat,elite,mid,0.4791,1147,65.7,92.4,27.5,95.2,92.5,100.0,81.9,0.0,0.0,0.0
+Seedhe Maut,Madira,elite,elite,0.6849,1487,36.8,86.2,8.1,24.8,90.3,32.2,27.3,0.0,0.0,0.0
+Seedhe Maut,Maina,elite,mid,0.5384,2443,27.1,69.2,4.7,56.6,32.2,39.1,15.9,17.0,0.0,0.0
+Seedhe Maut,MMM,elite,mid,0.5305,5317,45.9,78.8,2.2,95.2,82.8,88.8,82.5,16.4,0.0,0.0
+Seedhe Maut,Nafrat,elite,commercial,0.744,1215,19.9,82.9,0.0,26.3,0.0,91.3,23.5,0.0,0.0,0.0
+Seedhe Maut,Naksha,elite,elite,0.9766,3119,90.7,95.0,4.6,64.0,74.5,94.4,85.0,0.0,0.0,0.0
+Seedhe Maut,Namastute,elite,elite,0.9815,2676,51.6,87.6,12.3,94.0,84.3,91.6,85.0,0.0,0.0,0.0
+Seedhe Maut,Nanchaku,elite,elite,0.4888,3803,47.3,60.9,2.8,87.3,48.8,42.9,66.5,10.2,0.0,0.0
+Seedhe Maut,Natkhat,elite,commercial,0.636,2882,40.1,28.9,0.0,76.0,47.1,34.9,16.6,21.9,0.0,0.0
+Seedhe Maut,Nawazuddin,elite,commercial,0.6893,3065,50.5,83.1,3.6,91.1,89.3,87.0,85.0,0.0,0.0,0.0
+Seedhe Maut,Peace of Mind,elite,elite,0.4393,3142,38.3,82.2,4.1,55.3,51.4,81.0,74.4,12.0,1.0,0.0
+Seedhe Maut,Raat Ki Raani,elite,elite,0.6023,3549,56.6,95.0,4.1,88.6,46.2,96.5,85.0,87.1,0.0,0.0
+Seedhe Maut,Shakti Aur Kshama,elite,commercial,0.5472,3757,45.0,95.0,11.0,57.7,82.5,89.2,85.0,25.3,0.0,0.0
+Seedhe Maut,Taakat,elite,elite,0.4693,2557,44.2,66.5,3.7,95.2,75.7,85.3,76.3,13.6,0.0,0.0
+Seedhe Maut,TT / Shutdown,elite,commercial,0.7599,10001,32.6,86.6,1.2,81.6,76.8,93.9,73.6,4.4,0.0,0.0
+Seedhe Maut,YAAD,elite,commercial,0.7662,2829,40.4,53.0,0.0,64.0,46.2,66.3,54.3,14.4,0.0,0.0
+Sikander Kahlon,100 Muu 100 Baat,mid,commercial,0.7722,1814,27.5,42.4,0.0,47.6,75.4,87.6,85.0,0.0,0.0,0.0
+Sikander Kahlon,2020 FLOW,mid,mid,0.8128,2199,15.1,62.0,5.0,73.3,53.4,94.8,84.6,18.6,0.0,0.0
+Sikander Kahlon,2023 FLOW,mid,commercial,0.7079,4345,58.0,77.4,5.6,95.8,55.4,89.3,85.0,20.2,0.0,0.0
+Sikander Kahlon,BIG SNITCH,mid,mid,0.4538,2449,49.3,72.2,5.1,82.0,83.1,100.0,83.0,33.6,0.0,0.0
+Sikander Kahlon,Game Over (Punjab Edition),mid,commercial,0.5973,1349,25.8,73.5,0.0,45.6,18.0,17.6,31.1,0.0,0.0,0.0
+Sikander Kahlon,Rann,mid,mid,0.5333,2800,42.7,71.0,0.0,54.8,13.8,85.6,85.0,0.0,2.5,0.0
+Sikander Kahlon,Shikayat,mid,commercial,0.6821,710,20.3,39.6,0.0,31.9,17.9,24.7,14.9,0.0,0.0,0.0
+Talha Anjum,12 Bajay,commercial,commercial,0.6857,927,15.7,39.4,10.1,41.2,28.2,25.8,18.2,0.0,0.0,0.0
+Talha Anjum,Happy Hour,commercial,commercial,0.6454,1117,1.3,48.7,0.0,48.8,21.6,18.6,16.3,0.0,0.0,0.0
+Talha Anjum,Kaun Talha,commercial,commercial,0.6822,3629,21.0,73.1,3.5,69.7,86.9,44.2,70.0,42.7,0.0,0.0
+Talha Anjum,Kyun,commercial,commercial,0.7818,1908,28.2,86.6,7.1,80.0,63.2,66.4,53.4,0.0,0.0,0.0
+Talha Anjum,Secrets,commercial,commercial,0.863,1518,42.1,29.8,0.0,32.8,6.3,65.1,26.5,0.0,0.0,0.0
+Talha Anjum,Touch Base,commercial,commercial,0.7108,4581,15.4,67.7,2.5,95.6,89.2,52.3,60.9,0.0,0.0,0.0
+Talhah Yunus,Aazma Le,mid,commercial,0.7347,3867,58.3,76.5,0.0,71.0,71.4,57.6,85.0,0.0,0.0,0.0
+Talhah Yunus,Cali 2 Karachi,mid,mid,0.9258,3683,14.9,77.6,3.6,70.0,66.8,90.6,85.0,13.3,0.0,0.0
+Talhah Yunus,Class,mid,commercial,0.7047,1303,16.4,52.2,0.0,25.3,35.8,18.3,35.0,0.0,0.0,0.0
+Talhah Yunus,Gumaan,mid,commercial,0.5923,1717,19.8,25.4,0.0,20.1,0.0,8.8,11.2,0.0,0.0,0.0
+Talhah Yunus,Jalega,mid,commercial,0.4318,4687,24.5,77.9,5.5,65.6,60.8,87.7,80.3,35.5,0.0,0.0
+Talhah Yunus,Next Level,mid,commercial,0.5231,1832,5.5,82.6,6.9,44.6,28.4,63.3,64.3,0.0,0.0,0.0
+Talhah Yunus,Rooh (Remix),mid,commercial,0.6841,945,12.9,47.5,11.5,54.4,31.3,100.0,45.5,0.0,0.0,0.0
+Tsumyoki,BREAKSHIT!,commercial,commercial,0.7828,4230,16.3,76.4,0.0,29.9,60.5,41.1,32.7,0.0,0.0,0.0
+Tsumyoki,Candyland,commercial,commercial,0.8809,3577,55.5,91.9,4.3,60.0,92.6,68.1,85.0,0.0,0.0,0.0
+Tsumyoki,Dont Even Text,commercial,commercial,0.88,2745,2.8,40.2,0.0,45.6,81.7,12.6,14.5,65.7,0.0,0.0
+Tsumyoki,Ek Do Ek,commercial,commercial,0.6306,4873,24.0,81.4,3.0,72.0,92.1,84.2,85.0,85.7,0.0,0.0
+Tsumyoki,Feel Okay,commercial,commercial,0.9281,1952,8.5,35.2,5.6,56.9,53.6,15.9,12.9,0.0,0.0,0.0
+Tsumyoki,Headphones,commercial,commercial,0.9302,2391,23.1,63.2,0.0,29.0,46.9,8.8,23.7,0.0,0.0,0.0
+Tsumyoki,IDK,commercial,commercial,0.951,2030,7.7,55.7,0.0,46.9,44.8,16.4,16.7,86.0,0.0,0.0
+Tsumyoki,Its Aight,commercial,commercial,0.96,2277,19.7,27.4,0.0,82.0,37.1,6.6,14.8,0.0,0.0,0.0
+Tsumyoki,On My Way,commercial,commercial,0.9285,2073,10.0,65.5,0.0,59.4,67.8,9.1,15.5,0.0,0.0,0.0
+Tsumyoki,Perfect Life,commercial,commercial,0.9458,2282,14.9,39.4,5.0,72.0,22.8,11.7,14.1,0.0,0.0,0.0
+Tsumyoki,Pink Blue,commercial,commercial,0.9494,2346,30.5,23.5,0.0,30.0,51.8,8.7,11.4,22.9,0.0,0.0
+Tsumyoki,Sunlight,commercial,commercial,0.9349,2541,17.3,68.3,0.0,52.1,88.0,86.7,71.0,18.9,0.0,0.0
+Tsumyoki,The Way I Fall In Love,commercial,commercial,0.8867,3758,26.8,72.5,3.7,44.4,77.7,13.0,18.1,0.0,0.0,0.0
+Tsumyoki,WANT IT ALL,commercial,commercial,0.751,2345,19.2,24.6,0.0,90.5,75.7,14.9,17.3,13.5,0.0,0.0
+Tsumyoki,WHAT CAN I SAY?,commercial,commercial,0.7401,3268,34.0,83.2,5.6,89.0,84.0,52.7,85.0,86.2,0.0,0.0
+Vichaar,3 DRAGS,mid,mid,0.9432,2794,64.1,89.0,12.6,53.1,91.4,86.9,74.7,86.3,0.0,0.0
+Vichaar,5 Fingers of Death,mid,mid,0.5724,5196,51.1,61.5,2.6,54.7,67.0,54.4,26.9,7.8,0.0,0.0
+Vichaar,Bhul,mid,commercial,0.385,2508,23.2,56.6,0.0,95.0,61.5,68.1,19.4,0.0,0.0,0.0
+Vichaar,Haadse,mid,mid,0.4735,2656,68.6,91.9,0.0,53.8,36.8,100.0,85.0,19.5,0.0,0.0
+Vichaar,Kalakaari Vishwasniya,mid,commercial,0.4284,2699,43.6,95.0,6.0,64.0,53.9,86.6,85.0,0.0,0.0,0.0
+Vichaar,Mehnat,mid,mid,0.6533,3277,27.8,53.3,3.3,74.3,61.8,76.5,21.7,0.0,0.0,0.0
+Vichaar,Mudda Kya Hai,mid,mid,0.4366,3639,41.1,48.3,2.8,51.1,27.1,37.2,35.8,36.6,0.0,0.0
+Vichaar,No Pockets,mid,elite,0.6289,3221,39.4,86.9,6.4,53.8,62.2,79.9,85.0,0.0,2.6,0.0
+Yashraj,Complicated,mid,commercial,0.683,2183,41.8,60.1,10.6,49.4,14.4,88.1,85.0,0.0,0.0,0.0
+Yashraj,DAF,mid,commercial,0.4796,4109,31.2,83.0,3.0,63.0,87.8,46.9,21.0,10.8,0.0,0.0
+Yashraj,Dhundhala,mid,mid,0.4004,1698,31.2,56.2,6.9,35.6,58.7,39.1,34.6,0.0,0.0,0.0
+Yashraj,GABBAR,mid,mid,0.7843,1274,41.1,83.0,0.0,74.7,45.5,94.9,85.0,0.0,0.0,0.0
+Yashraj,Khel,mid,commercial,0.8465,1449,6.7,31.7,0.0,83.0,15.1,16.4,10.2,0.0,0.0,0.0
+Yashraj,Musafir,mid,commercial,0.6968,475,57.6,95.0,0.0,59.9,29.9,19.8,85.0,0.0,0.0,0.0
+Yashraj,Paracetamol,mid,commercial,0.7706,2656,38.0,50.6,0.0,24.6,29.3,15.7,12.2,12.8,0.0,0.0
+Yo Yo Honey Singh,Angreji Beat,commercial,commercial,0.6798,1108,9.6,56.1,9.5,33.1,38.9,72.5,85.0,57.1,0.0,0.0
+Yo Yo Honey Singh,Billionaire,commercial,mid,0.4152,1929,53.5,82.8,6.4,46.9,73.5,51.8,79.0,67.4,0.0,0.0
+Yo Yo Honey Singh,Blue Eyes,commercial,commercial,0.7666,1880,14.1,39.0,0.0,52.5,25.4,17.8,50.4,0.0,1.6,0.0
+Yo Yo Honey Singh,Daftar Ki Girl,commercial,commercial,0.7029,1648,64.6,62.2,6.7,24.5,0.0,29.3,18.3,23.1,0.0,0.0
+Yo Yo Honey Singh,Desi Kalakaar,commercial,commercial,0.7699,2337,36.7,75.4,6.6,44.6,35.1,57.1,61.0,0.0,0.0,0.0
+Yo Yo Honey Singh,Dheere Dheere,commercial,commercial,0.7372,1508,38.0,77.4,0.0,49.4,54.3,72.1,18.1,29.4,0.0,0.0
+Yo Yo Honey Singh,Gabru,commercial,commercial,0.8068,1231,32.5,95.0,0.0,24.2,46.9,94.0,85.0,63.7,0.0,3.4
+Yo Yo Honey Singh,Gal Ban Gayi,commercial,commercial,0.8676,1967,22.1,76.6,0.0,45.0,48.6,74.0,69.0,55.6,0.0,0.0
+Yo Yo Honey Singh,Gur Nalo Ishq Mitha,commercial,commercial,0.8687,3808,23.8,32.3,0.0,28.9,30.8,18.4,14.7,0.0,0.0,0.0
+Yo Yo Honey Singh,Kalaastar,commercial,commercial,0.6759,1883,13.8,27.8,4.6,81.2,43.5,34.1,25.1,16.8,0.0,0.0
+Yo Yo Honey Singh,Khadke Glassy,commercial,commercial,0.8554,1692,17.3,28.0,0.0,23.5,48.7,10.0,10.8,19.8,0.0,0.0
+Yo Yo Honey Singh,Kuley Kuley,commercial,commercial,0.9076,1509,44.1,84.2,0.0,29.8,80.4,100.0,85.0,0.0,0.0,0.0
+Yo Yo Honey Singh,Love Dose,commercial,commercial,0.7276,1696,37.9,56.1,0.0,31.9,6.3,16.7,26.5,40.9,0.0,0.0
+Yo Yo Honey Singh,Lungi Dance,commercial,commercial,0.7459,1593,21.6,84.9,0.0,46.9,74.8,43.6,85.0,0.0,0.0,0.0
+Yo Yo Honey Singh,Millionaire,commercial,commercial,0.7987,1048,23.0,78.2,0.0,56.9,31.3,96.0,85.0,0.0,0.0,0.0
+Yo Yo Honey Singh,Moscow Suka,commercial,commercial,0.8741,2265,29.0,26.6,0.0,44.6,38.5,15.2,24.2,48.4,0.0,0.0
+Yo Yo Honey Singh,One Thousand Miles,commercial,commercial,0.763,2727,28.0,55.7,0.0,28.7,42.4,13.3,18.6,0.0,0.0,0.0
+Yo Yo Honey Singh,Party All Night,commercial,commercial,0.8149,2872,24.0,30.1,0.0,27.6,0.0,17.1,37.7,11.8,0.0,0.0
+Yo Yo Honey Singh,Payal,commercial,commercial,0.6316,2021,35.4,56.6,0.0,94.0,30.5,38.9,61.0,0.0,3.3,0.0
+Yo Yo Honey Singh,Stardom,commercial,commercial,0.5496,1908,25.1,29.0,10.3,53.4,33.6,19.4,29.0,18.3,0.0,0.0
+Yo Yo Honey Singh,Urvashi,commercial,commercial,0.5252,1263,25.4,84.4,0.0,60.0,54.3,16.4,66.0,54.2,0.0,0.0
+Yungsta,Dilli,elite,commercial,0.6149,3324,31.8,73.2,3.6,89.4,77.6,69.8,71.7,25.1,0.0,0.0
+Yungsta,Hona Hi Tha,elite,commercial,0.7511,4248,34.0,60.6,2.5,73.6,45.5,64.6,54.0,9.0,0.0,0.0
+Yungsta,Jeena Isi Ka Naam,elite,commercial,0.5413,2205,57.6,48.1,0.0,64.0,22.0,24.9,49.0,0.0,0.0,0.0
+Yungsta,Kaamyaabi,elite,mid,0.4848,3867,71.9,95.0,20.4,59.8,74.6,100.0,85.0,0.0,0.0,0.0
+Yungsta,Ruhbaru,elite,elite,0.5358,2314,44.0,85.2,13.6,73.6,79.6,90.6,85.0,0.0,0.0,0.0
+Yungsta,Sansani,elite,mid,0.6236,2545,50.2,77.7,4.7,66.7,87.1,90.2,85.0,31.2,0.0,0.0
+Yungsta,Savera,elite,elite,0.4827,2485,45.0,50.5,3.8,43.1,33.9,25.4,25.4,0.0,0.0,0.0
+Yungsta,Sukoon,elite,commercial,0.7145,2377,60.5,45.1,13.4,27.9,65.9,25.0,7.8,0.0,0.0,0.0
+Yungsta,Totka,elite,commercial,0.6431,2811,49.9,72.7,0.0,91.1,47.5,88.7,84.4,0.0,0.0,0.0

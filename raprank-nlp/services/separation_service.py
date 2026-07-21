@@ -12,8 +12,8 @@ try:
     import config.ffmpeg_patch
     import demucs.separate
     _DEMUCS_AVAILABLE = True
-except ImportError:
-    logger.warning("demucs not installed. Audio source separation will be skipped (falling back to mixed audio).")
+except (ImportError, Exception) as exc:
+    logger.warning("demucs not available or DLL failed (%s). Audio source separation will be skipped (falling back to mixed audio).", exc)
 
 
 def separate_vocals(audio_bytes: bytes, filename: str) -> tuple[tuple[bytes, bytes] | None, str | None]:

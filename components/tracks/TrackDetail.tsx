@@ -254,10 +254,18 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
   const bayesTierProbabilities: Record<string, number> =
     track.scoreBreakdown?.bayesTierProbabilities ?? track.scoreBreakdown?.bayes_tier_probabilities ?? {};
   const bayesTierConfidence = bayesTier != null ? bayesTierProbabilities[bayesTier] ?? null : null;
+  // DPST / BarsNet V2 Neural Transformer classifier head
+  const dpstTier = track.scoreBreakdown?.dpstTier ?? track.scoreBreakdown?.dpst_tier ?? null;
+  const dpstTierConfidence = track.scoreBreakdown?.dpstTierConfidence ?? track.scoreBreakdown?.dpst_tier_confidence ?? null;
+  const dpstTierProbabilities: Record<string, number> =
+    track.scoreBreakdown?.dpstTierProbabilities ?? track.scoreBreakdown?.dpst_tier_probabilities ?? {};
+
   const tierConsensus = track.scoreBreakdown?.tierConsensus ?? track.scoreBreakdown?.tier_consensus ?? null;
   const tierConsensusAgreement =
     track.scoreBreakdown?.tierConsensusAgreement ?? track.scoreBreakdown?.tier_consensus_agreement ?? null;
+
   const tierHeads = [
+    { name: "BarsNet V2 (Deep Transformer)", tier: dpstTier, confidence: dpstTierConfidence },
     { name: "Flow Critic", tier: predictedTier, confidence: tierConfidence },
     { name: "The Gatekeeper", tier: svmTier, confidence: svmTierConfidence },
     { name: "The Oracle", tier: bayesTier, confidence: bayesTierConfidence },
@@ -574,19 +582,19 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
                 </div>
               )}
 
-              {/* AI Classification — GMM style cluster / RF quality tier, both nullable.
+              {/* AI Classification — GMM style cluster / RF / BarsNet quality tier, all nullable.
                   Shows the full soft distribution, not just the top-1 winner. */}
-              {(styleCluster || predictedTier || elementClusterEntries.length > 0) && (
+              {(styleCluster || predictedTier || dpstTier || tierConsensus || tierHeads.length > 0 || elementClusterEntries.length > 0) && (
                 <div className="border-t border-[#2a2a2a]/60 pt-5 mt-1 flex flex-col gap-4">
                   <h3 className="text-xs font-bold text-[#c7a8ff] uppercase tracking-wider">AI Classification</h3>
 
-                  {predictedTier && (
+                  {(predictedTier || dpstTier || tierConsensus || tierHeads.length > 0) && (
                     <div className="space-y-2">
                       {/* Consensus row: majority vote across RF/SVM/Bayesian heads.
                           Falls back to the RF tier alone for older analyses. */}
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider bg-[#2a1f3a] border border-[#c7a8ff]/40 text-[#c7a8ff] rounded-full px-3 py-1.5 w-fit">
-                          Tier: {tierConsensus ?? predictedTier}
+                          Tier: {tierConsensus ?? predictedTier ?? dpstTier ?? "N/A"}
                           {tierConsensus == null && tierConfidence != null && (
                             <span className="opacity-70">({Math.round(tierConfidence * 100)}%)</span>
                           )}

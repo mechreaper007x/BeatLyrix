@@ -81,9 +81,25 @@ raprank-nlp/test_out.html
 # lyric text) -- deliberately kept outside raprank-nlp/ and out of the repo
 # entirely, since a trained artifact derived from scraped copyrighted lyrics
 # should never be committed.
-/local_real_model/*.pkl
+/local_real_model/
 
-# Kaggle English-rap lyrics dataset (Genius-scraped, copyrighted) -- same
-# treatment as local_real_model/: raw lyric text and anything derived from
-# it stays local-only, never committed.
+# Kaggle datasets and notebooks — contain raw lyric text or phoneme artifacts
+# derived from copyrighted corpus; all local-only, never committed.
 /kaggle_rap_data/
+/kaggle_dataset/
+/kaggle_lyrics_dataset/
+/kaggle_barsnet/
+/kaggle_barsnet_cpu/
+/kaggle_classifier/
+/kaggle_classifier_synth/
+/kaggle_g2p/
+
+# Root-level scraped lyrics files — copyrighted raw text, local-only.
+/scraped_lyrics*.json
+/scraped_*.json
+
+# Root-level trained model artifacts derived from scraped corpus.
+/barsnet.pt
+/barsnet_pretrained.pt
+/barsnet_history.json
+/barsnet_meta_out.json

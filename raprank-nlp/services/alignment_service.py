@@ -44,8 +44,8 @@ try:
     import torchaudio
     from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
     _TORCH_OK = True
-except ImportError:
-    logger.warning("Torch/transformers not available. Forced alignment will fall back to spectral onset detection.")
+except (ImportError, Exception) as exc:
+    logger.warning("Torch/torchaudio/transformers not available or DLL failed (%s). Forced alignment will fall back to spectral onset detection.", exc)
 
 # Load pre-trained Hindi Wav2Vec2-CTC model at module level if available
 _MODEL = None

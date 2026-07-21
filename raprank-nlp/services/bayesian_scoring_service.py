@@ -111,8 +111,8 @@ def _axis_scores_from_lyrics(lyrics: str) -> dict[str, float]:
 # In-memory view of the on-disk cache; loaded once per process.
 _FEATURE_CACHE_PATH = SYNTHETIC_DATA_DIR / "_axis_feature_cache.jsonl"
 _feature_cache_mem: dict[str, dict] | None = None
-# v3 = updated rhyme weights and allusion fallback (2026-07).
-_FEATURE_CACHE_VERSION = 3
+# v8 = strict triple consonant distinct-word alliteration, no hooks (Jul 2026).
+_FEATURE_CACHE_VERSION = 9
 
 
 def _feature_cache() -> dict[str, dict]:

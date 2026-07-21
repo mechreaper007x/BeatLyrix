@@ -185,6 +185,20 @@ class ScoreBreakdown(BaseModel):
         description="Fraction of available heads agreeing with the consensus (e.g. 0.67 = 2/3).",
     )
 
+    # ── Quality tier: DPST dual-tower neural classifier ───────────────────────
+    # Phonetic Transformer (Tower A) + Character CNN (Tower B) fused via
+    # cross-attention. Trained end-to-end on the DHH phonetic dataset.
+    # null when model weights are absent.
+    dpst_tier: Optional[str] = Field(
+        default=None, description="DPST-predicted quality tier (elite | mid | commercial)."
+    )
+    dpst_tier_confidence: Optional[float] = Field(
+        default=None, ge=0, le=1, description="DPST softmax probability of the predicted tier (0-1)."
+    )
+    dpst_tier_probabilities: Optional[dict] = Field(
+        default=None, description="DPST full class distribution {tier_label: probability}."
+    )
+
     # ── Stats ─────────────────────────────────────────────────
     word_count: int
     line_count: int
