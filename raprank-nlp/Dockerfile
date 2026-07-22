@@ -15,7 +15,7 @@ RUN apt-get update && \
 WORKDIR /app
 
 # ── Python dependencies (own layer for build cache efficiency) ────────────────
-COPY raprank-nlp/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Create non-root user for Hugging Face Spaces / Render compatibility
@@ -26,9 +26,9 @@ ENV HOME=/home/user \
 
 WORKDIR $HOME/app
 
-COPY --chown=user raprank-nlp/ $HOME/app
+COPY --chown=user . $HOME/app
 
-EXPOSE 8000
 EXPOSE 7860
+EXPOSE 8000
 
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-7860}"]
