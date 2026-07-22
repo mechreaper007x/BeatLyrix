@@ -19,7 +19,7 @@ services:
           type: web
           name: raprank-upload
           property: host
-      - key: JWT_SECRET
+      - key: APP_JWT_SECRET
         generateValue: true
 
   # 2. Go Audio Upload Service
