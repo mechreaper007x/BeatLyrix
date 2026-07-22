@@ -3,8 +3,7 @@ services:
   - type: web
     name: raprank-backend
     runtime: docker
-    dockerContext: .
-    dockerfilePath: raprank-backend/Dockerfile
+    dockerfilePath: ./raprank-backend/Dockerfile
     region: singapore
     plan: free
     envVars:
@@ -26,8 +25,7 @@ services:
   - type: web
     name: raprank-upload
     runtime: docker
-    dockerContext: .
-    dockerfilePath: raprank-upload/Dockerfile
+    dockerfilePath: ./raprank-upload/Dockerfile
     region: singapore
     plan: free
 
