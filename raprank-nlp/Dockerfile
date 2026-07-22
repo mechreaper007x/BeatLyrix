@@ -15,10 +15,10 @@ RUN apt-get update && \
 WORKDIR /app
 
 # ── Python dependencies (own layer for build cache efficiency) ────────────────
-COPY requirements.txt .
+COPY raprank-nlp/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Create non-root user for Hugging Face Spaces compatibility
+# Create non-root user for Hugging Face Spaces / Render compatibility
 RUN useradd -m -u 1000 user
 USER user
 ENV HOME=/home/user \
@@ -26,11 +26,9 @@ ENV HOME=/home/user \
 
 WORKDIR $HOME/app
 
-COPY --chown=user . $HOME/app
+COPY --chown=user raprank-nlp/ $HOME/app
 
-EXPOSE 7860
 EXPOSE 8000
+EXPOSE 7860
 
-ENV WHISPER_API_URL=https://mechreaper007x-raprank-whisper.hf.space
-
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-7860}"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]

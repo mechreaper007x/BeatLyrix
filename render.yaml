@@ -28,7 +28,10 @@ services:
           name: raprank-db
           property: password
       - key: APP_PYTHON_SERVICE_URL
-        value: https://mechreaper007x-raprank-whisper.hf.space
+        fromService:
+          type: web
+          name: raprank-nlp
+          property: host
       - key: APP_GO_SERVICE_URL
         fromService:
           type: web
@@ -39,7 +42,18 @@ services:
       - key: APP_JWT_EXPIRATION
         value: "86400000"
 
-  # 2. Go Audio Upload Service
+  # 2. FastAPI NLP Engine & BarsNet Model
+  - type: web
+    name: raprank-nlp
+    runtime: docker
+    dockerfilePath: ./raprank-nlp/Dockerfile
+    region: singapore
+    plan: free
+    envVars:
+      - key: PORT
+        value: "8000"
+
+  # 3. Go Audio Upload Service
   - type: web
     name: raprank-upload
     runtime: docker
