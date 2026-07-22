@@ -234,6 +234,9 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
   const punchlineCount = track.scoreBreakdown?.punchlineCount ?? track.scoreBreakdown?.punchline_count ?? 0;
   const extendedMetaphorCount = track.scoreBreakdown?.extendedMetaphorCount ?? track.scoreBreakdown?.extended_metaphor_count ?? 0;
   const allusionsCount = track.scoreBreakdown?.allusionsCount ?? track.scoreBreakdown?.allusions_count ?? 0;
+  const assonancePairs: string[] = track.scoreBreakdown?.assonancePairs ?? track.scoreBreakdown?.assonance_pairs ?? [];
+  const consonancePairs: string[] = track.scoreBreakdown?.consonancePairs ?? track.scoreBreakdown?.consonance_pairs ?? [];
+  const detectedLanguage: string | null = track.scoreBreakdown?.detectedLanguage ?? track.scoreBreakdown?.detected_language ?? null;
 
   // AI classification (GMM style cluster, RF quality tier) — categorical,
   // nullable when the respective model is untrained/absent. Full soft
@@ -736,8 +739,47 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
                     <span className="text-[#888888]">Lexical Diversity (TTR)</span>
                     <span className="text-white font-bold">{(vocabularyUniqueness * 100).toFixed(1)}%</span>
                   </div>
+                  {detectedLanguage && (
+                    <div className="flex justify-between bg-[#1a1a1a] p-2 rounded-lg border border-[#2a2a2a] col-span-2">
+                      <span className="text-[#888888]">Detected Language</span>
+                      <span className="text-[#a8ff3e] font-bold uppercase">{detectedLanguage}</span>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Phonetic & Rhyme Match Highlights */}
+              {(assonancePairs.length > 0 || consonancePairs.length > 0) && (
+                <div className="border-t border-[#2a2a2a]/60 pt-4 mt-2 flex flex-col gap-3">
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">Phonetic Pattern Matches</h3>
+                  
+                  {assonancePairs.length > 0 && (
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] font-semibold text-[#888888] uppercase tracking-wider block">Assonance Vowel Chains</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {assonancePairs.map((pair, idx) => (
+                          <span key={idx} className="text-[10px] font-sans text-[#a8ff3e] bg-[#a8ff3e]/10 border border-[#a8ff3e]/30 px-2.5 py-1 rounded-full">
+                            {pair}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {consonancePairs.length > 0 && (
+                    <div className="space-y-1.5 mt-1">
+                      <span className="text-[10px] font-semibold text-[#888888] uppercase tracking-wider block">Consonance Phoneme Clusters</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {consonancePairs.map((pair, idx) => (
+                          <span key={idx} className="text-[10px] font-sans text-[#c7a8ff] bg-[#c7a8ff]/10 border border-[#c7a8ff]/30 px-2.5 py-1 rounded-full">
+                            {pair}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Wordplay Explanation Accordion */}
               {wordplayExplanation && (

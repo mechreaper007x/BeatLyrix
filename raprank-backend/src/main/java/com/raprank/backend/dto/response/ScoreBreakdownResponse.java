@@ -143,4 +143,34 @@ public class ScoreBreakdownResponse {
 
     @JsonAlias("tier_consensus_agreement")
     private Double tierConsensusAgreement;
+
+    @JsonAlias("coherence_score")
+    private Double coherenceScore;
+
+    @JsonAlias("semantic_surprisal_score")
+    private Double semanticSurprisalScore;
+
+    @JsonAlias("lexical_sophistication_score")
+    private Double lexicalSophisticationScore;
+
+    @JsonAlias("theme_consistency_score")
+    private Double themeConsistencyScore;
+
+    @JsonAlias("assonance_pairs")
+    private java.util.List<String> assonancePairs;
+
+    @JsonAlias("consonance_pairs")
+    private java.util.List<String> consonancePairs;
+
+    @JsonAlias("onomatopoeia_hits")
+    private java.util.List<String> onomatopoeiaHits;
+
+    @JsonAlias("rhyme_pairs")
+    private java.util.List<Object> rhymePairs;
+
+    @JsonAlias("detected_language")
+    private String detectedLanguage;
+
+    @JsonAlias("story_structure")
+    private java.util.Map<String, Object> storyStructure;
 }

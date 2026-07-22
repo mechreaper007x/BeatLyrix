@@ -163,5 +163,18 @@ public class ScoringOrchestrationService {
 
         private String tier_consensus;
         private Double tier_consensus_agreement;
+
+        private Double coherence_score;
+        private Double semantic_surprisal_score;
+        private Double lexical_sophistication_score;
+        private Double theme_consistency_score;
+
+        private java.util.List<String> assonance_pairs;
+        private java.util.List<String> consonance_pairs;
+        private java.util.List<String> onomatopoeia_hits;
+        private java.util.List<Object> rhyme_pairs;
+
+        private String detected_language;
+        private java.util.Map<String, Object> story_structure;
     }
 }
