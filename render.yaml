@@ -20,6 +20,8 @@ services:
           property: host
       - key: APP_JWT_SECRET
         generateValue: true
+      - key: APP_JWT_EXPIRATION
+        value: "86400000"
 
   # 2. Go Audio Upload Service
   - type: web
