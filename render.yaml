@@ -7,6 +7,8 @@ services:
     region: singapore
     plan: free
     envVars:
+      - key: PORT
+        value: "8080"
       - key: SPRING_DATASOURCE_URL
         fromDatabase:
           name: raprank-db
@@ -30,6 +32,9 @@ services:
     dockerfilePath: ./raprank-upload/Dockerfile
     region: singapore
     plan: free
+    envVars:
+      - key: PORT
+        value: "9090"
 
   # 3. Vite React Frontend
   - type: web
