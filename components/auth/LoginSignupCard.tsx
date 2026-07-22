@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getApiUrl } from "@/src/utils/api";
 
 export default function LoginSignupCard() {
   const navigate = useNavigate();
@@ -67,10 +68,7 @@ export default function LoginSignupCard() {
     setIsSubmitting(true);
     setAuthMessage(null);
     try {
-      const env = (import.meta as any).env || {};
-      const rawApiUrl = env.VITE_API_URL || "https://raprank-backend.onrender.com";
-      const baseUrl = rawApiUrl.replace(/\/$/, "");
-      const url = mode === "login" ? `${baseUrl}/api/auth/login` : `${baseUrl}/api/auth/register`;
+      const url = mode === "login" ? getApiUrl("/api/auth/login") : getApiUrl("/api/auth/register");
       const body = mode === "login"
         ? { username: data.username, password: data.password }
         : { username: data.username, email: data.email, password: data.password, bio: "FRESH SPITTER" };

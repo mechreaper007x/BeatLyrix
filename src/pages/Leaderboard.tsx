@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
+import { getApiUrl } from "@/src/utils/api";
 
 interface Spitter {
   rank: number;
@@ -27,7 +28,7 @@ export default function LeaderboardPage() {
         const token = localStorage.getItem("token");
         const headers: HeadersInit = token ? { "Authorization": `Bearer ${token}` } : {};
 
-        const response = await fetch("/api/leaderboard", { headers });
+        const response = await fetch(getApiUrl("/api/leaderboard"), { headers });
         if (!response.ok) {
           throw new Error("Failed to load leaderboard database.");
         }

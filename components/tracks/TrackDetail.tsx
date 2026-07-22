@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { getApiUrl } from "@/src/utils/api";
 
 interface Comment {
   id: string;
@@ -35,7 +36,7 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
         const headers: HeadersInit = token ? { "Authorization": `Bearer ${token}` } : {};
 
         // Fetch track
-        const trackRes = await fetch(`/api/tracks/${trackId}`, { headers });
+        const trackRes = await fetch(getApiUrl(`/api/tracks/${trackId}`), { headers });
         if (!trackRes.ok) {
           throw new Error("Failed to load track details");
         }
@@ -51,7 +52,7 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
         }
 
         // Fetch comments
-        const commentsRes = await fetch(`/api/tracks/${trackId}/comments`, { headers });
+        const commentsRes = await fetch(getApiUrl(`/api/tracks/${trackId}/comments`), { headers });
         if (commentsRes.ok) {
           const commentsData = await commentsRes.json();
           // Map backend CommentResponse to frontend Comment struct
@@ -86,7 +87,7 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
         return;
       }
 
-      const response = await fetch(`/api/tracks/${trackId}/like`, {
+      const response = await fetch(getApiUrl(`/api/tracks/${trackId}/like`), {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -121,7 +122,7 @@ export default function TrackDetail({ trackId }: TrackDetailProps) {
         return;
       }
 
-      const response = await fetch(`/api/tracks/${trackId}/comments`, {
+      const response = await fetch(getApiUrl(`/api/tracks/${trackId}/comments`), {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,

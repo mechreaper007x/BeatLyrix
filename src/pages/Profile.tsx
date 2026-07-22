@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
+import { getApiUrl } from "@/src/utils/api";
 
 interface Track {
   id: string;
@@ -36,7 +37,7 @@ export default function ProfilePage() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch("/api/artists/me", {
+        const response = await fetch(getApiUrl("/api/artists/me"), {
           headers: {
             "Authorization": `Bearer ${token}`,
           },
@@ -77,7 +78,7 @@ export default function ProfilePage() {
     }
 
     try {
-      const response = await fetch(`/api/tracks/${trackId}`, {
+      const response = await fetch(getApiUrl(`/api/tracks/${trackId}`), {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${token}`,

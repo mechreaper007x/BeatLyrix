@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { getApiUrl, getUploadApiUrl } from "@/src/utils/api";
 
 type Stage = "idle" | "uploading" | "analyzing" | "success" | "error";
 
@@ -132,7 +133,7 @@ export default function UploadForm() {
         goFormData.append("lyrics", lyrics);
 
         setUploadProgress(30);
-        const goResponse = await fetch("http://localhost:9090/upload-pipeline", {
+        const goResponse = await fetch(getUploadApiUrl("/upload-pipeline"), {
           method: "POST",
           body: goFormData,
         });
@@ -153,7 +154,7 @@ export default function UploadForm() {
       setAnalysisText("Registering track metadata...");
 
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/tracks", {
+      const response = await fetch(getApiUrl("/api/tracks"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -205,7 +206,7 @@ export default function UploadForm() {
 
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`/api/tracks/${trackId}`, {
+        const response = await fetch(getApiUrl(`/api/tracks/${trackId}`), {
           headers: token ? { "Authorization": `Bearer ${token}` } : {},
         });
 
