@@ -1,3 +1,13 @@
+---
+title: RapRank NLP Service
+emoji: 🎤
+colorFrom: purple
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # RapRank NLP Service & BarsNet V2 🎤⚡
 
 > **Multi-Lingual Hip-Hop NLP Engine, G2P Syllabifier & Deep Dual-Tower Neural Transformer**
