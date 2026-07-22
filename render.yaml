@@ -28,7 +28,7 @@ services:
           name: raprank-db
           property: password
       - key: APP_PYTHON_SERVICE_URL
-        value: https://mechreaper007x-raprank-nlp.hf.space
+        value: https://mechreaper007x-raprank-whisper.hf.space
       - key: APP_GO_SERVICE_URL
         fromService:
           type: web
