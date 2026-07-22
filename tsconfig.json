@@ -1,3 +1,30 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:be18523b23b78b6e1a876ddd107d330f0168bddf09d751b57e0b5edce69c66f3
-size 666
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+
+    /* Linting */
+    "strict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": false,
+
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["src", "components", "pages", "services", "utils", "types", "vite.config.ts"]
+}
