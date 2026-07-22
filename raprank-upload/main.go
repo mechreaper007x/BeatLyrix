@@ -9,8 +9,12 @@ import (
 
 func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Set CORS headers
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -32,10 +36,11 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// Serve uploaded audio files statically
-	// This enables playbacks of uploads at http://localhost:9090/uploads/audio/filename.mp3
+	// Serve uploaded audio files statically with CORS support
 	fs := http.FileServer(http.Dir("uploads/audio"))
-	http.Handle("/uploads/audio/", http.StripPrefix("/uploads/audio/", fs))
+	http.HandleFunc("/uploads/audio/", corsMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		http.StripPrefix("/uploads/audio/", fs).ServeHTTP(w, r)
+	}))
 
 	// API routes with CORS configuration
 	http.HandleFunc("/upload", corsMiddleware(handlers.HandleUpload))

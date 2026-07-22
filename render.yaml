@@ -30,10 +30,7 @@ services:
       - key: APP_PYTHON_SERVICE_URL
         value: https://mechreaper007x-raprank-whisper.hf.space
       - key: APP_GO_SERVICE_URL
-        fromService:
-          type: web
-          name: raprank-upload
-          property: host
+        value: https://raprank-upload.onrender.com
       - key: APP_JWT_SECRET
         generateValue: true
       - key: APP_JWT_EXPIRATION

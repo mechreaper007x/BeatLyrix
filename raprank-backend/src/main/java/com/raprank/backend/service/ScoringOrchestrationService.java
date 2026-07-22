@@ -40,12 +40,17 @@ public class ScoringOrchestrationService {
     @Async
     public void triggerAnalysis(Track track) {
         try {
-            String url = pythonServiceUrl + "/analyze";
+            String baseUrl = pythonServiceUrl.replaceAll("/+$", "");
+            String url = baseUrl + "/analyze";
+
             Map<String, Object> request = new HashMap<>();
             request.put("lyrics", track.getLyricsText());
             request.put("track_id", track.getId());
-            if (track.getAudioUrl() != null && !track.getAudioUrl().isEmpty()) {
-                request.put("audio_url", goServiceUrl + track.getAudioUrl());
+
+            if (track.getAudioUrl() != null && !track.getAudioUrl().trim().isEmpty()) {
+                String baseGoUrl = goServiceUrl.replaceAll("/+$", "");
+                String audioPath = track.getAudioUrl().startsWith("/") ? track.getAudioUrl() : "/" + track.getAudioUrl();
+                request.put("audio_url", baseGoUrl + audioPath);
             }
 
             log.info("Sending track {} to NLP service at {} (audio_url: {})...", 
