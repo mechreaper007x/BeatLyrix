@@ -13,6 +13,14 @@ services:
         fromDatabase:
           name: raprank-db
           property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: raprank-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: raprank-db
+          property: password
       - key: APP_PYTHON_SERVICE_URL
         value: https://mechreaper007x-raprank-nlp.hf.space
       - key: APP_GO_SERVICE_URL
