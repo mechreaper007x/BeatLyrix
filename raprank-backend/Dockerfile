@@ -8,11 +8,11 @@ FROM maven:3.9-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 
 # Copy pom first for layer caching — dependencies won't re-download unless pom changes
-COPY pom.xml .
+COPY raprank-backend/pom.xml ./pom.xml
 RUN mvn dependency:go-offline -q
 
 # Copy source and build (skip tests — they need a live DB)
-COPY src ./src
+COPY raprank-backend/src ./src
 RUN mvn clean package -DskipTests -q
 
 # Stage 2: minimal JRE runtime
