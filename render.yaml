@@ -58,15 +58,9 @@ services:
     staticPublishPath: ./dist
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: raprank-backend
-          property: host
+        value: https://raprank-backend.onrender.com
       - key: VITE_UPLOAD_API_URL
-        fromService:
-          type: web
-          name: raprank-upload
-          property: host
+        value: https://raprank-upload.onrender.com
 
 databases:
   - name: raprank-db
