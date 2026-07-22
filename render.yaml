@@ -3,6 +3,7 @@ services:
   - type: web
     name: raprank-backend
     runtime: docker
+    dockerContext: raprank-backend
     dockerfilePath: raprank-backend/Dockerfile
     region: singapore
     plan: free
@@ -25,6 +26,7 @@ services:
   - type: web
     name: raprank-upload
     runtime: docker
+    dockerContext: raprank-upload
     dockerfilePath: raprank-upload/Dockerfile
     region: singapore
     plan: free
