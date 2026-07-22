@@ -33,20 +33,35 @@ _SIG_AXES = (
 )
 NUM_EXPLICIT = len(_SIG_AXES)  # 10
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
 _HERE = Path(__file__).resolve().parent.parent
+_MODELS_DIR = _HERE / "models"
 _LOCAL_MODEL_DIR = _HERE.parent / "local_real_model"
 
-BARSNET_MODEL_PATH = _LOCAL_MODEL_DIR / "barsnet.pt"
+BARSNET_MODEL_PATH = _MODELS_DIR / "barsnet.pt"
 if not BARSNET_MODEL_PATH.exists():
-    BARSNET_MODEL_PATH = _HERE.parent / "barsnet.pt"
+    BARSNET_MODEL_PATH = _LOCAL_MODEL_DIR / "barsnet.pt"
+    if not BARSNET_MODEL_PATH.exists():
+        BARSNET_MODEL_PATH = _HERE.parent / "barsnet.pt"
 
-BARSNET_META_PATH = _HERE.parent / "kaggle_dataset" / "barsnet_meta.json"
+BARSNET_META_PATH = _MODELS_DIR / "barsnet_meta.json"
+if not BARSNET_META_PATH.exists():
+    BARSNET_META_PATH = _HERE.parent / "kaggle_dataset" / "barsnet_meta.json"
 
-DPST_MODEL_PATH = _LOCAL_MODEL_DIR / "dhh_classifier.pt"
-DPST_META_PATH  = _LOCAL_MODEL_DIR / "dpst_model_meta.json"
-G2P_MODEL_PATH  = _LOCAL_MODEL_DIR / "g2p_model.pt"
-G2P_VOCAB_PATH  = _LOCAL_MODEL_DIR / "vocab_map.json"
+DPST_MODEL_PATH = _MODELS_DIR / "dhh_classifier.pt"
+if not DPST_MODEL_PATH.exists():
+    DPST_MODEL_PATH = _LOCAL_MODEL_DIR / "dhh_classifier.pt"
+
+DPST_META_PATH = _MODELS_DIR / "dpst_model_meta.json"
+if not DPST_META_PATH.exists():
+    DPST_META_PATH = _LOCAL_MODEL_DIR / "dpst_model_meta.json"
+
+G2P_MODEL_PATH = _MODELS_DIR / "g2p_model.pt"
+if not G2P_MODEL_PATH.exists():
+    G2P_MODEL_PATH = _LOCAL_MODEL_DIR / "g2p_model.pt"
+
+G2P_VOCAB_PATH = _MODELS_DIR / "vocab_map.json"
+if not G2P_VOCAB_PATH.exists():
+    G2P_VOCAB_PATH = _LOCAL_MODEL_DIR / "vocab_map.json"
 
 VOWELS = {"a", "aa", "i", "u", "e", "ai", "o", "au", "ri"}
 
