@@ -9,10 +9,16 @@ services:
     envVars:
       - key: PORT
         value: "8080"
-      - key: SPRING_DATASOURCE_URL
+      - key: DB_HOST
         fromDatabase:
           name: raprank-db
-          property: connectionString
+          property: host
+      - key: DB_NAME
+        fromDatabase:
+          name: raprank-db
+          property: database
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://${DB_HOST}/${DB_NAME}
       - key: SPRING_DATASOURCE_USERNAME
         fromDatabase:
           name: raprank-db
