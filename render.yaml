@@ -4,7 +4,7 @@ services:
     name: raprank-backend
     runtime: docker
     dockerContext: raprank-backend
-    dockerfilePath: raprank-backend/Dockerfile
+    dockerfilePath: Dockerfile
     region: singapore
     plan: free
     envVars:
@@ -27,7 +27,7 @@ services:
     name: raprank-upload
     runtime: docker
     dockerContext: raprank-upload
-    dockerfilePath: raprank-upload/Dockerfile
+    dockerfilePath: Dockerfile
     region: singapore
     plan: free
 
