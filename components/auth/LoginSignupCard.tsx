@@ -67,8 +67,9 @@ export default function LoginSignupCard() {
     setIsSubmitting(true);
     setAuthMessage(null);
     try {
-      const baseUrl = import.meta.env.VITE_API_URL 
-        ? import.meta.env.VITE_API_URL.replace(/\/$/, "") 
+      const env = (import.meta as any).env || {};
+      const baseUrl = env.VITE_API_URL 
+        ? env.VITE_API_URL.replace(/\/$/, "") 
         : "";
       const url = mode === "login" ? `${baseUrl}/api/auth/login` : `${baseUrl}/api/auth/register`;
       const body = mode === "login"
