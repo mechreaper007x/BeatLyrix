@@ -7,11 +7,11 @@
 FROM golang:1.22-alpine AS build
 WORKDIR /app
 
-COPY go.mod .
+COPY raprank-upload/go.mod ./go.mod
 # go.sum may not exist if there are no external deps — touch it to be safe
 RUN touch go.sum && go mod download
 
-COPY . .
+COPY raprank-upload/ .
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o raprank-upload .
 
 # Stage 2: minimal runtime
