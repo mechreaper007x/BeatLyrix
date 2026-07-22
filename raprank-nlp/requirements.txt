@@ -1,3 +1,4 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
 fastapi==0.111.0
 uvicorn==0.30.0
 pyphen==0.14.0
@@ -8,31 +9,12 @@ python-multipart==0.0.9
 pydantic==2.8.2
 librosa==0.10.2
 soundfile==0.12.1
-# pgmpy>=1.1 hard-requires numpy>=2.0 -- bumped from 1.26.4 (librosa/torch/
-# transformers all import cleanly against 2.x, verified in this repo).
 numpy>=2.0
 nltk==3.8.1
 mistralai==1.0.0
-
-# Bayesian-network quality-tier scoring (services/bayesian_scoring_service.py),
-# trained on corpus/synthetic_data/ -- replaces the hand-tuned linear
-# MAIN_WEIGHTS/RHYME["WEIGHTS"] combination with learned, calibrated weights.
 pgmpy==1.1.2
-
-# GMM style-clustering (services/gmm_style_service.py) -- unsupervised style
-# fingerprint (StandardScaler + GaussianMixture, k by BIC). Lazy-imported so a
-# missing install never breaks the /analyze request path.
 scikit-learn>=1.4
-
-# corpus/real_corpus/fetch_real_corpus.py -- pulls the real, artist-tier-labeled
-# rap corpus used to train the Bayesian network from Hugging Face Hub.
 huggingface_hub>=0.24.0
-
-# CPU-only forced alignment (services/alignment_service.py) -- Wav2Vec2-CTC
-# refinement of Whisper's rough word timestamps against real acoustic
-# transients. --extra-index-url pins CPU wheels (no CUDA), matching the
-# same pattern already used in raprank-whisper/requirements.txt.
---extra-index-url https://download.pytorch.org/whl/cpu
 torch
 torchaudio
 transformers
