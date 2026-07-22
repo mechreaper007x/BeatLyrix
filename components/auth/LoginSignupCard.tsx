@@ -67,7 +67,10 @@ export default function LoginSignupCard() {
     setIsSubmitting(true);
     setAuthMessage(null);
     try {
-      const url = mode === "login" ? "/api/auth/login" : "/api/auth/register";
+      const baseUrl = import.meta.env.VITE_API_URL 
+        ? import.meta.env.VITE_API_URL.replace(/\/$/, "") 
+        : "";
+      const url = mode === "login" ? `${baseUrl}/api/auth/login` : `${baseUrl}/api/auth/register`;
       const body = mode === "login"
         ? { username: data.username, password: data.password }
         : { username: data.username, email: data.email, password: data.password, bio: "FRESH SPITTER" };
