@@ -68,9 +68,8 @@ export default function LoginSignupCard() {
     setAuthMessage(null);
     try {
       const env = (import.meta as any).env || {};
-      const baseUrl = env.VITE_API_URL 
-        ? env.VITE_API_URL.replace(/\/$/, "") 
-        : "";
+      const rawApiUrl = env.VITE_API_URL || "https://raprank-backend.onrender.com";
+      const baseUrl = rawApiUrl.replace(/\/$/, "");
       const url = mode === "login" ? `${baseUrl}/api/auth/login` : `${baseUrl}/api/auth/register`;
       const body = mode === "login"
         ? { username: data.username, password: data.password }
